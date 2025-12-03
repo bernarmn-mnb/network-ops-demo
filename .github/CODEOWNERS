@@ -1,0 +1,21 @@
+# CODEOWNERS for elastic-demo-starter
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+* @elastic/search-ai-solutions
+
+# Frontend ownership
+/frontend/ @elastic/search-ai-solutions
+
+# Backend ownership  
+/backend/ @elastic/search-ai-solutions
+
+# Hive-mind patterns (shared knowledge base)
+/hive-mind/ @elastic/search-ai-solutions
+
+# Documentation
+*.md @elastic/search-ai-solutions
+
+# Scripts and tooling
+/scripts/ @elastic/search-ai-solutions
+
