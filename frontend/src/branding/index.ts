@@ -63,7 +63,6 @@ export interface BrandTheme {
  * 
  * Uses Vite's import.meta.glob for dynamic imports at build time.
  */
-// @ts-expect-error - import.meta.glob is a Vite feature, TypeScript doesn't recognize it
 const themeModules = import.meta.glob('./*Theme.ts', { 
   eager: true,
 }) as Record<string, { [key: string]: any }>

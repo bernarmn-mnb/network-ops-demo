@@ -21,21 +21,22 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock ResizeObserver for EUI components
-global.ResizeObserver = class ResizeObserver {
+class MockResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
-};
+}
+(globalThis as typeof globalThis & { ResizeObserver: typeof MockResizeObserver }).ResizeObserver = MockResizeObserver;
 
 // Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
+class MockIntersectionObserver {
   root = null;
   rootMargin = '';
-  thresholds = [];
+  thresholds: number[] = [];
   
   observe() {}
   unobserve() {}
   disconnect() {}
-  takeRecords() { return []; }
-} as unknown as typeof IntersectionObserver;
-
+  takeRecords(): IntersectionObserverEntry[] { return []; }
+}
+(globalThis as typeof globalThis & { IntersectionObserver: typeof MockIntersectionObserver }).IntersectionObserver = MockIntersectionObserver;
