@@ -2,20 +2,23 @@
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 # Default owners for everything in the repo
-* @elastic/search-ai-solutions
+* @m-adams @elastic/search-ai-solutions
 
 # Frontend ownership
-/frontend/ @elastic/search-ai-solutions
+/frontend/ @m-adams @elastic/search-ai-solutions
 
 # Backend ownership  
-/backend/ @elastic/search-ai-solutions
+/backend/ @m-adams @elastic/search-ai-solutions
 
 # Hive-mind patterns (shared knowledge base)
-/hive-mind/ @elastic/search-ai-solutions
+/hive-mind/ @m-adams @elastic/search-ai-solutions
 
 # Documentation
-*.md @elastic/search-ai-solutions
+*.md @m-adams @elastic/search-ai-solutions
 
 # Scripts and tooling
-/scripts/ @elastic/search-ai-solutions
+/scripts/ @m-adams @elastic/search-ai-solutions
+
+# CI/CD and GitHub config
+/.github/ @m-adams
 

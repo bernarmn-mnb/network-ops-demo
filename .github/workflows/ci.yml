@@ -28,9 +28,17 @@ jobs:
         working-directory: frontend
         run: yarn install --frozen-lockfile
       
+      - name: Lint
+        working-directory: frontend
+        run: yarn lint
+      
       - name: Type check
         working-directory: frontend
         run: yarn tsc --noEmit
+      
+      - name: Test
+        working-directory: frontend
+        run: yarn test
       
       - name: Build
         working-directory: frontend
@@ -63,6 +71,10 @@ jobs:
         working-directory: backend
         run: |
           python -c "from app.main import app; print('✅ FastAPI app imports successfully')"
+      
+      - name: Run tests
+        working-directory: backend
+        run: pytest -v
 
   markdown-lint:
     name: Markdown Lint
