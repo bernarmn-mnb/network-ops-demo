@@ -1,5 +1,7 @@
 # Elastic Demo Starter
 
+[![CI](https://github.com/elastic/elastic-demo-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/elastic/elastic-demo-starter/actions/workflows/ci.yml)
+
 A production-ready starter kit for building AI-powered demos with Elastic Agent Builder, EUI (Elastic UI Framework), and modern web technologies.
 
 This repository serves as a "Golden Master" for building custom Elastic demos. It comes pre-wired with correct architectural patterns for streaming chat, multi-agent orchestration, and brand theming - avoiding common pitfalls and accelerating development.
