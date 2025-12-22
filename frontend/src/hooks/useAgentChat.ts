@@ -144,7 +144,7 @@ export function useAgentChat({
                 return { ...msg, content: msg.content + text }
               }
 
-              case 'message_complete':
+              case 'message_complete': {
                 // Only use message_content if it has actual content
                 // Prefer streamed content if available (it's already complete)
                 const finalContent = event.data.message_content as string | undefined
@@ -153,6 +153,7 @@ export function useAgentChat({
                   content: msg.content || finalContent || '',
                   isComplete: true,
                 }
+              }
 
               case 'error':
                 return {

@@ -301,7 +301,7 @@ export function FunctionCallCard({ functionCall }: FunctionCallCardProps) {
                         </div>
                       )
                     
-                    case 'tool_status':
+                    case 'tool_status': {
                       // Show spinner only if this is the last step AND still executing
                       const showSpinner = isLastStep && isStillExecuting
                       return (
@@ -316,6 +316,7 @@ export function FunctionCallCard({ functionCall }: FunctionCallCardProps) {
                           </EuiText>
                         </div>
                       )
+                    }
                     
                     case 'tool_result':
                       return (
