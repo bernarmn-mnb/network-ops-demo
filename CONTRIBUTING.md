@@ -141,10 +141,10 @@ git push upstream feature/reusable-feature-name
 
 #### Option B: Fork Workflow (recommended)
 
-1. Fork `elastic-agent-starter` on GitHub
+1. Fork `elastic-demo-starter` on GitHub
 2. Add your fork as a remote:
    ```bash
-   git remote add my-fork https://github.com/YOUR-USERNAME/elastic-agent-starter.git
+   git remote add my-fork https://github.com/YOUR-USERNAME/elastic-demo-starter.git
    ```
 3. Push your changes:
    ```bash

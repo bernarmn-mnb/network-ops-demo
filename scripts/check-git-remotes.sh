@@ -32,7 +32,7 @@ fi
 
 # Check if origin points to template
 ORIGIN_URL=$(git remote get-url origin 2>/dev/null || echo "")
-if [[ "$ORIGIN_URL" == *"elastic-agent-starter"* ]]; then
+if [[ "$ORIGIN_URL" == *"elastic-demo-starter"* ]]; then
     echo -e "${YELLOW}⚠️  Origin points to template repo${NC}"
     echo ""
     echo "If you want origin to point to your own repo:"

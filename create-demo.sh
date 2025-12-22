@@ -344,7 +344,7 @@ case "$REPO_CHOICE" in
         echo ""
         echo -e "   ${GREEN}git remote add origin https://github.com/YOUR_USERNAME/$PROJECT_NAME.git${NC}"
         echo -e "   ${GREEN}git add .${NC}"
-        echo -e "   ${GREEN}git commit -m \"Initial commit from elastic-agent-starter\"${NC}"
+        echo -e "   ${GREEN}git commit -m \"Initial commit from elastic-demo-starter\"${NC}"
         echo -e "   ${GREEN}git branch -M main${NC}"
         echo -e "   ${GREEN}git push -u origin main${NC}"
         echo ""
