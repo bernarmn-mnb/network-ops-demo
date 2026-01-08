@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
+from .otel import init_otel
 from .routes.agent import router as agent_router
 from .routes.audit import router as audit_router
 from .routes.branding import router as branding_router
@@ -33,6 +34,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Initialize OpenTelemetry (if configured)
+init_otel(app)
 
 # Register routes
 app.include_router(agent_router)
