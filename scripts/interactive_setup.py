@@ -27,10 +27,9 @@ from enum import Enum
 class Feature(Enum):
     """Available features that can be configured."""
     AGENT_BUILDER = "agent_builder"
+    ELASTICSEARCH = "elasticsearch"
+    OTEL = "otel"
     LLM_PROXY = "llm_proxy"
-    # Future features - uncomment when ready:
-    # ELASTICSEARCH = "elasticsearch"
-    # OTEL = "otel"
 
 
 @dataclass
@@ -52,7 +51,23 @@ FEATURES: Dict[Feature, FeatureInfo] = {
         description="Connect to Elastic Agent Builder for AI chat",
         enables=["Chat", "Branded Demo", "Audit", "MCP Explorer"],
         env_vars=["KIBANA_URL", "ELASTIC_API_KEY", "AGENT_ID"],
-        required=False,  # Can still use branding without it
+        required=False,
+    ),
+    Feature.ELASTICSEARCH: FeatureInfo(
+        id=Feature.ELASTICSEARCH,
+        name="Elasticsearch Search",
+        description="Direct Elasticsearch connection for search and analytics",
+        enables=["Search Page", "Analytics Dashboard", "Faceted Search"],
+        env_vars=["ELASTIC_CLOUD_ID", "ELASTIC_API_KEY", "SEARCH_INDEX"],
+        required=False,
+    ),
+    Feature.OTEL: FeatureInfo(
+        id=Feature.OTEL,
+        name="OpenTelemetry / APM",
+        description="Send traces to Elastic APM for observability",
+        enables=["APM Traces", "Search Analytics", "Click Tracking"],
+        env_vars=["OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_HEADERS"],
+        required=False,
     ),
     Feature.LLM_PROXY: FeatureInfo(
         id=Feature.LLM_PROXY,
@@ -62,23 +77,6 @@ FEATURES: Dict[Feature, FeatureInfo] = {
         env_vars=["LLM_PROXY_URL", "LLM_PROXY_API_KEY", "LLM_PROXY_MODEL"],
         required=False,
     ),
-    # Future features:
-    # Feature.ELASTICSEARCH: FeatureInfo(
-    #     id=Feature.ELASTICSEARCH,
-    #     name="Elasticsearch Direct",
-    #     description="Direct Elasticsearch connection for search/analytics",
-    #     enables=["Search demos", "Analytics"],
-    #     env_vars=["ELASTICSEARCH_URL", "ES_API_KEY"],
-    #     required=False,
-    # ),
-    # Feature.OTEL: FeatureInfo(
-    #     id=Feature.OTEL,
-    #     name="OpenTelemetry",
-    #     description="Send telemetry to Elastic APM/Observability",
-    #     enables=["APM traces", "Metrics", "Logs"],
-    #     env_vars=["OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_HEADERS"],
-    #     required=False,
-    # ),
 }
 
 
@@ -612,9 +610,87 @@ def configure_llm_proxy() -> Dict[str, str]:
     return env_vars
 
 
-# Future feature configurators can be added here:
-# def configure_elasticsearch() -> Dict[str, str]: ...
-# def configure_otel() -> Dict[str, str]: ...
+def configure_elasticsearch() -> Dict[str, str]:
+    """Configure Elasticsearch connection for search features. Returns env vars dict."""
+    print(f"\n{Colors.BOLD}Elasticsearch Configuration{Colors.ENDC}")
+    print(f"{Colors.DIM}Enables: Search Page, Analytics Dashboard, Faceted Search{Colors.ENDC}\n")
+    
+    print("You'll need:")
+    print(f"  • {Colors.BOLD}Cloud ID{Colors.ENDC} or {Colors.BOLD}Elasticsearch URL{Colors.ENDC}")
+    print(f"    {Colors.DIM}Find Cloud ID in: Elastic Cloud Console → Deployment → Cloud ID{Colors.ENDC}")
+    print(f"  • {Colors.BOLD}API Key{Colors.ENDC} - Same key used for Agent Builder works here")
+    print(f"  • {Colors.BOLD}Index Name{Colors.ENDC} - The Elasticsearch index to search")
+    print()
+    
+    if not ask_yes_no("Do you have Elasticsearch details ready?"):
+        print_info("No problem! You can configure this later in backend/.env")
+        return {}
+    
+    env_vars = {}
+    
+    print(f"\n{Colors.BOLD}Connection Method:{Colors.ENDC}")
+    print(f"   {Colors.CYAN}1.{Colors.ENDC} Cloud ID (recommended for Elastic Cloud)")
+    print(f"   {Colors.CYAN}2.{Colors.ENDC} Direct URL (for self-hosted)")
+    print()
+    
+    handler = get_input_handler()
+    choice = handler.get_input(f"{Colors.BOLD}Select [1-2]: {Colors.ENDC}").strip()
+    
+    if choice == "2":
+        es_url = ask("Elasticsearch URL", default="https://localhost:9200")
+        env_vars["ELASTICSEARCH_URL"] = normalize_url(es_url)
+    else:
+        cloud_id = ask("Cloud ID")
+        env_vars["ELASTIC_CLOUD_ID"] = cloud_id
+    
+    # API key might already be set from Agent Builder
+    api_key = ask("API Key (or press Enter if already configured)", required=False)
+    if api_key:
+        env_vars["ELASTIC_API_KEY"] = api_key
+    
+    # Index name
+    index_name = ask("Search index name", default="products")
+    env_vars["SEARCH_INDEX"] = index_name
+    
+    print_success("Elasticsearch configured")
+    return env_vars
+
+
+def configure_otel() -> Dict[str, str]:
+    """Configure OpenTelemetry for APM/observability. Returns env vars dict."""
+    print(f"\n{Colors.BOLD}OpenTelemetry / APM Configuration{Colors.ENDC}")
+    print(f"{Colors.DIM}Enables: APM Traces, Search Analytics, Click Tracking{Colors.ENDC}\n")
+    
+    print("Send traces to Elastic APM for:")
+    print("  • Search query performance")
+    print("  • Click-through tracking")
+    print("  • User journey analysis")
+    print()
+    print("You'll need:")
+    print(f"  • {Colors.BOLD}APM Endpoint{Colors.ENDC} - Your Elastic APM server URL")
+    print(f"    {Colors.DIM}Find in: Kibana → Observability → APM → Settings{Colors.ENDC}")
+    print(f"  • {Colors.BOLD}Secret Token{Colors.ENDC} - APM authentication token")
+    print()
+    
+    if not ask_yes_no("Do you have APM/OTel details ready?"):
+        print_info("No problem! OTel is optional. You can configure this later in backend/.env")
+        return {}
+    
+    env_vars = {}
+    
+    endpoint = ask("APM/OTLP Endpoint", 
+                   default="https://xxx.apm.us-central1.gcp.cloud.es.io:443")
+    env_vars["OTEL_EXPORTER_OTLP_ENDPOINT"] = normalize_url(endpoint)
+    
+    secret_token = ask("Secret Token")
+    env_vars["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Bearer {secret_token}"
+    
+    # Service name
+    service_name = ask("Service name", default="elastic-demo-starter")
+    env_vars["OTEL_SERVICE_NAME"] = service_name
+    
+    print_success("OpenTelemetry configured")
+    return env_vars
 
 
 # =============================================================================
@@ -731,11 +807,11 @@ def save_env_file(env_vars: Dict[str, str]):
     # Group variables for readability
     groups = [
         ("# Elastic Agent Builder", ["KIBANA_URL", "ELASTIC_API_KEY", "AGENT_ID"]),
+        ("# Elasticsearch Search", ["ELASTIC_CLOUD_ID", "ELASTICSEARCH_URL", "SEARCH_INDEX"]),
+        ("# OpenTelemetry / APM", ["OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_HEADERS", 
+                                   "OTEL_SERVICE_NAME", "OTEL_SERVICE_VERSION", "OTEL_DEPLOYMENT_ENVIRONMENT"]),
         ("# LLM Proxy (A2A Multi-Agent)", ["LLM_PROXY_URL", "LLM_PROXY_API_KEY", "LLM_PROXY_MODEL"]),
         ("# Server Ports", ["PORT", "FRONTEND_PORT"]),
-        # Future groups:
-        # ("# Elasticsearch", ["ELASTICSEARCH_URL", "ES_API_KEY"]),
-        # ("# OpenTelemetry", ["OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_HEADERS"]),
     ]
     
     lines = []
@@ -947,14 +1023,17 @@ def main():
         new_vars = configure_agent_builder()
         env_vars.update(new_vars)
     
+    if Feature.ELASTICSEARCH.value in selected_features:
+        new_vars = configure_elasticsearch()
+        env_vars.update(new_vars)
+    
+    if Feature.OTEL.value in selected_features:
+        new_vars = configure_otel()
+        env_vars.update(new_vars)
+    
     if Feature.LLM_PROXY.value in selected_features:
         new_vars = configure_llm_proxy()
         env_vars.update(new_vars)
-    
-    # Future features:
-    # if Feature.ELASTICSEARCH.value in selected_features:
-    #     new_vars = configure_elasticsearch()
-    #     env_vars.update(new_vars)
     
     # Save configuration
     save_env_file(env_vars)
@@ -1026,6 +1105,17 @@ def main():
         print(f"   ✅ Agent Builder → Chat, Demo, Audit, MCP")
     else:
         print(f"   ⬜ Agent Builder (not configured)")
+    
+    if env_vars.get("ELASTIC_CLOUD_ID") or env_vars.get("ELASTICSEARCH_URL"):
+        index = env_vars.get("SEARCH_INDEX", "products")
+        print(f"   ✅ Elasticsearch → Search, Analytics (index: {index})")
+    else:
+        print(f"   ⬜ Elasticsearch (not configured)")
+    
+    if env_vars.get("OTEL_EXPORTER_OTLP_ENDPOINT"):
+        print(f"   ✅ OpenTelemetry → APM Traces, Click Tracking")
+    else:
+        print(f"   ⬜ OpenTelemetry (not configured)")
     
     if env_vars.get("LLM_PROXY_URL"):
         print(f"   ✅ LLM Proxy → A2A Multi-Agent")
