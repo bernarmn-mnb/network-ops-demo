@@ -19,8 +19,12 @@ class Settings:
     # Elastic Configuration
     KIBANA_URL: str = os.getenv("KIBANA_URL", "")
     ELASTICSEARCH_URL: str = os.getenv("ELASTICSEARCH_URL", "")
+    ELASTIC_CLOUD_ID: str = os.getenv("ELASTIC_CLOUD_ID", "")
     ELASTIC_API_KEY: str = os.getenv("ELASTIC_API_KEY", "")
     AGENT_ID: str = os.getenv("AGENT_ID", "")
+    
+    # Search Configuration
+    SEARCH_INDEX: str = os.getenv("SEARCH_INDEX", "products")
     
     # LLM Proxy Configuration (for A2A Multi-Agent)
     LLM_PROXY_URL: str = os.getenv("LLM_PROXY_URL", "")

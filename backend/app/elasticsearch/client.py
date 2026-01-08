@@ -1,0 +1,81 @@
+"""
+Elasticsearch client initialization and management.
+
+Supports both Elastic Cloud (via Cloud ID) and direct URL connections.
+"""
+
+from elasticsearch import Elasticsearch
+from typing import Optional
+import logging
+
+from ..config import settings
+
+logger = logging.getLogger(__name__)
+
+# Global client instance (lazy initialized)
+_es_client: Optional[Elasticsearch] = None
+
+
+def get_es_client() -> Elasticsearch:
+    """
+    Get or create the Elasticsearch client.
+    
+    Uses Cloud ID if available, otherwise falls back to direct URL.
+    Authentication is via API key.
+    
+    Returns:
+        Elasticsearch client instance
+        
+    Raises:
+        ValueError: If neither Cloud ID nor URL is configured
+    """
+    global _es_client
+    
+    if _es_client is not None:
+        return _es_client
+    
+    if not settings.ELASTIC_API_KEY:
+        raise ValueError("ELASTIC_API_KEY is required")
+    
+    if settings.ELASTIC_CLOUD_ID:
+        logger.info("Connecting to Elastic Cloud via Cloud ID")
+        _es_client = Elasticsearch(
+            cloud_id=settings.ELASTIC_CLOUD_ID,
+            api_key=settings.ELASTIC_API_KEY,
+        )
+    elif settings.ELASTICSEARCH_URL:
+        logger.info(f"Connecting to Elasticsearch at {settings.ELASTICSEARCH_URL}")
+        _es_client = Elasticsearch(
+            hosts=[settings.ELASTICSEARCH_URL],
+            api_key=settings.ELASTIC_API_KEY,
+        )
+    else:
+        raise ValueError("Either ELASTIC_CLOUD_ID or ELASTICSEARCH_URL must be configured")
+    
+    # Verify connection
+    info = _es_client.info()
+    logger.info(f"Connected to Elasticsearch cluster: {info['cluster_name']}")
+    
+    return _es_client
+
+
+def es_client() -> Elasticsearch:
+    """
+    Dependency injection helper for FastAPI.
+    
+    Usage:
+        @app.get("/search")
+        def search(es: Elasticsearch = Depends(es_client)):
+            ...
+    """
+    return get_es_client()
+
+
+def close_es_client() -> None:
+    """Close the Elasticsearch client connection."""
+    global _es_client
+    if _es_client is not None:
+        _es_client.close()
+        _es_client = None
+        logger.info("Elasticsearch client closed")
+
