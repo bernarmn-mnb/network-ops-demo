@@ -18,6 +18,10 @@ from .routes.audit import router as audit_router
 from .routes.branding import router as branding_router
 from .routes.mcp import router as mcp_router
 from .routes.a2a import router as a2a_router
+from .routes.search_simple import router as search_simple_router
+from .routes.search import router as search_router
+from .routes.analytics import router as analytics_router
+from .routes.tracking import router as tracking_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -44,6 +48,12 @@ app.include_router(audit_router)
 app.include_router(branding_router)
 app.include_router(mcp_router)
 app.include_router(a2a_router)
+
+# Search & Analytics routes (requires Elasticsearch connection)
+app.include_router(search_simple_router)
+app.include_router(search_router)
+app.include_router(analytics_router)
+app.include_router(tracking_router)
 
 
 @app.get("/")

@@ -35,7 +35,7 @@ from ..otel import get_tracer
 logger = logging.getLogger(__name__)
 tracer = get_tracer()
 
-router = APIRouter(prefix="/api/search", tags=["search"])
+router = APIRouter(prefix="/api/search-simple", tags=["search-simple"])
 
 
 # =============================================================================
