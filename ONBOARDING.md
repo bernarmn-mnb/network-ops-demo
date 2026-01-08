@@ -12,6 +12,9 @@ You are helping onboard a new user to this **Elastic Demo Starter** project. Thi
 
 - **Agent Builder Chat** - Streaming chat with Elastic Agent Builder
 - **A2A Multi-Agent** - Orchestrate multiple agents with a coordinator LLM
+- **Elasticsearch Search** - Full-featured search with facets, analytics, and RetrieverBuilder
+- **Search Analytics** - CTR, MRR, zero-results tracking via ES|QL
+- **OpenTelemetry** - APM traces, click tracking, and observability
 - **MCP Server Explorer** - Browse and test MCP (Model Context Protocol) tools
 - **Conversation Audit** - View conversation history and agent reasoning
 - **Brand Theming** - Customize appearance for customer demos
@@ -111,13 +114,17 @@ Verify the development environment is ready:
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
-| `KIBANA_URL` | ✅ Yes | Your Elastic Cloud Kibana URL |
-| `ELASTIC_API_KEY` | ✅ Yes | API key for authentication |
-| `AGENT_ID` | ✅ Yes | The agent to connect to |
+| `KIBANA_URL` | For Agent Builder | Your Elastic Cloud Kibana URL |
+| `ELASTIC_API_KEY` | ✅ Yes | API key for authentication (used by Agent Builder & ES) |
+| `AGENT_ID` | For Agent Builder | The agent to connect to |
+| `ELASTIC_CLOUD_ID` | For Search | Elastic Cloud deployment ID |
+| `SEARCH_INDEX` | For Search | Elasticsearch index to search (default: products) |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | For APM | OTel/APM endpoint URL |
+| `OTEL_EXPORTER_OTLP_HEADERS` | For APM | Auth header (Authorization=Bearer xxx) |
 | `PORT` | Optional | Backend port (default: 8001) |
 | `FRONTEND_PORT` | Optional | Frontend port (default: 3000) |
-| `LLM_PROXY_URL` | Optional | LLM proxy for A2A coordinator |
-| `LLM_PROXY_API_KEY` | Optional | API key for LLM proxy |
+| `LLM_PROXY_URL` | For A2A | LLM proxy for A2A coordinator |
+| `LLM_PROXY_API_KEY` | For A2A | API key for LLM proxy |
 
 **Report any missing items with specific guidance:**
 
@@ -273,8 +280,11 @@ After completing all checks, provide a summary:
 **Available Features:**
 - Chat: http://localhost:3000/chat - Talk to your Agent Builder agent
 - A2A: http://localhost:3000/a2a - Multi-agent orchestration (requires LLM proxy)
+- Search: /api/search - Elasticsearch search with facets (requires ES connection)
+- Analytics: /api/analytics - Search quality metrics via ES|QL (requires ES connection)
 - MCP: http://localhost:3000/mcp - Explore MCP server tools
 - Audit: http://localhost:3000/audit - View conversation history
+- API Docs: http://localhost:3000/docs - Full OpenAPI documentation (42 routes)
 
 **Ready to vibe code!** 
 
@@ -336,14 +346,18 @@ If you need to create an API key:
 | Stop servers | `./dev stop` |
 | View logs | `./dev logs-snapshot` |
 | Check status | `./dev status` |
-| Reconfigure Elastic | `./setup.sh` → option 3 |
+| Reconfigure | `./setup.sh` (Elasticsearch, OTel, Agent Builder, LLM Proxy) |
 | Chat page | http://localhost:3000/chat |
 | A2A page | http://localhost:3000/a2a |
 | MCP Explorer | http://localhost:3000/mcp |
 | Audit page | http://localhost:3000/audit |
 | Brand Editor | http://localhost:3000/brands |
+| API Docs | http://localhost:8001/docs |
+| Search API | POST /api/search (full), POST /api/search-simple |
+| Analytics API | /api/analytics/* (CTR, MRR, top queries) |
 | Theme template | `frontend/src/branding/exampleTheme.ts` |
 | Branding patterns | `hive-mind/patterns/branding/` |
+| OTel patterns | `hive-mind/patterns/elastic/OTEL_*.md` |
 | Beads issues | `bd ready`, `bd list` |
 
 ---
