@@ -122,8 +122,53 @@ update_env_value() {
 # Commands
 # =============================================================================
 
+check_dependencies() {
+    local missing=()
+    
+    # Check for yarn or npm (need at least one)
+    if ! command -v yarn &> /dev/null && ! command -v npm &> /dev/null; then
+        missing+=("yarn or npm (Node.js package manager)")
+    fi
+    
+    # Check for Python venv
+    if [ ! -f "backend/venv/bin/python" ]; then
+        missing+=("backend Python venv (backend/venv)")
+    fi
+    
+    if [ ${#missing[@]} -gt 0 ]; then
+        echo -e "${RED}❌ Missing dependencies:${NC}"
+        for dep in "${missing[@]}"; do
+            echo -e "   - $dep"
+        done
+        echo ""
+        echo -e "${YELLOW}To fix:${NC}"
+        if [[ " ${missing[*]} " =~ "yarn or npm" ]]; then
+            echo -e "   Install Node.js: ${BLUE}https://nodejs.org/${NC}"
+            echo -e "   Or with Homebrew: ${BLUE}brew install node${NC}"
+        fi
+        if [[ " ${missing[*]} " =~ " backend Python venv " ]]; then
+            echo -e "   Create Python venv: ${BLUE}cd backend && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt${NC}"
+        fi
+        echo ""
+        echo -e "Then run ${BLUE}./setup.sh${NC} to complete setup."
+        exit 1
+    fi
+}
+
+# Detect which package manager to use (prefer yarn if available)
+get_pkg_manager() {
+    if command -v yarn &> /dev/null; then
+        echo "yarn"
+    elif command -v npm &> /dev/null; then
+        echo "npm"
+    else
+        echo ""
+    fi
+}
+
 cmd_start() {
     ensure_dirs
+    check_dependencies
     read_env_ports
     
     echo -e "${BLUE}🚀 Starting Elastic Demo Starter...${NC}"
@@ -183,9 +228,19 @@ cmd_start() {
         
         echo -e "Starting frontend on port ${GREEN}$FRONTEND_PORT${NC}..."
         cd frontend
+        # Detect package manager (prefer yarn, fall back to npm)
+        local pkg_manager=$(get_pkg_manager)
+        if [ -z "$pkg_manager" ]; then
+            echo -e "${RED}❌ No package manager found (yarn or npm)${NC}"
+            exit 1
+        fi
         # Use --strictPort so Vite fails instead of silently switching ports
         # Pass BACKEND_PORT so vite proxy knows where to proxy API requests
-        VITE_BACKEND_PORT=$BACKEND_PORT nohup yarn dev --port $FRONTEND_PORT --strictPort > "../$LOG_DIR/frontend.log" 2>&1 &
+        if [ "$pkg_manager" = "yarn" ]; then
+            VITE_BACKEND_PORT=$BACKEND_PORT nohup yarn dev --port $FRONTEND_PORT --strictPort > "../$LOG_DIR/frontend.log" 2>&1 &
+        else
+            VITE_BACKEND_PORT=$BACKEND_PORT nohup npm run dev -- --port $FRONTEND_PORT --strictPort > "../$LOG_DIR/frontend.log" 2>&1 &
+        fi
         echo $! > "../$FRONTEND_PID_FILE"
         cd ..
         echo -e "${GREEN}✅ Frontend started${NC} (PID: $(get_pid $FRONTEND_PID_FILE))"
