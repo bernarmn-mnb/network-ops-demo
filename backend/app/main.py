@@ -31,7 +31,12 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Configure CORS for frontend access
+# Initialize OpenTelemetry FIRST (before other middleware)
+# This ensures proper traceparent header extraction for distributed tracing
+# See: hive-mind/patterns/elastic/OTEL_DISTRIBUTED_TRACING.md
+init_otel(app)
+
+# Configure CORS for frontend access (after OTel)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -39,9 +44,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Initialize OpenTelemetry (if configured)
-init_otel(app)
 
 # Register routes
 app.include_router(agent_router)
