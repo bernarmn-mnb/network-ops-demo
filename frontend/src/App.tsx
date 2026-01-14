@@ -6,6 +6,7 @@ import { BrandedDemoPage } from './pages/BrandedDemoPage'
 import { BrandEditorPage } from './pages/BrandEditorPage'
 import { AuditPage } from './pages/AuditPage'
 import { MCPExplorerPage } from './pages/MCPExplorerPage'
+import { SearchPageSimple } from './pages/SearchPageSimple'
 
 /**
  * Main App Component
@@ -18,6 +19,7 @@ import { MCPExplorerPage } from './pages/MCPExplorerPage'
  * - /brands : Brand editor for creating/managing themes
  * - /audit : Conversation history and audit display
  * - /mcp : MCP Explorer for testing Agent Builder tools
+ * - /search : Product search with faceted filtering
  */
 function App() {
   return (
@@ -29,6 +31,7 @@ function App() {
       <Route path="/brands" element={<BrandEditorPage />} />
       <Route path="/audit" element={<AuditPage />} />
       <Route path="/mcp" element={<MCPExplorerPage />} />
+      <Route path="/search" element={<SearchPageSimple />} />
     </Routes>
   )
 }
