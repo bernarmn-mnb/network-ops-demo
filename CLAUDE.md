@@ -103,6 +103,7 @@ This project supports multiple brand themes with two approaches:
 ./dev stop           # Stop servers
 ./dev status         # Check if running
 ./dev verify         # Quick setup verification (checks .env, venv, health)
+./dev test-agent     # Test Agent Builder connection (sends test message)
 ./dev logs-snapshot  # View recent logs (NON-BLOCKING - use this!)
 ./dev logs           # Follow logs (BLOCKS FOREVER - don't use in scripts)
 ./dev open           # Open browser

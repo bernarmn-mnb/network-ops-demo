@@ -432,6 +432,101 @@ cmd_open() {
     esac
 }
 
+cmd_test_agent() {
+    read_env_ports
+    
+    # Get actual running port
+    local actual_backend_port=$BACKEND_PORT
+    if [ -f "$PID_DIR/backend.port" ]; then
+        actual_backend_port=$(cat "$PID_DIR/backend.port")
+    fi
+    
+    echo -e "${BLUE}🤖 Testing Agent Builder Connection...${NC}"
+    echo ""
+    
+    # Check if backend is running
+    if ! is_running "$BACKEND_PID_FILE"; then
+        echo -e "${RED}❌ Backend not running${NC}"
+        echo -e "   Start with: ${BLUE}./dev start${NC}"
+        exit 1
+    fi
+    
+    # Step 1: Check agent health endpoint
+    echo -e "Checking agent configuration..."
+    local health_response
+    health_response=$(curl -s --max-time 10 "http://localhost:$actual_backend_port/api/agent/health" 2>&1)
+    
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Could not reach backend${NC}"
+        echo -e "   Error: $health_response"
+        exit 1
+    fi
+    
+    # Parse health response
+    local agent_id=$(echo "$health_response" | grep -o '"agent_id":"[^"]*"' | cut -d'"' -f4)
+    local kibana_configured=$(echo "$health_response" | grep -o '"kibana_configured":true')
+    
+    if [ -z "$kibana_configured" ]; then
+        echo -e "${RED}❌ Kibana not configured${NC}"
+        echo -e "   Run: ${BLUE}./setup.sh${NC} to configure"
+        exit 1
+    fi
+    
+    echo -e "✅ Agent ID: ${GREEN}$agent_id${NC}"
+    echo -e "✅ Kibana: ${GREEN}configured${NC}"
+    echo ""
+    
+    # Step 2: Send a test message
+    echo -e "Sending test message..."
+    local test_response
+    test_response=$(curl -s --max-time 30 "http://localhost:$actual_backend_port/api/agent/chat" \
+        -H "Content-Type: application/json" \
+        -d '{"input": "Hello, please respond briefly."}' 2>&1)
+    
+    # Check for common errors in response
+    if echo "$test_response" | grep -q '"error"'; then
+        local error_msg=$(echo "$test_response" | grep -o '"message":"[^"]*"' | head -1 | cut -d'"' -f4)
+        echo ""
+        echo -e "${RED}❌ Agent Error${NC}"
+        echo -e "   $error_msg"
+        echo ""
+        
+        # Provide helpful guidance based on error
+        if echo "$test_response" | grep -qi "401\|unauthorized\|authenticate"; then
+            echo -e "${YELLOW}Likely cause:${NC} Invalid API Key"
+            echo -e "${YELLOW}Fix:${NC} Regenerate API key in Kibana and run ./setup.sh"
+        elif echo "$test_response" | grep -qi "not found"; then
+            echo -e "${YELLOW}Likely cause:${NC} Agent ID doesn't exist"
+            echo -e "${YELLOW}Fix:${NC} Run ./setup.sh to list and select valid agents"
+        elif echo "$test_response" | grep -qi "resolve\|connection\|connect"; then
+            echo -e "${YELLOW}Likely cause:${NC} Cannot reach Kibana"
+            echo -e "${YELLOW}Fix:${NC} Check KIBANA_URL in backend/.env"
+        fi
+        
+        echo ""
+        echo -e "See: ${BLUE}hive-mind/troubleshooting/AGENT_BUILDER_ERROR_REFERENCE.md${NC}"
+        exit 1
+    fi
+    
+    # Check for successful response (look for message_complete event)
+    if echo "$test_response" | grep -q "message_complete\|message_chunk"; then
+        echo -e "${GREEN}✅ Agent responded successfully!${NC}"
+        echo ""
+        
+        # Try to extract a preview of the response
+        local preview=$(echo "$test_response" | grep -o '"text_chunk":"[^"]*"' | head -3 | cut -d'"' -f4 | tr -d '\n')
+        if [ -n "$preview" ]; then
+            echo -e "${DIM}Response preview: ${preview:0:100}...${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  Response received but format unexpected${NC}"
+        echo -e "${DIM}First 200 chars: ${test_response:0:200}${NC}"
+    fi
+    
+    echo ""
+    echo -e "${GREEN}✅ Agent Builder connection working!${NC}"
+}
+
 cmd_verify() {
     echo -e "${BLUE}🔍 Verifying setup...${NC}"
     echo ""
@@ -519,6 +614,7 @@ cmd_help() {
     echo "  restart        Restart (only needed after .env or dependency changes)"
     echo "  status         Show if running, ports, PIDs"
     echo "  verify         Quick setup verification (checks .env, venv, etc.)"
+    echo "  test-agent     Test Agent Builder connection (sends test message)"
     echo "  logs           Tail server logs (follows, use Ctrl+C to exit)"
     echo "  logs-snapshot  Show recent logs and exit (default: 50 lines)"
     echo "                 Usage: ./dev logs-snapshot [num_lines]"
@@ -549,6 +645,7 @@ case "${1:-help}" in
     restart) cmd_restart ;;
     status)  cmd_status ;;
     verify)  cmd_verify ;;
+    test-agent) cmd_test_agent ;;
     logs)    cmd_logs ;;
     logs-snapshot) cmd_logs_snapshot "${2:-50}" ;;
     open)    cmd_open ;;
