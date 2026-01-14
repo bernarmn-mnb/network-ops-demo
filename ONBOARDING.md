@@ -258,6 +258,113 @@ To verify branding is working:
 
 ---
 
+### 5b. Configure Search (if Elasticsearch enabled)
+
+**Skip this section if `ELASTIC_CLOUD_ID` or `ELASTICSEARCH_URL` is not set in `.env`**
+
+The search page (`/search`) works out-of-the-box with robust defaults, but displays raw JSON if the index fields don't match the expected product structure. To provide a better user experience, configure the search to understand your index's field mapping.
+
+---
+
+#### Check Search Configuration Status
+
+1. **Visit the search page**: http://localhost:3000/search
+2. **Run a test search** (e.g., search for `*` or any term)
+
+**If you see a yellow warning banner** saying "Search needs configuration":
+- The index fields don't match the expected structure
+- Results are displayed as raw JSON
+- Continue with configuration below
+
+**If results display nicely** with titles, images, prices:
+- The index already matches expected fields
+- Configuration is optional (skip to section 6)
+
+---
+
+#### Configure Search Fields
+
+**Step 1: Discover available fields**
+
+Fetch the index mapping from the API:
+
+```bash
+curl http://localhost:8001/api/search/fields | jq
+```
+
+Or visit: http://localhost:8001/api/search/fields
+
+The response includes:
+- `index`: The configured search index name
+- `configured`: Whether fields match expected structure
+- `fields`: List of all fields with types and purposes
+- `suggested_config`: AI-generated configuration suggestion
+
+**Step 2: Update frontend configuration**
+
+Edit `frontend/src/config/searchConfig.ts`:
+
+1. Update `fields.search` to match your searchable text fields
+2. Update `display` to map your fields to UI components:
+   - `title`: Field containing the main title/name
+   - `description`: Field containing description text
+   - `image`: Field containing image URL
+   - `price`: Field containing price (numeric)
+   - `brand`: Field for brand/manufacturer
+   - `category`: Field for category/type
+
+Example for a recipes index:
+
+```typescript
+export const searchConfig: SearchConfig = {
+  index: "recipes",
+  queryTemplate: "simple",
+  fields: {
+    search: [
+      { field: "recipe_name", boost: 3 },
+      { field: "ingredients", boost: 2 },
+      { field: "instructions", boost: 1 },
+    ],
+  },
+  display: {
+    title: "recipe_name",
+    description: "instructions",
+    image: "photo_url",
+    badges: ["cuisine", "difficulty"],
+  },
+  facets: [
+    { field: "cuisine", label: "Cuisine", size: 20 },
+    { field: "difficulty", label: "Difficulty", size: 10 },
+  ],
+}
+```
+
+**Step 3: Restart frontend**
+
+```bash
+./dev stop && ./dev start
+```
+
+**Step 4: Verify configuration**
+
+1. Visit http://localhost:3000/search
+2. Run a test search
+3. Confirm results display with proper titles, images, etc.
+4. Confirm facet filters appear in sidebar
+
+---
+
+#### Troubleshooting Search
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| "Elasticsearch not connected" | Backend can't reach ES | Check `ELASTIC_CLOUD_ID` and `ELASTIC_API_KEY` in `.env` |
+| Results show but no facets | Facet fields don't exist or aren't `keyword` type | Check field types in mapping, use `.keyword` subfield |
+| Images not loading | Wrong field name or URLs are relative | Verify `display.image` points to field with full URLs |
+| "No results" for all queries | Index is empty or field names wrong | Check index has documents, verify search field names |
+
+---
+
 ### 6. Final Summary
 
 After completing all checks, provide a summary:
@@ -277,10 +384,14 @@ After completing all checks, provide a summary:
 - [Created via Brand Editor / AI-extracted for X / Not configured]
 - Brand Editor available at: http://localhost:3000/brands
 
+**Search:**
+- [Configured / Unconfigured (showing JSON) / Not enabled]
+- Search page: http://localhost:3000/search
+
 **Available Features:**
 - Chat: http://localhost:3000/chat - Talk to your Agent Builder agent
 - A2A: http://localhost:3000/a2a - Multi-agent orchestration (requires LLM proxy)
-- Search: /api/search - Elasticsearch search with facets (requires ES connection)
+- Search: http://localhost:3000/search - Product search with facets (requires ES connection)
 - Analytics: /api/analytics - Search quality metrics via ES|QL (requires ES connection)
 - MCP: http://localhost:3000/mcp - Explore MCP server tools
 - Audit: http://localhost:3000/audit - View conversation history
@@ -349,11 +460,14 @@ If you need to create an API key:
 | Reconfigure | `./setup.sh` (Elasticsearch, OTel, Agent Builder, LLM Proxy) |
 | Chat page | http://localhost:3000/chat |
 | A2A page | http://localhost:3000/a2a |
+| Search page | http://localhost:3000/search |
 | MCP Explorer | http://localhost:3000/mcp |
 | Audit page | http://localhost:3000/audit |
 | Brand Editor | http://localhost:3000/brands |
 | API Docs | http://localhost:8001/docs |
-| Search API | POST /api/search (full), POST /api/search-simple |
+| Search API | POST /api/search |
+| Search fields | GET /api/search/fields (discover index mapping) |
+| Search config | `frontend/src/config/searchConfig.ts` |
 | Analytics API | /api/analytics/* (CTR, MRR, top queries) |
 | Theme template | `frontend/src/branding/exampleTheme.ts` |
 | Branding patterns | `hive-mind/patterns/branding/` |

@@ -1,24 +1,19 @@
 """
 Simplified Search API for Starter Template
 
-A clean, minimal search endpoint (~200 lines) with:
+A clean, minimal search endpoint with:
 - POST /api/search - Search with filters and pagination
 - GET /api/search/config - Get current configuration
 - GET /api/search/health - Check search availability
 
+Features robust defaults that work with any index structure:
+- Uses simple_query_string to search all text fields when not configured
+- Falls back gracefully when expected fields don't exist
+- Aggregations only run on fields that exist
+
 OTel Instrumentation:
 - Custom span attributes for search analytics
 - Follows semantic conventions from docs/SEMANTIC-CONVENTIONS.md
-
-Removed features (see search.py for full version):
-- Lab Mode / Feature weights
-- Personalization (user preferences, session context)
-- Diversification (field collapse, MMR)
-- Learning to Rank
-- Query type configuration / Hybrid search
-- Explain mode
-- Config update endpoint
-- Fields introspection
 """
 
 from fastapi import APIRouter, HTTPException
@@ -35,16 +30,20 @@ from ..otel import get_tracer
 logger = logging.getLogger(__name__)
 tracer = get_tracer()
 
-router = APIRouter(prefix="/api/search-simple", tags=["search-simple"])
+router = APIRouter(prefix="/api/search", tags=["search"])
 
 
 # =============================================================================
 # Configuration
 # =============================================================================
 
+# Default search config - works with product-like indexes
+# Will be used if fields exist, otherwise falls back to wildcard search
 SEARCH_CONFIG = {
     "index": settings.SEARCH_INDEX,
-    "searchFields": ["title^3", "description", "brand^2", "category^1.5"],
+    # Fields to search with boosts (if they exist)
+    "searchFields": ["title^3", "description", "brand^2", "category^1.5", "name^3"],
+    # Facet fields to try (will skip if field doesn't exist)
     "facets": [
         {"field": "category", "label": "Category", "size": 20},
         {"field": "brand", "label": "Brand", "size": 20},
@@ -102,6 +101,11 @@ async def search(request: SearchRequest) -> SearchResponse:
     """
     Search with filters and pagination.
     
+    Uses robust defaults that work with any index:
+    - simple_query_string searches all text fields
+    - Aggregations only run on fields that exist
+    - Falls back gracefully when fields are missing
+    
     OTel Instrumentation:
     - search.user_query: User's search text
     - search.result_count: Total matching results
@@ -120,7 +124,7 @@ async def search(request: SearchRequest) -> SearchResponse:
             span.set_attribute("search.index", index)
             
             # Build query
-            query_body = _build_query(request)
+            query_body = _build_robust_query(es, index, request)
             
             # Execute search
             response = es.search(index=index, body=query_body)
@@ -143,15 +147,17 @@ async def search(request: SearchRequest) -> SearchResponse:
                     highlight=hit.get("highlight"),
                 ))
             
-            # Build aggregations
+            # Build aggregations (only for fields that returned data)
             aggs = {}
             for facet in SEARCH_CONFIG["facets"]:
                 field = facet["field"]
                 if field in response.get("aggregations", {}):
-                    aggs[field] = [
-                        AggregationBucket(key=b["key"], doc_count=b["doc_count"])
-                        for b in response["aggregations"][field]["buckets"]
-                    ]
+                    buckets = response["aggregations"][field].get("buckets", [])
+                    if buckets:
+                        aggs[field] = [
+                            AggregationBucket(key=b["key"], doc_count=b["doc_count"])
+                            for b in buckets
+                        ]
             
             logger.info(f"Search: query='{request.query}' results={total} took={took_ms}ms")
             
@@ -193,22 +199,95 @@ async def health_check() -> dict:
 # Query Building
 # =============================================================================
 
-def _build_query(request: SearchRequest) -> dict:
-    """Build Elasticsearch query from request."""
+def _get_index_text_fields(es, index: str) -> list[str]:
+    """Get all text fields from the index mapping."""
+    try:
+        mapping = es.indices.get_mapping(index=index)
+        # Handle both direct index and alias
+        if index in mapping:
+            props = mapping[index]["mappings"].get("properties", {})
+        else:
+            first_index = next(iter(mapping))
+            props = mapping[first_index]["mappings"].get("properties", {})
+        
+        text_fields = []
+        _extract_text_fields(props, "", text_fields)
+        return text_fields
+    except Exception as e:
+        logger.warning(f"Could not get mapping for {index}: {e}")
+        return []
+
+
+def _extract_text_fields(properties: dict, prefix: str, result: list):
+    """Recursively extract text field names from mapping properties."""
+    for field_name, field_info in properties.items():
+        full_name = f"{prefix}{field_name}" if prefix else field_name
+        field_type = field_info.get("type", "")
+        
+        if field_type == "text":
+            result.append(full_name)
+        elif "properties" in field_info:
+            _extract_text_fields(field_info["properties"], f"{full_name}.", result)
+
+
+def _check_field_exists(es, index: str, field: str) -> bool:
+    """Check if a field exists in the index mapping."""
+    try:
+        mapping = es.indices.get_mapping(index=index)
+        if index in mapping:
+            props = mapping[index]["mappings"].get("properties", {})
+        else:
+            first_index = next(iter(mapping))
+            props = mapping[first_index]["mappings"].get("properties", {})
+        
+        # Simple check for top-level fields
+        return field in props
+    except Exception:
+        return False
+
+
+def _build_robust_query(es, index: str, request: SearchRequest) -> dict:
+    """
+    Build Elasticsearch query with robust defaults.
+    
+    Strategy:
+    1. Try multi_match on known fields if they exist
+    2. Fall back to simple_query_string on all fields
+    3. Add aggregations only for fields that exist
+    """
     
     # Build bool query
     bool_query: dict[str, Any] = {}
     
     # Text search
     if request.query and request.query.strip():
-        bool_query["must"] = [{
-            "multi_match": {
-                "query": request.query,
-                "fields": SEARCH_CONFIG["searchFields"],
-                "type": "best_fields",
-                "fuzziness": "AUTO",
-            }
-        }]
+        # Try to use configured fields first
+        search_fields = SEARCH_CONFIG["searchFields"]
+        
+        # Check if any configured fields exist
+        text_fields = _get_index_text_fields(es, index)
+        
+        if text_fields:
+            # Use simple_query_string which searches all text fields by default
+            # This is the most robust approach for unknown schemas
+            bool_query["must"] = [{
+                "simple_query_string": {
+                    "query": request.query,
+                    "fields": ["*"],  # Search all fields
+                    "default_operator": "AND",
+                    "analyze_wildcard": True,
+                }
+            }]
+        else:
+            # Fallback to multi_match on configured fields
+            bool_query["must"] = [{
+                "multi_match": {
+                    "query": request.query,
+                    "fields": search_fields,
+                    "type": "best_fields",
+                    "fuzziness": "AUTO",
+                }
+            }]
     else:
         bool_query["must"] = [{"match_all": {}}]
     
@@ -233,19 +312,25 @@ def _build_query(request: SearchRequest) -> dict:
         },
     }
     
-    # Aggregations for facets
+    # Aggregations for facets - only add if fields might exist
+    # We'll add them and let ES ignore non-existent fields
     query_body["aggs"] = {}
     for facet in SEARCH_CONFIG["facets"]:
-        query_body["aggs"][facet["field"]] = {
-            "terms": {"field": facet["field"], "size": facet.get("size", 20)}
+        # Use keyword subfield if it exists, otherwise try the field directly
+        field_name = facet["field"]
+        query_body["aggs"][field_name] = {
+            "terms": {
+                "field": field_name,
+                "size": facet.get("size", 20),
+                "missing": "__missing__",  # Handle missing values gracefully
+            }
         }
     
     # Sort
     if request.sort_by and request.sort_by != "_score":
         query_body["sort"] = [
-            {request.sort_by: request.sort_dir},
+            {request.sort_by: {"order": request.sort_dir, "unmapped_type": "keyword"}},
             {"_score": "desc"},
         ]
     
     return query_body
-

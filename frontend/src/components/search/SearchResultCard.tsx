@@ -1,14 +1,12 @@
 /**
- * Simplified Search Result Card for Starter Template
+ * Search Result Card for Starter Template
  * 
- * A clean, minimal product card with:
- * - Product image
- * - Title and description
- * - Price and brand
- * - Click tracking
+ * Supports two modes:
+ * 1. Configured mode: Shows product card with title, image, price, etc.
+ * 2. Generic mode: Shows raw JSON when fields don't match expected structure
  * 
- * For the full-featured version with ranking explanation,
- * query rules, variants, etc., see the search-otel-ubi branch.
+ * The card automatically detects if expected fields exist and falls back
+ * to generic mode if the index hasn't been configured yet.
  */
 
 import {
@@ -19,6 +17,8 @@ import {
   EuiText,
   EuiSpacer,
   EuiImage,
+  EuiCodeBlock,
+  EuiToolTip,
 } from '@elastic/eui';
 
 interface SearchResultCardProps {
@@ -36,6 +36,71 @@ interface SearchResultCardProps {
   searchQuery?: string;
   /** Click handler */
   onClick?: (id: string, position: number) => void;
+  /** Force generic mode (for unconfigured indexes) */
+  forceGenericMode?: boolean;
+}
+
+/**
+ * Check if the source has recognizable product fields
+ */
+function hasKnownFields(source: Record<string, unknown>): boolean {
+  // Check for common title fields
+  const hasTitleField = !!(
+    source.title || 
+    source.name || 
+    source.product_name || 
+    source.item_name ||
+    source.headline
+  );
+  
+  // If we have at least a title-like field, consider it configured
+  return hasTitleField;
+}
+
+/**
+ * Extract the best available title from the source
+ */
+function extractTitle(source: Record<string, unknown>): string {
+  return (
+    source.title ||
+    source.name ||
+    source.product_name ||
+    source.item_name ||
+    source.headline ||
+    source.label ||
+    ''
+  ) as string;
+}
+
+/**
+ * Extract the best available description
+ */
+function extractDescription(source: Record<string, unknown>): string {
+  return (
+    source.description ||
+    source.desc ||
+    source.summary ||
+    source.body ||
+    source.content ||
+    source.text ||
+    ''
+  ) as string;
+}
+
+/**
+ * Extract the best available image URL
+ */
+function extractImageUrl(source: Record<string, unknown>): string {
+  return (
+    source.image_url ||
+    source.imageUrl ||
+    source.image ||
+    source.img ||
+    source.photo ||
+    source.thumbnail ||
+    source.picture ||
+    ''
+  ) as string;
 }
 
 export function SearchResultCard({
@@ -45,17 +110,10 @@ export function SearchResultCard({
   highlight,
   position,
   onClick,
+  forceGenericMode = false,
 }: SearchResultCardProps) {
-  // Extract common product fields (adjust based on your index mapping)
-  const title = (source.title || source.name || 'Untitled') as string;
-  const description = (source.description || '') as string;
-  const imageUrl = (source.image_url || source.imageUrl || source.image || '') as string;
-  const price = source.price as number | undefined;
-  const brand = (source.brand || '') as string;
-  const category = (source.category || '') as string;
-
-  // Get highlighted title if available
-  const displayTitle = highlight?.title?.[0] || highlight?.name?.[0] || title;
+  // Determine if we should use generic mode
+  const useGenericMode = forceGenericMode || !hasKnownFields(source);
 
   // Handle click
   const handleClick = () => {
@@ -63,6 +121,79 @@ export function SearchResultCard({
       onClick(id, position);
     }
   };
+
+  // Generic mode: Show raw JSON
+  if (useGenericMode) {
+    // Get first few meaningful fields for preview
+    const previewFields = Object.entries(source)
+      .filter(([key]) => !key.startsWith('_'))
+      .slice(0, 4);
+
+    return (
+      <EuiCard
+        title=""
+        onClick={handleClick}
+        paddingSize="s"
+        hasBorder
+        style={{ height: '100%', cursor: 'pointer' }}
+      >
+        {/* Document ID */}
+        <EuiToolTip content={`Document ID: ${id}`}>
+          <EuiBadge color="hollow" style={{ marginBottom: 8 }}>
+            #{position}
+          </EuiBadge>
+        </EuiToolTip>
+
+        {/* Preview fields */}
+        {previewFields.map(([key, value]) => (
+          <div key={key} style={{ marginBottom: 4 }}>
+            <EuiText size="xs" color="subdued">
+              <strong>{key}:</strong>
+            </EuiText>
+            <EuiText size="xs">
+              {typeof value === 'string' 
+                ? value.length > 100 ? value.substring(0, 100) + '...' : value
+                : JSON.stringify(value)?.substring(0, 100)}
+            </EuiText>
+          </div>
+        ))}
+
+        <EuiSpacer size="s" />
+
+        {/* Full JSON (collapsed) */}
+        <EuiCodeBlock
+          language="json"
+          fontSize="s"
+          paddingSize="s"
+          overflowHeight={120}
+          isCopyable
+        >
+          {JSON.stringify(source, null, 2)}
+        </EuiCodeBlock>
+
+        {/* Score */}
+        {score !== undefined && score !== null && (
+          <>
+            <EuiSpacer size="xs" />
+            <EuiText size="xs" color="subdued">
+              Score: {score.toFixed(2)}
+            </EuiText>
+          </>
+        )}
+      </EuiCard>
+    );
+  }
+
+  // Configured mode: Show product card
+  const title = extractTitle(source);
+  const description = extractDescription(source);
+  const imageUrl = extractImageUrl(source);
+  const price = source.price as number | undefined;
+  const brand = (source.brand || source.manufacturer || source.vendor || '') as string;
+  const category = (source.category || source.type || source.department || '') as string;
+
+  // Get highlighted title if available
+  const displayTitle = highlight?.title?.[0] || highlight?.name?.[0] || title || 'Untitled';
 
   // Format price
   const formatPrice = (value: number | undefined) => {

@@ -1,12 +1,13 @@
 /**
  * Simplified Search Page for Starter Template
  * 
- * A clean, minimal search page (~280 lines) with:
+ * A clean, minimal search page with:
  * - Search bar with suggestions
  * - Results grid with product cards
  * - Faceted filter sidebar
  * - Pagination
  * - OTel click tracking
+ * - Unconfigured index detection with warning banner
  * 
  * Removed features (see SearchPage.tsx for full version):
  * - Lab Mode / Ranking Pipeline
@@ -17,7 +18,7 @@
  * - Resizable sidebar panel
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { recordClickEvent } from '../otel';
 import {
   EuiPageTemplate,
@@ -35,11 +36,31 @@ import {
   EuiFacetButton,
   EuiFieldSearch,
   EuiButton,
+  EuiCode,
+  EuiAccordion,
+  EuiLink,
 } from '@elastic/eui';
 import { AppHeader } from '../components/layout/AppHeader';
 import { SearchResultCard } from '../components/search/SearchResultCard';
 import { useSearchSimple } from '../hooks/useSearchSimple';
 import { searchConfig } from '../config/searchConfig';
+
+interface FieldsConfig {
+  index: string;
+  configured: boolean;
+  fields: Array<{
+    name: string;
+    type: string;
+    searchable: boolean;
+    aggregatable: boolean;
+    likely_purpose: string | null;
+  }>;
+  suggested_config: {
+    searchFields: string[];
+    display: Record<string, string>;
+    facets: Array<{ field: string; label: string; size: number }>;
+  } | null;
+}
 
 export function SearchPageSimple() {
   const {
@@ -62,6 +83,37 @@ export function SearchPageSimple() {
 
   const [searchInput, setSearchInput] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
+  const [fieldsConfig, setFieldsConfig] = useState<FieldsConfig | null>(null);
+  const [fieldsLoading, setFieldsLoading] = useState(true);
+  const [fieldsError, setFieldsError] = useState<string | null>(null);
+
+  // Fetch field configuration on mount
+  useEffect(() => {
+    const fetchFieldsConfig = async () => {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+      try {
+        const response = await fetch(`${apiUrl}/api/search/fields`);
+        if (response.ok) {
+          const data = await response.json();
+          setFieldsConfig(data);
+        } else if (response.status === 400) {
+          // SEARCH_INDEX not configured
+          setFieldsError('Search index not configured');
+        } else {
+          setFieldsError(`Failed to load field config: ${response.status}`);
+        }
+      } catch (err) {
+        setFieldsError('Could not connect to backend');
+      } finally {
+        setFieldsLoading(false);
+      }
+    };
+
+    fetchFieldsConfig();
+  }, []);
+
+  // Determine if search is properly configured
+  const isConfigured = fieldsConfig?.configured ?? true;
 
   // Handle search submission
   const handleSearch = useCallback(() => {
@@ -88,6 +140,9 @@ export function SearchPageSimple() {
 
   // Render facet filters from aggregations
   const renderFacets = () => {
+    // Don't show facets if not configured
+    if (!isConfigured) return null;
+
     const facetConfigs = searchConfig.facets || [];
     
     return facetConfigs.map(facetConfig => {
@@ -124,6 +179,92 @@ export function SearchPageSimple() {
         </EuiPanel>
       );
     });
+  };
+
+  // Render configuration warning banner
+  const renderConfigWarning = () => {
+    if (fieldsLoading || isConfigured) return null;
+
+    return (
+      <>
+        <EuiCallOut
+          title="Search needs configuration"
+          color="warning"
+          iconType="wrench"
+        >
+          <p>
+            The search index <EuiCode>{fieldsConfig?.index || 'unknown'}</EuiCode> has fields 
+            that don't match the expected structure. Results are shown in raw JSON format.
+          </p>
+          
+          <EuiAccordion
+            id="config-instructions"
+            buttonContent="How to configure"
+            paddingSize="m"
+          >
+            <EuiText size="s">
+              <p><strong>Option 1: Use AI Assistant</strong></p>
+              <p>
+                Tell your AI coding assistant (Cursor/Claude Code):
+              </p>
+              <EuiCode>
+                "Configure the search page for my index. Check /api/search/fields for the field mapping."
+              </EuiCode>
+              
+              <EuiSpacer size="m" />
+              
+              <p><strong>Option 2: Manual Configuration</strong></p>
+              <ol>
+                <li>
+                  Check available fields: <EuiLink href="/api/search/fields" target="_blank">
+                    GET /api/search/fields
+                  </EuiLink>
+                </li>
+                <li>
+                  Edit <EuiCode>frontend/src/config/searchConfig.ts</EuiCode> to map your fields
+                </li>
+                <li>
+                  Update <EuiCode>backend/app/routes/search_simple.py</EuiCode> search fields
+                </li>
+              </ol>
+
+              {fieldsConfig?.suggested_config && (
+                <>
+                  <EuiSpacer size="m" />
+                  <p><strong>Suggested Configuration:</strong></p>
+                  <EuiCode language="json">
+                    {JSON.stringify(fieldsConfig.suggested_config, null, 2)}
+                  </EuiCode>
+                </>
+              )}
+            </EuiText>
+          </EuiAccordion>
+        </EuiCallOut>
+        <EuiSpacer size="l" />
+      </>
+    );
+  };
+
+  // Render ES connection error
+  const renderConnectionError = () => {
+    if (!fieldsError) return null;
+
+    return (
+      <>
+        <EuiCallOut
+          title="Elasticsearch not connected"
+          color="danger"
+          iconType="alert"
+        >
+          <p>{fieldsError}</p>
+          <p>
+            Run <EuiCode>./setup.sh</EuiCode> to configure Elasticsearch connection, 
+            or check that the backend server is running.
+          </p>
+        </EuiCallOut>
+        <EuiSpacer size="l" />
+      </>
+    );
   };
 
   // Render results grid
@@ -171,7 +312,7 @@ export function SearchPageSimple() {
       <>
         <EuiFlexGroup wrap gutterSize="l">
           {results.map((hit, index) => (
-            <EuiFlexItem key={hit.id} grow={false} style={{ width: 280 }}>
+            <EuiFlexItem key={hit.id} grow={false} style={{ width: isConfigured ? 280 : 350 }}>
               <SearchResultCard
                 source={hit.source}
                 id={hit.id}
@@ -179,6 +320,7 @@ export function SearchPageSimple() {
                 highlight={hit.highlight}
                 position={index + 1 + (page - 1) * 12}
                 searchQuery={query}
+                forceGenericMode={!isConfigured}
                 onClick={() => handleResultClick(
                   hit.id,
                   index + 1 + (page - 1) * 12,
@@ -223,15 +365,21 @@ export function SearchPageSimple() {
         <EuiPageTemplate.Section>
           {/* Page Title */}
           <EuiTitle size="l">
-            <h1>Search Products</h1>
+            <h1>Search {!isConfigured && '(Unconfigured)'}</h1>
           </EuiTitle>
           <EuiSpacer size="l" />
+
+          {/* Connection Error */}
+          {renderConnectionError()}
+
+          {/* Configuration Warning */}
+          {renderConfigWarning()}
 
           {/* Search Bar */}
           <EuiFlexGroup>
             <EuiFlexItem>
               <EuiFieldSearch
-                placeholder="Search products..."
+                placeholder="Search..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -256,6 +404,7 @@ export function SearchPageSimple() {
                   <p>
                     Found <strong>{total.toLocaleString()}</strong> results
                     {tookMs !== null && <> in {tookMs}ms</>}
+                    {!isConfigured && <> (showing raw JSON)</>}
                   </p>
                 ) : (
                   <p>No results found</p>
@@ -267,12 +416,14 @@ export function SearchPageSimple() {
 
           {/* Main Content: Sidebar + Results */}
           <EuiFlexGroup>
-            {/* Filter Sidebar */}
-            <EuiFlexItem grow={false} style={{ width: 250 }}>
-              <EuiFlexGroup direction="column" gutterSize="m">
-                {renderFacets()}
-              </EuiFlexGroup>
-            </EuiFlexItem>
+            {/* Filter Sidebar - only show if configured */}
+            {isConfigured && (
+              <EuiFlexItem grow={false} style={{ width: 250 }}>
+                <EuiFlexGroup direction="column" gutterSize="m">
+                  {renderFacets()}
+                </EuiFlexGroup>
+              </EuiFlexItem>
+            )}
 
             {/* Results Grid */}
             <EuiFlexItem>
@@ -286,4 +437,3 @@ export function SearchPageSimple() {
 }
 
 export default SearchPageSimple;
-
