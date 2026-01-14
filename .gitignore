@@ -68,3 +68,4 @@ backend/data/
 .beads/
 !.beads/.gitignore
 
+.setup-complete

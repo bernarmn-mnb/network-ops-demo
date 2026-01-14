@@ -652,8 +652,49 @@ def configure_elasticsearch() -> Dict[str, str]:
     index_name = ask("Search index name", default="products")
     env_vars["SEARCH_INDEX"] = index_name
     
+    # Update frontend searchConfig.ts with the index name
+    update_frontend_search_config(index_name)
+    
     print_success("Elasticsearch configured")
     return env_vars
+
+
+def update_frontend_search_config(index_name: str):
+    """Update frontend searchConfig.ts with the configured index name."""
+    config_path = "frontend/src/config/searchConfig.ts"
+    
+    if not os.path.exists(config_path):
+        print_warning(f"Could not find {config_path} - skipping frontend config update")
+        return
+    
+    try:
+        with open(config_path, "r") as f:
+            lines = f.readlines()
+        
+        import re
+        
+        # Find and update the index line in the actual config (not comments or interface)
+        # The actual config line looks like: '  index: "products",' (with a quoted string value)
+        updated = False
+        for i, line in enumerate(lines):
+            # Match lines with index: "value" pattern (actual config, not interface definition)
+            # Must have 2-space indent and contain a quoted string value
+            if re.match(r'^  index:\s*"[^"]+"', line):
+                old_line = line
+                new_line = re.sub(r'index:\s*"[^"]+"', f'index: "{index_name}"', line)
+                if new_line != old_line:
+                    lines[i] = new_line
+                    updated = True
+                    break
+        
+        if updated:
+            with open(config_path, "w") as f:
+                f.writelines(lines)
+            print_info(f"Updated frontend search config with index: {index_name}")
+        else:
+            print_warning("Frontend config unchanged - could not find index line")
+    except Exception as e:
+        print_warning(f"Could not update frontend config: {e}")
 
 
 def configure_otel() -> Dict[str, str]:
@@ -1157,6 +1198,39 @@ def main():
     print()
     print(f'   {Colors.CYAN}"Read and follow ONBOARDING.md"{Colors.ENDC}')
     print()
+    
+    # ==========================================================================
+    # Create setup-complete marker file
+    # ==========================================================================
+    create_setup_complete_marker(env_vars)
+
+
+def create_setup_complete_marker(env_vars: Dict[str, str]):
+    """Create .setup-complete marker file with setup metadata."""
+    import datetime
+    
+    features_configured = []
+    if env_vars.get("KIBANA_URL"):
+        features_configured.append("agent_builder")
+    if env_vars.get("ELASTIC_CLOUD_ID") or env_vars.get("ELASTICSEARCH_URL"):
+        features_configured.append("elasticsearch")
+    if env_vars.get("OTEL_EXPORTER_OTLP_ENDPOINT"):
+        features_configured.append("otel")
+    if env_vars.get("LLM_PROXY_URL"):
+        features_configured.append("llm_proxy")
+    
+    content = f"""# Setup completed successfully
+# This file is created by setup.sh to indicate successful setup
+# AI agents can check for this file to verify setup was run
+
+timestamp: {datetime.datetime.now().isoformat()}
+features: {', '.join(features_configured) if features_configured else 'none'}
+search_index: {env_vars.get('SEARCH_INDEX', '')}
+agent_id: {env_vars.get('AGENT_ID', '')}
+"""
+    
+    with open(".setup-complete", "w") as f:
+        f.write(content)
 
 
 if __name__ == "__main__":

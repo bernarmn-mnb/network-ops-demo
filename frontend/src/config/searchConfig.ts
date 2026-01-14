@@ -145,7 +145,7 @@ export interface SearchConfig {
  * To switch to recipes, replace this entire object with:
  * 
  * export const searchConfig: SearchConfig = {
- *   index: "recipes",
+ *   index: "search-ecommerce",
  *   queryTemplate: "simple",
  *   fields: {
  *     search: [
@@ -174,7 +174,7 @@ export const searchConfig: SearchConfig = {
   // -------------------------------------------------------------------------
   // Index & Query Settings
   // -------------------------------------------------------------------------
-  index: "products",
+  index: "search-ecommerce",
   queryTemplate: "simple",
   
   // For advanced relevancy, uncomment:

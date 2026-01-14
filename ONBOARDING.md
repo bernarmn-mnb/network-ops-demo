@@ -6,6 +6,16 @@
 
 ---
 
+## Prerequisites
+
+**Before running this onboarding, ensure:**
+1. You have run `./setup.sh` at least once
+2. The setup wizard completed successfully (creates `.setup-complete` marker file)
+
+If `.setup-complete` doesn't exist, tell the user to run `./setup.sh` first.
+
+---
+
 ## Instructions for AI Agent
 
 You are helping onboard a new user to this **Elastic Demo Starter** project. This is a multi-purpose demo platform supporting:
@@ -103,9 +113,29 @@ The project *intends* to use beads for issue tracking. Now verify the CLI is wor
 
 ### 4. Sanity Check Environment
 
-Verify the development environment is ready:
+Verify the development environment is ready.
 
-**Check these files/folders exist:**
+**Quick Check (Recommended):**
+
+First, check if setup was already completed:
+
+```
+Check: Does ./.setup-complete file exist?
+```
+
+If `.setup-complete` exists, read it to see:
+- When setup was run (`timestamp:` line)
+- What features are configured (`features:` line)
+- Search index name (`search_index:` line)
+
+**If `.setup-complete` does NOT exist:**
+> "Setup hasn't been run yet. Please run `./setup.sh` first, then come back to this onboarding."
+
+---
+
+**Detailed Checks (if .setup-complete exists):**
+
+Verify these files/folders exist:
 - [ ] `backend/.env` - Elastic configuration
 - [ ] `backend/venv/` - Python virtual environment  
 - [ ] `frontend/node_modules/` - Frontend dependencies
@@ -141,8 +171,16 @@ Verify the development environment is ready:
 
 ### 4b. Verify Servers Start
 
-Before proceeding, confirm the servers can actually run:
+Before proceeding, confirm the servers can actually run.
 
+**Option A: Use verify command (Quick)**
+```bash
+./dev verify
+```
+
+This checks .setup-complete, .env, venv, node_modules, and pings the health endpoint.
+
+**Option B: Start and check status**
 ```bash
 ./dev start
 ./dev status
@@ -153,6 +191,12 @@ Before proceeding, confirm the servers can actually run:
 Backend:  Running (PID: XXXX)
 Frontend: Running (PID: XXXX)
 ```
+
+**File-based verification (for agents with limited shell access):**
+- Check `.dev-pids/backend.pid` exists → backend was started
+- Check `.dev-pids/frontend.pid` exists → frontend was started
+- Check `.dev-pids/backend.port` for actual backend port
+- Check `.dev-pids/frontend.port` for actual frontend port
 
 **If servers don't start:**
 
@@ -455,6 +499,7 @@ If you need to create an API key:
 |------|-----------------|
 | Start servers | `./dev start` |
 | Stop servers | `./dev stop` |
+| **Verify setup** | `./dev verify` (quick health check) |
 | View logs | `./dev logs-snapshot` |
 | Check status | `./dev status` |
 | Reconfigure | `./setup.sh` (Elasticsearch, OTel, Agent Builder, LLM Proxy) |

@@ -432,6 +432,80 @@ cmd_open() {
     esac
 }
 
+cmd_verify() {
+    echo -e "${BLUE}🔍 Verifying setup...${NC}"
+    echo ""
+    
+    local all_pass=true
+    
+    # Check 1: .setup-complete marker
+    if [ -f ".setup-complete" ]; then
+        echo -e "✅ Setup completed ($(grep timestamp .setup-complete | cut -d' ' -f2))"
+    else
+        echo -e "${RED}❌ Setup not complete${NC} - run ./setup.sh first"
+        all_pass=false
+    fi
+    
+    # Check 2: backend/.env exists
+    if [ -f "backend/.env" ]; then
+        echo -e "✅ Backend configuration exists"
+    else
+        echo -e "${RED}❌ Missing backend/.env${NC}"
+        all_pass=false
+    fi
+    
+    # Check 3: Python venv
+    if [ -f "backend/venv/bin/python" ]; then
+        echo -e "✅ Python virtual environment"
+    else
+        echo -e "${RED}❌ Missing backend/venv${NC}"
+        all_pass=false
+    fi
+    
+    # Check 4: node_modules
+    if [ -d "frontend/node_modules" ]; then
+        echo -e "✅ Frontend dependencies"
+    else
+        echo -e "${RED}❌ Missing frontend/node_modules${NC}"
+        all_pass=false
+    fi
+    
+    # Check 5: hive-mind submodule
+    if [ -d "hive-mind/patterns" ]; then
+        echo -e "✅ Hive-mind knowledge base"
+    else
+        echo -e "${YELLOW}⚠️  Hive-mind empty${NC} - run: git submodule update --init"
+    fi
+    
+    # Check 6: If servers running, ping health
+    read_env_ports
+    local actual_backend_port=$BACKEND_PORT
+    if [ -f "$PID_DIR/backend.port" ]; then
+        actual_backend_port=$(cat "$PID_DIR/backend.port")
+    fi
+    
+    if is_running "$BACKEND_PID_FILE"; then
+        # Try to ping health endpoint
+        if curl -s --max-time 3 "http://localhost:$actual_backend_port/health" > /dev/null 2>&1; then
+            echo -e "✅ Backend health check passed"
+        else
+            echo -e "${YELLOW}⚠️  Backend running but health check failed${NC}"
+        fi
+    else
+        echo -e "${DIM}ℹ️  Servers not running (start with ./dev start)${NC}"
+    fi
+    
+    echo ""
+    if [ "$all_pass" = true ]; then
+        echo -e "${GREEN}✅ All checks passed!${NC}"
+        return 0
+    else
+        echo -e "${RED}❌ Some checks failed${NC}"
+        echo -e "${DIM}   Run ./setup.sh to fix${NC}"
+        return 1
+    fi
+}
+
 cmd_help() {
     read_env_ports
     
@@ -444,6 +518,7 @@ cmd_help() {
     echo "  stop           Stop all servers"
     echo "  restart        Restart (only needed after .env or dependency changes)"
     echo "  status         Show if running, ports, PIDs"
+    echo "  verify         Quick setup verification (checks .env, venv, etc.)"
     echo "  logs           Tail server logs (follows, use Ctrl+C to exit)"
     echo "  logs-snapshot  Show recent logs and exit (default: 50 lines)"
     echo "                 Usage: ./dev logs-snapshot [num_lines]"
@@ -473,6 +548,7 @@ case "${1:-help}" in
     stop)    cmd_stop ;;
     restart) cmd_restart ;;
     status)  cmd_status ;;
+    verify)  cmd_verify ;;
     logs)    cmd_logs ;;
     logs-snapshot) cmd_logs_snapshot "${2:-50}" ;;
     open)    cmd_open ;;
