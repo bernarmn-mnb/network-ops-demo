@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/logo.png" alt="Demo Starter" width="300">
+</p>
+
 # Elastic Demo Starter
 
 [![CI](https://github.com/elastic/elastic-demo-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/elastic/elastic-demo-starter/actions/workflows/ci.yml)
