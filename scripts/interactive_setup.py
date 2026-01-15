@@ -16,6 +16,7 @@ import socket
 import urllib.request
 import urllib.error
 from typing import Optional, Dict, List, Tuple
+import base64
 from dataclasses import dataclass
 from enum import Enum
 
@@ -365,6 +366,112 @@ def get_prerequisites() -> List[Prerequisite]:
     return prereqs
 
 
+def check_node_version() -> bool:
+    """Check if Node.js version is 18+."""
+    try:
+        result = subprocess.run(["node", "--version"], capture_output=True, text=True)
+        version = result.stdout.strip().lstrip('v')
+        major = int(version.split('.')[0])
+        if major < 18:
+            print_warning(f"Node.js {version} detected. Version 18+ is recommended.")
+            return False
+        return True
+    except Exception:
+        return False
+
+
+def check_submodules() -> bool:
+    """Check if git submodules are initialized."""
+    hive_mind_exists = os.path.exists("hive-mind")
+    hive_mind_populated = os.path.exists("hive-mind/patterns")
+    
+    if not hive_mind_exists:
+        print_info("hive-mind folder not found (may not be a git clone)")
+        return True  # Not a blocker
+    
+    if hive_mind_exists and not hive_mind_populated:
+        print_warning("Hive-mind submodule exists but is empty")
+        if ask_yes_no("Initialize git submodules now?"):
+            try:
+                print("   Initializing submodules...")
+                subprocess.run(
+                    ["git", "submodule", "update", "--init", "--recursive"],
+                    check=True, stdin=subprocess.DEVNULL
+                )
+                print_success("Submodules initialized")
+                return True
+            except subprocess.CalledProcessError as e:
+                print_error(f"Failed to initialize submodules: {e}")
+                print_info("You can try manually: git submodule update --init --recursive")
+                return False
+        else:
+            print_info("Skipping - AI coding assistance will be limited without hive-mind patterns")
+            return True
+    
+    return True
+
+
+def check_network_connectivity() -> bool:
+    """Check if we can reach required services."""
+    print("\n   Checking network connectivity...")
+    
+    endpoints = [
+        ("cloud.elastic.co", "Elastic Cloud"),
+        ("registry.npmjs.org", "npm registry"),
+        ("pypi.org", "Python packages"),
+    ]
+    
+    all_ok = True
+    for host, name in endpoints:
+        try:
+            urllib.request.urlopen(f"https://{host}", timeout=5)
+            print(f"   {Colors.GREEN}✓{Colors.ENDC} {name}")
+        except Exception:
+            print(f"   {Colors.WARNING}⚠{Colors.ENDC} Cannot reach {name} ({host})")
+            all_ok = False
+    
+    if not all_ok:
+        print_warning("Some services are unreachable. This may cause issues during setup.")
+        if not ask_yes_no("Continue anyway?", default="no"):
+            return False
+    
+    return True
+
+
+def validate_api_key_format(key: str) -> Tuple[bool, str]:
+    """
+    Validate that API key looks correct.
+    Returns (is_valid, cleaned_key).
+    """
+    import base64
+    
+    # Strip whitespace
+    key = key.strip()
+    
+    # Check for common mistakes
+    if not key:
+        return False, key
+    
+    # Too short - probably pasted the ID instead of the encoded key
+    if len(key) < 20:
+        print_warning("API key looks too short.")
+        print_info("Make sure you copied the 'Encoded' key, not the 'ID'.")
+        print_info("The encoded key is the long Base64 string shown when you create the key.")
+        if not ask_yes_no("Use this value anyway?", default="no"):
+            return False, key
+    
+    # Try base64 decode
+    try:
+        base64.b64decode(key)
+    except Exception:
+        print_warning("API key doesn't appear to be Base64 encoded.")
+        print_info("When creating an API key in Kibana, copy the 'Encoded' value.")
+        if not ask_yes_no("Use this value anyway?", default="no"):
+            return False, key
+    
+    return True, key
+
+
 def install_prerequisite(prereq: Prerequisite, os_info: OSInfo) -> bool:
     """Install a single prerequisite."""
     cmd = prereq.get_install_cmd(os_info)
@@ -421,7 +528,15 @@ def configure_agent_builder() -> Dict[str, str]:
     
     while True:
         kibana_url = ask("Kibana URL")
-        api_key = ask("API Key")
+        api_key_raw = ask("API Key")
+        
+        # Validate API key format
+        is_valid, api_key = validate_api_key_format(api_key_raw)
+        if not is_valid:
+            if not ask_yes_no("Try entering credentials again?"):
+                print_info("You can configure this later by editing backend/.env")
+                return {}
+            continue
         
         agents = validate_and_list_agents(kibana_url, api_key)
         
@@ -997,6 +1112,10 @@ def main():
                 print_error(f"{prereq.name} not found")
                 missing_required.append(prereq)
         
+        # Check Node.js version
+        if check_command("node"):
+            check_node_version()
+        
         if missing_required:
             print(f"\n{Colors.BOLD}Missing required prerequisites:{Colors.ENDC}")
             for prereq in missing_required:
@@ -1014,6 +1133,13 @@ def main():
             else:
                 print_error("Please install the missing prerequisites manually.")
                 sys.exit(1)
+        
+        # Check git submodules
+        check_submodules()
+        
+        # Check network connectivity
+        if not check_network_connectivity():
+            sys.exit(1)
     
     # ==========================================================================
     # Step 2: Feature Selection
@@ -1110,19 +1236,35 @@ def main():
             print_info("node_modules exists, skipping install")
         else:
             try:
-                # Use non-interactive/silent flags and redirect stdin/stdout
-                # to prevent output interleaving with prompts
+                # Use non-interactive/silent flags
                 if pkg_manager == "yarn":
-                    cmd = [pkg_manager, "install", "--non-interactive", "--silent"]
+                    cmd = [pkg_manager, "install", "--non-interactive"]
                 else:
-                    cmd = [pkg_manager, "install", "--no-fund", "--no-audit", "--silent"]
+                    cmd = [pkg_manager, "install", "--no-fund", "--no-audit"]
                 
-                subprocess.run(cmd, cwd="frontend", check=True, 
-                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL)
-                print_success("Frontend dependencies installed")
-            except subprocess.CalledProcessError:
-                print_error("Frontend installation failed")
+                # Capture output so we can show errors if it fails
+                result = subprocess.run(
+                    cmd, cwd="frontend",
+                    stdin=subprocess.DEVNULL,
+                    capture_output=True,
+                    text=True
+                )
+                
+                if result.returncode == 0:
+                    print_success("Frontend dependencies installed")
+                else:
+                    print_error("Frontend installation failed")
+                    if result.stderr:
+                        # Show last 500 chars of error output
+                        error_preview = result.stderr[-500:] if len(result.stderr) > 500 else result.stderr
+                        print(f"   {Colors.DIM}{error_preview}{Colors.ENDC}")
+                    print_info(f"Try manually: cd frontend && {pkg_manager} install")
+                    
+            except FileNotFoundError:
+                print_error(f"{pkg_manager} not found")
+                print_info("Install Node.js from https://nodejs.org/")
+            except subprocess.CalledProcessError as e:
+                print_error(f"Frontend installation failed: {e}")
     
     # ==========================================================================
     # Step 5: Branding (Optional)

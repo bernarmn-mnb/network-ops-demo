@@ -9,10 +9,13 @@
 ## Prerequisites
 
 **Before running this onboarding, ensure:**
-1. You have run `./setup.sh` at least once
-2. The setup wizard completed successfully (creates `.setup-complete` marker file)
+1. You have verified prerequisites by running `./preflight-check.sh`
+2. You have run `./setup.sh` at least once
+3. The setup wizard completed successfully (creates `.setup-complete` marker file)
 
 If `.setup-complete` doesn't exist, tell the user to run `./setup.sh` first.
+
+> **See also**: [PREREQUISITES.md](./PREREQUISITES.md) for detailed information about mandatory, recommended, and optional tools.
 
 ---
 
@@ -497,12 +500,14 @@ If you need to create an API key:
 
 | Task | Command/Location |
 |------|-----------------|
+| **Pre-flight check** | `./preflight-check.sh` (verify prerequisites) |
 | Start servers | `./dev start` |
 | Stop servers | `./dev stop` |
 | **Verify setup** | `./dev verify` (quick health check) |
 | View logs | `./dev logs-snapshot` |
 | Check status | `./dev status` |
 | Reconfigure | `./setup.sh` (Elasticsearch, OTel, Agent Builder, LLM Proxy) |
+| Prerequisites guide | `PREREQUISITES.md` |
 | Chat page | http://localhost:3000/chat |
 | A2A page | http://localhost:3000/a2a |
 | Search page | http://localhost:3000/search |

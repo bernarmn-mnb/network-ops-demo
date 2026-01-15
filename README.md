@@ -33,17 +33,18 @@ The setup script configures context files (`.cursorrules`, `CLAUDE.md`) that tea
 
 ### System Requirements
 
-The setup script **automatically checks and offers to install** these:
+Run `./preflight-check.sh` to verify all requirements, or check manually:
 
-| Requirement | Purpose | Auto-install? |
-|-------------|---------|---------------|
-| **Python 3.8+** | Backend server | ✅ Yes (via brew/apt) |
-| **Node.js 18+** | Frontend build | ✅ Yes (via brew/apt) |
-| **Git** | Clone repo | ✅ Yes |
-| **GitHub CLI (`gh`)** | Create private repo | Optional |
-| Yarn | Faster npm alternative | Optional |
-| Docker | Container deployment | Optional |
-| Go | Beads issue tracker | Optional |
+| Requirement | Minimum | Purpose | Status |
+|-------------|---------|---------|--------|
+| **Python** | 3.8+ | Backend server (FastAPI) | **Required** - setup fails if missing/old |
+| **Node.js** | 18+ | Frontend build (Vite) | **Required** - warns if older |
+| **Git** | Any | Clone repo, submodules | **Required** |
+| GitHub CLI (`gh`) | Any | Easier cloning/auth | Recommended |
+| Yarn | Any | Faster npm alternative | Recommended |
+| Firecrawl MCP | - | AI branding extraction | Optional (see [PREREQUISITES.md](./PREREQUISITES.md)) |
+| Docker | Any | Container deployment | Optional |
+| Beads (`bd`) | Any | Issue tracking | Optional |
 
 ### Elastic Requirements
 
@@ -56,10 +57,22 @@ You'll need access to an **Elastic Agent Builder** deployment:
 
 ## Quick Start
 
+### 0. Pre-flight Check (Recommended)
+
+After cloning, verify your environment has all prerequisites:
+
+```bash
+./preflight-check.sh
+```
+
+This checks for Python 3.8+, Node.js 18+, Git, and optional tools like GitHub CLI and Yarn. Run this **before** `./setup.sh` to catch issues early.
+
+> **Full prerequisites guide**: See [PREREQUISITES.md](./PREREQUISITES.md) for detailed installation instructions.
+
 ### 1. Clone the Repository
 
 ```bash
-# Using GitHub CLI (recommended for private repos)
+# Using GitHub CLI (recommended)
 gh repo clone elastic/elastic-demo-starter my-demo
 
 # OR using git directly
@@ -89,15 +102,18 @@ This downloads the `hive-mind/` shared knowledge base.
 ```
 
 The wizard will:
-1. ✅ Check prerequisites (Python, Node) - offers to install if missing
-2. 🎯 **Ask which features you want to configure:**
+1. ✅ **Validate environment** - Python 3.8+ (fails early if too old), Node.js 18+ (warns if older)
+2. 🔌 **Check network** - Verifies connectivity to Elastic Cloud, npm, PyPI
+3. 📦 **Initialize submodules** - Offers to fix if hive-mind is empty
+4. 🎯 **Ask which features you want to configure:**
    - Agent Builder (Chat, Demo, Audit, MCP)
+   - Elasticsearch (Search Page, Analytics, Faceted Search)
+   - OpenTelemetry (APM Traces, Click Tracking)
    - LLM Proxy (A2A Multi-Agent)
-   - *(More coming: Elasticsearch, OTEL)*
-3. 🔧 Configure only what you selected
-4. 📦 Install dependencies
-5. 🎨 Set up branding (optional)
-6. 🚀 Launch the demo
+5. 🔧 **Validate credentials** - Warns if API key format looks wrong
+6. 📦 **Install dependencies** - Shows errors if installation fails
+7. 🎨 **Set up branding** (optional)
+8. 🚀 **Launch the demo**
 
 > **Tip**: You can re-run `./setup.sh` anytime to add more features or change configuration.
 
@@ -106,11 +122,14 @@ The wizard will:
 After setup, use the `./dev` script to manage servers:
 
 ```bash
-./dev start    # Start servers in background
-./dev stop     # Stop servers
-./dev status   # Check if running
-./dev logs     # View server logs
-./dev open     # Open browser
+./dev start       # Start servers in background
+./dev stop        # Stop servers
+./dev status      # Check if running
+./dev verify      # Quick health check (setup, config, servers)
+./dev test-agent  # Test Agent Builder connectivity
+./dev logs        # View server logs (follows)
+./dev logs-snapshot  # View recent logs and exit
+./dev open        # Open browser
 ```
 
 Both servers **auto-reload** on code changes - no restart needed!
@@ -190,14 +209,41 @@ No `.env` needed! The Vite config proxies `/api` to the backend automatically.
 
 ## Features
 
-- ✅ SSE streaming from Agent Builder
+### Agent Builder Integration
+- ✅ SSE streaming chat with Agent Builder
 - ✅ Real-time reasoning display
 - ✅ Tool call visualization
-- ✅ Dark/light theme toggle
-- ✅ Conversation persistence
+- ✅ Conversation persistence & audit trail
 - ✅ Stream cancellation
-- ✅ Accessible chat interface
+
+### Search & Analytics
+- ✅ Elasticsearch search with faceted filtering
+- ✅ RetrieverBuilder for advanced queries
+- ✅ Search analytics (CTR, MRR, zero-results tracking)
+- ✅ ES|QL powered dashboards
+
+### Multi-Agent (A2A)
+- ✅ LLM coordinator for multi-agent orchestration
+- ✅ Connect multiple Agent Builder agents
+- ✅ Unified conversation interface
+
+### Observability
+- ✅ OpenTelemetry instrumentation
+- ✅ APM traces for backend & search
+- ✅ Click tracking & user journey analysis
+
+### UI & Branding
+- ✅ Dark/light theme toggle
 - ✅ Multi-brand theming with Brand Editor
+- ✅ AI-powered brand extraction from websites
+- ✅ EUI (Elastic UI) components
+- ✅ Accessible chat interface
+
+### Developer Experience
+- ✅ Pre-flight environment check script
+- ✅ Interactive setup wizard with validation
+- ✅ Hot-reload for frontend & backend
+- ✅ MCP server explorer
 
 ## Branding
 
@@ -379,9 +425,12 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 ├── scripts/
 │   └── interactive_setup.py  # Setup wizard
 │
-├── create-demo.sh            # One-liner installer
+├── preflight-check.sh        # Pre-clone environment check
 ├── setup.sh                  # Setup launcher
-└── dev                       # Server management script
+├── dev                       # Server management script
+├── PREREQUISITES.md          # Detailed prerequisites guide
+├── ONBOARDING.md             # AI assistant onboarding prompt
+└── BRANDING.md               # Branding documentation
 ```
 
 ## Key Lessons Learned
@@ -509,4 +558,36 @@ You can re-run `./setup.sh` anytime to:
 - Reset and start fresh
 
 The wizard remembers what's already configured and lets you choose what to update.
+
+---
+
+## Troubleshooting
+
+### Quick Diagnostics
+
+```bash
+./preflight-check.sh  # Check prerequisites
+./dev verify          # Check setup completeness
+./dev status          # Check if servers running
+./dev logs-snapshot   # View recent logs
+./dev test-agent      # Test Agent Builder connection
+```
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| "Python not found" or version too old | Install Python 3.8+: `brew install python3` |
+| "Node not found" or version too old | Install Node 18+: `brew install node` |
+| hive-mind folder empty | Run: `git submodule update --init --recursive` |
+| API key errors (401) | Regenerate key in Kibana → Stack Management → API Keys |
+| Agent not found | Run `./setup.sh` to list and select valid agents |
+| Frontend won't start | Check `./dev logs-snapshot`, try `cd frontend && yarn install` |
+| Backend won't start | Check `./dev logs-snapshot`, try `cd backend && ./venv/bin/pip install -r requirements.txt` |
+
+### Detailed Troubleshooting
+
+See **[hive-mind/troubleshooting/](./hive-mind/troubleshooting/)** for in-depth guides:
+- [Agent Builder Error Reference](./hive-mind/troubleshooting/AGENT_BUILDER_ERROR_REFERENCE.md)
+- [OTel Environment Variables](./hive-mind/troubleshooting/OTEL_ENV_VAR_FORMATTING.md)
 
