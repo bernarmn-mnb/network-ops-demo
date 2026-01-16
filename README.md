@@ -300,8 +300,14 @@ This project optionally supports **[Beads](https://github.com/steveyegge/beads)*
 The setup script offers to install beads. If you skipped it:
 
 ```bash
-# Install (requires Go)
+# Install via Homebrew (recommended)
 brew install steveyegge/beads/bd
+
+# Or via npm
+npm install -g @anthropic/bd
+
+# Or via install script
+curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
 
 # Initialize in your project
 bd init
@@ -590,4 +596,3 @@ The wizard remembers what's already configured and lets you choose what to updat
 See **[hive-mind/troubleshooting/](./hive-mind/troubleshooting/)** for in-depth guides:
 - [Agent Builder Error Reference](./hive-mind/troubleshooting/AGENT_BUILDER_ERROR_REFERENCE.md)
 - [OTel Environment Variables](./hive-mind/troubleshooting/OTEL_ENV_VAR_FORMATTING.md)
-
