@@ -439,6 +439,27 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 └── BRANDING.md               # Branding documentation
 ```
 
+## Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [ONBOARDING.md](./ONBOARDING.md) | First-time setup guide for AI assistants |
+| [CUSTOMIZATION.md](./CUSTOMIZATION.md) | Chat interface customization options |
+| [BRANDING.md](./BRANDING.md) | Brand theming system documentation |
+| [docs/PAGES.md](./docs/PAGES.md) | Page reference for demo builders |
+| [DEMO_GUIDE_TEMPLATE.md](./DEMO_GUIDE_TEMPLATE.md) | Template for documenting your demo |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | How to contribute to the template |
+
+### Creating a Demo Guide
+
+When building a demo for a specific customer or use case, copy the template:
+
+```bash
+cp DEMO_GUIDE_TEMPLATE.md DEMO_GUIDE.md
+```
+
+Then fill in the sections to document your demo's configuration, flow, and customizations.
+
 ## Key Lessons Learned
 
 ### API Endpoint Discovery

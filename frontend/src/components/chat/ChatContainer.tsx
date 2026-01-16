@@ -5,9 +5,11 @@
  * - Message list with auto-scroll
  * - Chat input
  * - Header with reset option
+ * 
+ * Exposes sendMessage via ref for external triggering (e.g., demo prompt pills)
  */
 
-import React, { useRef, useEffect, useCallback } from 'react'
+import React, { useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
 import {
   EuiFlexGroup,
   EuiFlexItem,
@@ -31,12 +33,22 @@ export interface ChatContainerProps {
   suggestions?: Suggestion[]
 }
 
-export function ChatContainer({
+/** Ref handle for external control of the chat */
+export interface ChatContainerRef {
+  /** Send a message programmatically */
+  sendMessage: (message: string) => void
+  /** Reset the conversation */
+  resetConversation: () => void
+  /** Whether the chat is currently loading */
+  isLoading: boolean
+}
+
+export const ChatContainer = forwardRef<ChatContainerRef, ChatContainerProps>(function ChatContainer({
   title = 'Elastic Agent',
   greeting = "Hello! I'm your AI assistant. How can I help you today?",
   placeholder = "Type your message...",
   suggestions = [],
-}: ChatContainerProps) {
+}, ref) {
   const {
     messages,
     isLoading,
@@ -44,6 +56,13 @@ export function ChatContainer({
     cancelStream,
     resetConversation,
   } = useAgentChat({ initialGreeting: greeting })
+
+  // Expose methods via ref for external control
+  useImperativeHandle(ref, () => ({
+    sendMessage,
+    resetConversation,
+    isLoading,
+  }), [sendMessage, resetConversation, isLoading])
 
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -231,4 +250,4 @@ export function ChatContainer({
       `}</style>
     </div>
   )
-}
+})

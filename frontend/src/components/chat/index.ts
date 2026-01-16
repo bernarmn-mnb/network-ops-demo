@@ -4,7 +4,7 @@
  * All chat-related components for the Agent Builder integration.
  */
 
-export { ChatContainer, type ChatContainerProps } from './ChatContainer';
+export { ChatContainer, type ChatContainerProps, type ChatContainerRef } from './ChatContainer';
 export { ChatInput } from './ChatInput';
 export { MarkdownContent } from './MarkdownContent';
 export { AgentEmptyState } from './AgentEmptyState';

@@ -7,12 +7,14 @@ import { BrandEditorPage } from './pages/BrandEditorPage'
 import { AuditPage } from './pages/AuditPage'
 import { MCPExplorerPage } from './pages/MCPExplorerPage'
 import { SearchPageSimple } from './pages/SearchPageSimple'
+import { DemoGuidePage } from './pages/DemoGuidePage'
 
 /**
  * Main App Component
  * 
  * Routes:
  * - / : Welcome page with onboarding for new users
+ * - /guide : Demo guide with presenter notes and demo flow
  * - /chat : Streaming chat interface with Agent Builder
  * - /a2a-chat : A2A coordinator chat (multi-agent orchestration)
  * - /branded : Branded demo with customizable brand theme
@@ -25,6 +27,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<WelcomePage />} />
+      <Route path="/guide" element={<DemoGuidePage />} />
       <Route path="/chat" element={<ChatPage />} />
       <Route path="/a2a-chat" element={<A2AChatPage />} />
       <Route path="/branded" element={<BrandedDemoPage />} />

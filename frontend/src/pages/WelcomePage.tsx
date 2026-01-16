@@ -1,11 +1,10 @@
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import {
   EuiPageTemplate,
   EuiTitle,
   EuiText,
   EuiSpacer,
-  EuiButton,
   EuiCallOut,
   EuiFlexGroup,
   EuiFlexItem,
@@ -94,6 +93,16 @@ const FEATURES: Feature[] = [
 
   // Development Tools
   {
+    id: 'guide',
+    path: '/guide',
+    title: 'Demo Guide',
+    description: 'Presenter guide with demo flow, talking points, and quick navigation. Customize this for your specific demo.',
+    icon: 'training',
+    category: 'tools',
+    requirements: {},
+    useCase: 'Guide yourself or others through the demo with structured scenarios',
+  },
+  {
     id: 'audit',
     path: '/audit',
     title: 'Conversation Audit',
@@ -160,6 +169,7 @@ interface ConnectionStatus {
 
 export function WelcomePage() {
   const { brand } = useBrand()
+  const navigate = useNavigate()
   const [status, setStatus] = useState<ConnectionStatus>({
     agentConnected: false,
     llmProxyConfigured: false,
@@ -378,25 +388,16 @@ export function WelcomePage() {
                         }
                         description={feature.description}
                         footer={
-                          <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
-                            <EuiFlexItem grow={false}>
-                              <EuiText size="xs" color="subdued">
-                                <em>{feature.useCase}</em>
-                              </EuiText>
-                            </EuiFlexItem>
-                            <EuiFlexItem grow={false}>
-                              <Link to={feature.path}>
-                                <EuiButton size="s" isDisabled={!ready}>
-                                  {ready ? 'Open' : 'Configure'}
-                                </EuiButton>
-                              </Link>
-                            </EuiFlexItem>
-                          </EuiFlexGroup>
+                          <EuiText size="xs" color="subdued">
+                            <em>{feature.useCase}</em>
+                          </EuiText>
                         }
+                        onClick={ready ? () => navigate(feature.path) : undefined}
                         paddingSize="m"
                         style={{ 
                           opacity: ready ? 1 : 0.7,
                           height: '100%',
+                          cursor: ready ? 'pointer' : 'default',
                         }}
                       />
                     </EuiFlexItem>

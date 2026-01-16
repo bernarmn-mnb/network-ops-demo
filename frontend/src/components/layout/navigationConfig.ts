@@ -42,6 +42,12 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'home',
     description: 'Feature overview & setup guide',
   },
+  {
+    path: '/guide',
+    label: 'Guide',
+    icon: 'training',
+    description: 'Demo guide with presenter notes',
+  },
   
   // Demo Building Features
   {
