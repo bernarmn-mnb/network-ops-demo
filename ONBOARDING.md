@@ -97,7 +97,7 @@ The project *intends* to use beads for issue tracking. Now verify the CLI is wor
 1. Run `bd ready` to test the CLI
 2. **If it works:** Tell the user "Beads is configured. I'll use `bd ready` to check for work and reference issues in commits as `[bd-XX]`."
 3. **If `bd` command not found:** The beads CLI isn't installed. Tell user:
-   > "Beads folder exists but CLI not found. Install with: `go install github.com/benbarten/beads/cmd/bd@latest` (requires Go)"
+   > "Beads folder exists but CLI not found. Install with: `brew install steveyegge/beads/bd` or see https://github.com/steveyegge/beads"
 4. **If `bd` fails with database error:** The database needs initialization. Run:
    ```
    bd stats

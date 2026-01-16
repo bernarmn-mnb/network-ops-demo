@@ -130,11 +130,14 @@ These enable specific features but are not needed for the core demo.
 
 **Setup**:
 ```bash
-# Requires Go
-go install github.com/benbarten/beads/cmd/bd@latest
+# Install via Homebrew (recommended)
+brew install steveyegge/beads/bd
 
-# Add to PATH (add to ~/.zshrc or ~/.bashrc)
-export PATH=$PATH:$(go env GOPATH)/bin
+# Or via npm
+npm install -g @anthropic/bd
+
+# Or via install script
+curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
 ```
 
 **Usage**:

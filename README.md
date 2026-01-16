@@ -286,7 +286,7 @@ See **[BRANDING.md](./BRANDING.md)**
 
 ## Issue Tracking with Beads (Optional)
 
-This project optionally supports **[Beads](https://github.com/benbarten/beads)** (`bd`), a lightweight issue tracker designed for AI-assisted development.
+This project optionally supports **[Beads](https://github.com/steveyegge/beads)** (`bd`), a lightweight issue tracker designed for AI-assisted development.
 
 ### Why Beads?
 
@@ -301,7 +301,7 @@ The setup script offers to install beads. If you skipped it:
 
 ```bash
 # Install (requires Go)
-go install github.com/benbarten/beads/cmd/bd@latest
+brew install steveyegge/beads/bd
 
 # Initialize in your project
 bd init
