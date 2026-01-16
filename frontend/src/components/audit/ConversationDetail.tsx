@@ -207,7 +207,7 @@ function RoundDisplay({ round, index }: { round: ConversationRound; index: numbe
         {round.response && (
           <EuiComment
             username="Assistant"
-            timelineAvatar={<EuiAvatar name="Assistant" size="m" iconType="discuss" color="#00BFB3" />}
+            timelineAvatar={<EuiAvatar name="Assistant" size="m" iconType="newChat" color="#00BFB3" />}
             event="responded"
           >
             <EuiPanel paddingSize="s" hasShadow={false} hasBorder>

@@ -319,7 +319,7 @@ export function A2AChatContainer({
       >
         {isEmpty ? (
           <EuiEmptyPrompt
-            iconType="discuss"
+            iconType="newChat"
             title={<h3>Start a conversation</h3>}
             body={
               <EuiText color="subdued">
