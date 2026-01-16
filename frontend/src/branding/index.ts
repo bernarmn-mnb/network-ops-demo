@@ -148,8 +148,8 @@ const brandsRegistry: Record<string, BrandTheme> = {
 
 // Auto-register all discovered theme files
 for (const [path, module] of Object.entries(themeModules)) {
-  // Skip example theme
-  if (path.includes('exampleTheme')) {
+  // Skip example theme and elasticTheme (elasticTheme is already the default)
+  if (path.includes('exampleTheme') || path.includes('elasticTheme')) {
     continue
   }
   

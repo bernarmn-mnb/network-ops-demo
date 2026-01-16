@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   EuiPageTemplate,
   EuiTitle,
@@ -19,10 +21,24 @@ import { AppHeader } from '../components/layout/AppHeader'
  *
  * Showcases the current brand theme with dynamic content.
  * Uses brand context for all colors and styling via CSS variables.
+ * Reads ?brand=<id> query param to switch to a specific brand for preview.
  * Note: BrandProvider is at app root, no need to wrap again here.
  */
 export function BrandedDemoPage() {
-  const { brand } = useBrand()
+  const [searchParams] = useSearchParams()
+  const { brand, setBrand, refreshBrands } = useBrand()
+  
+  // Switch to the brand specified in URL query param
+  useEffect(() => {
+    const brandIdFromUrl = searchParams.get('brand')
+    if (brandIdFromUrl && brandIdFromUrl !== brand.id) {
+      // First refresh brands to ensure we have the latest from API
+      // then try to set the brand
+      refreshBrands().then(() => {
+        setBrand(brandIdFromUrl)
+      })
+    }
+  }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ backgroundColor: 'var(--brand-background)', minHeight: '100vh' }}>

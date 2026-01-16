@@ -30,6 +30,7 @@ import {
 import { AppHeader } from '../components/layout/AppHeader'
 import { PageInfoButton, PAGE_INFO } from '../components/layout/PageInfoButton'
 import { useNavigate } from 'react-router-dom'
+import { useBrand } from '../components/providers/BrandedThemeProvider'
 
 /**
  * Brand Editor Page
@@ -475,6 +476,7 @@ function BrandEditorModal({
 
 export function BrandEditorPage() {
   const navigate = useNavigate()
+  const { refreshBrands: refreshGlobalBrands } = useBrand()
   const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -506,6 +508,8 @@ export function BrandEditorPage() {
       await updateBrand(brand.id, brand)
     }
     await loadBrands()
+    // Also refresh the global brand context so the switcher updates
+    await refreshGlobalBrands()
   }
 
   const handleDelete = async (id: string) => {
@@ -514,6 +518,8 @@ export function BrandEditorPage() {
     try {
       await deleteBrand(id)
       await loadBrands()
+      // Also refresh the global brand context
+      await refreshGlobalBrands()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete')
     }

@@ -1,7 +1,7 @@
-import { useState, useEffect, createContext, useContext, type ReactNode } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react'
 import { EuiProvider, EuiThemeColorMode } from '@elastic/eui'
 import createCache from '@emotion/cache'
-import { BrandTheme, brands, getSelectedBrandId, setSelectedBrand as persistBrand } from '../../branding'
+import { BrandTheme, brands as staticBrands, getSelectedBrandId, setSelectedBrand as persistBrand, addBrand } from '../../branding'
 
 /**
  * Branded Theme Provider
@@ -34,6 +34,7 @@ interface BrandedThemeContextType {
   brandId: string
   setBrand: (brandId: string) => void
   availableBrands: BrandTheme[]
+  refreshBrands: () => Promise<void>
 }
 
 const BrandedThemeContext = createContext<BrandedThemeContextType | null>(null)
@@ -57,8 +58,8 @@ export function useTheme() {
 }
 
 export function useBrand() {
-  const { brand, brandId, setBrand, availableBrands } = useBrandedTheme()
-  return { brand, brandId, setBrand, availableBrands }
+  const { brand, brandId, setBrand, availableBrands, refreshBrands } = useBrandedTheme()
+  return { brand, brandId, setBrand, availableBrands, refreshBrands }
 }
 
 // ============================================================================
@@ -138,6 +139,53 @@ interface BrandedThemeProviderProps {
   defaultColorMode?: EuiThemeColorMode
 }
 
+// API Brand type (simplified version from backend)
+interface ApiBrand {
+  id: string
+  name: string
+  colors: {
+    primary: string
+    accent: string
+    background: string
+    text: string
+  }
+  logoLight?: { url: string; alt: string }
+  logoDark?: { url: string; alt: string }
+}
+
+// Convert API brand to full BrandTheme
+function apiBrandToTheme(api: ApiBrand): BrandTheme {
+  return {
+    id: api.id,
+    name: api.name,
+    sourceUrl: '',
+    extractedAt: '',
+    colors: {
+      primary: api.colors.primary,
+      accent: api.colors.accent,
+      background: api.colors.background,
+      white: '#FFFFFF',
+      black: '#1A1C21',
+      textPrimary: api.colors.text,
+      textBody: api.colors.text,
+      border: '#D3DAE6',
+    },
+    fonts: {
+      heading: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+      body: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+      fallback: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    },
+    spacing: {
+      borderRadius: '6px',
+      borderRadiusSmall: '4px',
+    },
+    logo: {
+      svgDataUrl: api.logoLight?.url || '',
+      alt: api.logoLight?.alt || api.name,
+    },
+  }
+}
+
 export function BrandedThemeProvider({ 
   children,
   defaultBrandId,
@@ -147,6 +195,9 @@ export function BrandedThemeProvider({
   const [brandId, setBrandId] = useState<string>(() => {
     return defaultBrandId || getSelectedBrandId()
   })
+  
+  // Track all brands (static + API)
+  const [allBrands, setAllBrands] = useState<Record<string, BrandTheme>>(staticBrands)
   
   // Initialize color mode from localStorage/system preference
   const [colorMode, setColorMode] = useState<EuiThemeColorMode>(() => {
@@ -159,8 +210,38 @@ export function BrandedThemeProvider({
     return defaultColorMode
   })
   
-  const brand = brands[brandId] || brands.default
-  const availableBrands = Object.values(brands)
+  // Fetch brands from API and merge with static brands
+  const refreshBrands = useCallback(async () => {
+    try {
+      const response = await fetch('/api/branding/')
+      if (response.ok) {
+        const apiBrands: ApiBrand[] = await response.json()
+        
+        // Merge API brands with static brands (static themes take priority)
+        const merged = { ...staticBrands }
+        for (const apiBrand of apiBrands) {
+          // Only add if not already in static brands
+          if (!staticBrands[apiBrand.id]) {
+            const theme = apiBrandToTheme(apiBrand)
+            merged[apiBrand.id] = theme
+            addBrand(theme) // Also add to in-memory registry for other components
+          }
+        }
+        setAllBrands(merged)
+      }
+    } catch {
+      // API not available, use static brands only
+      console.log('Brand API not available, using static brands')
+    }
+  }, [])
+  
+  // Fetch brands on mount
+  useEffect(() => {
+    refreshBrands()
+  }, [refreshBrands])
+  
+  const brand = allBrands[brandId] || allBrands.default || staticBrands.default
+  const availableBrands = Object.values(allBrands)
   
   // Inject CSS variables when brand or color mode changes
   useEffect(() => {
@@ -191,10 +272,9 @@ export function BrandedThemeProvider({
   }
   
   const setBrand = (newBrandId: string) => {
-    if (brands[newBrandId]) {
-      setBrandId(newBrandId)
-      persistBrand(newBrandId)
-    }
+    // Set the brand ID - if it doesn't exist, the fallback in `brand` will handle it
+    setBrandId(newBrandId)
+    persistBrand(newBrandId)
   }
   
   const contextValue: BrandedThemeContextType = {
@@ -205,6 +285,7 @@ export function BrandedThemeProvider({
     brandId,
     setBrand,
     availableBrands,
+    refreshBrands,
   }
   
   return (
