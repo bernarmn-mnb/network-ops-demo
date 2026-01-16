@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
- * Icon Validation Script
+ * Icon Validation Script (Self-Healing)
  * 
- * Scans the codebase for icon usages and validates they exist in the iconCache.
- * Run this in CI or before commits to catch missing icons early.
+ * Scans the codebase for icon usages and validates they exist in EUI.
+ * If a valid EUI icon is missing from the cache, it regenerates the cache.
+ * Only fails on actual typos (icons that don't exist in EUI).
  * 
  * Usage: node scripts/validate-icons.cjs
  */
@@ -14,6 +15,8 @@ const { execSync } = require('child_process');
 
 const SRC_DIR = path.join(__dirname, '../src');
 const ICON_CACHE_FILE = path.join(SRC_DIR, 'iconCache.ts');
+const EUI_ICONS_DIR = path.join(__dirname, '../node_modules/@elastic/eui/es/components/icon/assets');
+const EUI_ICON_MAP = path.join(__dirname, '../node_modules/@elastic/eui/es/components/icon/icon_map.js');
 
 // Patterns to find icon usages
 const ICON_PATTERNS = [
@@ -39,6 +42,39 @@ const IGNORE_PATTERNS = [
   /^password$/,  // HTML input type
 ];
 
+/**
+ * Get all valid EUI icon names (from assets + aliases)
+ */
+function getValidEuiIcons() {
+  const validIcons = new Set();
+  
+  // 1. Get all icon asset files
+  if (fs.existsSync(EUI_ICONS_DIR)) {
+    const files = fs.readdirSync(EUI_ICONS_DIR);
+    for (const file of files) {
+      if (file.endsWith('.js') && file !== 'index.js') {
+        const name = path.basename(file, '.js');
+        validIcons.add(name);
+        // Also add camelCase version
+        const camelName = name.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
+        validIcons.add(camelName);
+      }
+    }
+  }
+  
+  // 2. Get all aliases from icon_map.js
+  if (fs.existsSync(EUI_ICON_MAP)) {
+    const content = fs.readFileSync(EUI_ICON_MAP, 'utf8');
+    const regex = /^\s+(\w+):\s*'([a-z_]+)',/gm;
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      validIcons.add(match[1]); // alias name
+    }
+  }
+  
+  return validIcons;
+}
+
 function extractIconsFromFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
   const icons = new Set();
@@ -63,10 +99,6 @@ function getRegisteredIcons() {
   const content = fs.readFileSync(ICON_CACHE_FILE, 'utf8');
   const icons = new Set();
   
-  // Match entries in appendIconComponentCache like:
-  //   icon_name,
-  //   'icon_name': varName,
-  //   iconName: varName,
   const entryPattern = /^\s*['"]?(\w+)['"]?(?::|,)/gm;
   
   let match;
@@ -89,7 +121,6 @@ function findTsxFiles(dir) {
       if (entry.isDirectory() && entry.name !== 'node_modules' && entry.name !== 'dist') {
         scan(fullPath);
       } else if (entry.isFile() && (entry.name.endsWith('.tsx') || entry.name.endsWith('.ts'))) {
-        // Skip iconCache itself
         if (!entry.name.includes('iconCache')) {
           files.push(fullPath);
         }
@@ -104,7 +135,11 @@ function findTsxFiles(dir) {
 function main() {
   console.log('🔍 Validating icon usage...\n');
   
-  // Get registered icons
+  // Get all valid EUI icons
+  const validEuiIcons = getValidEuiIcons();
+  console.log(`📚 Found ${validEuiIcons.size} valid EUI icons (assets + aliases)\n`);
+  
+  // Get registered icons in our cache
   const registeredIcons = getRegisteredIcons();
   console.log(`📦 Found ${registeredIcons.size} icons in iconCache.ts\n`);
   
@@ -112,9 +147,10 @@ function main() {
   const files = findTsxFiles(SRC_DIR);
   console.log(`📂 Scanning ${files.length} files...\n`);
   
-  // Track all used icons and any missing ones
+  // Track all used icons
   const allUsedIcons = new Set();
-  const missingIcons = new Map(); // icon -> [files]
+  const missingFromCache = new Map(); // icon -> [files] - valid EUI icons not in cache
+  const invalidIcons = new Map();     // icon -> [files] - typos/non-existent icons
   
   for (const file of files) {
     const icons = extractIconsFromFile(file);
@@ -124,38 +160,80 @@ function main() {
       allUsedIcons.add(icon);
       
       if (!registeredIcons.has(icon)) {
-        if (!missingIcons.has(icon)) {
-          missingIcons.set(icon, []);
+        // Check if it's a valid EUI icon
+        if (validEuiIcons.has(icon)) {
+          if (!missingFromCache.has(icon)) {
+            missingFromCache.set(icon, []);
+          }
+          missingFromCache.get(icon).push(relativePath);
+        } else {
+          if (!invalidIcons.has(icon)) {
+            invalidIcons.set(icon, []);
+          }
+          invalidIcons.get(icon).push(relativePath);
         }
-        missingIcons.get(icon).push(relativePath);
       }
     }
   }
   
-  // Report results
   console.log(`📊 Found ${allUsedIcons.size} unique icons used in code\n`);
   
-  if (missingIcons.size === 0) {
-    console.log('✅ All icons are registered in iconCache.ts!\n');
-    console.log('Your icon setup is bulletproof. 🛡️');
-    process.exit(0);
-  } else {
-    console.log(`❌ Found ${missingIcons.size} icons NOT in iconCache.ts:\n`);
+  // Handle missing but valid icons - regenerate cache
+  if (missingFromCache.size > 0) {
+    console.log(`🔧 Found ${missingFromCache.size} valid EUI icons not in cache:\n`);
+    for (const [icon, files] of missingFromCache) {
+      console.log(`   📎 "${icon}" used in: ${files.join(', ')}`);
+    }
     
-    for (const [icon, files] of missingIcons) {
+    console.log('\n🔄 Regenerating icon cache to include them...\n');
+    
+    try {
+      execSync('node scripts/generate-icon-cache.cjs', { 
+        cwd: path.join(__dirname, '..'),
+        stdio: 'inherit'
+      });
+      console.log('\n✅ Icon cache regenerated successfully!\n');
+    } catch (error) {
+      console.error('❌ Failed to regenerate icon cache:', error.message);
+      process.exit(1);
+    }
+  }
+  
+  // Handle invalid icons (typos) - these are errors
+  if (invalidIcons.size > 0) {
+    console.log(`❌ Found ${invalidIcons.size} INVALID icons (typos or non-EUI icons):\n`);
+    
+    for (const [icon, files] of invalidIcons) {
       console.log(`  ⚠️  "${icon}"`);
       for (const file of files) {
         console.log(`      └─ ${file}`);
       }
+      
+      // Suggest similar valid icons
+      const similar = [...validEuiIcons].filter(v => 
+        v.toLowerCase().includes(icon.toLowerCase()) || 
+        icon.toLowerCase().includes(v.toLowerCase())
+      ).slice(0, 3);
+      
+      if (similar.length > 0) {
+        console.log(`      💡 Did you mean: ${similar.join(', ')}?`);
+      }
     }
     
     console.log('\n📝 To fix:');
-    console.log('   1. Check if the icon name is correct (see EUI docs)');
-    console.log('   2. Run: node scripts/generate-icon-cache.cjs');
-    console.log('   3. If it\'s a custom icon, add it to the ALIASES in generate-icon-cache.cjs\n');
+    console.log('   1. Check the icon name spelling (see https://eui.elastic.co/#/display/icons)');
+    console.log('   2. Use a valid EUI icon name');
+    console.log('   3. If using a custom SVG, pass the component directly instead of a string\n');
     
     process.exit(1);
   }
+  
+  // All good!
+  if (missingFromCache.size === 0) {
+    console.log('✅ All icons are registered in iconCache.ts!\n');
+  }
+  console.log('Your icon setup is bulletproof. 🛡️');
+  process.exit(0);
 }
 
 main();
