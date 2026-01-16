@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # =============================================================================
-# Elastic Demo Starter - Pre-flight Check
+# Elastic Demo Starter - Pre-flight Check (Interactive)
 # =============================================================================
 # Run this AFTER cloning but BEFORE ./setup.sh to verify your environment.
 #
 # Usage:
-#   ./preflight-check.sh
+#   ./preflight-check.sh           # Interactive mode (prompts to install)
+#   ./preflight-check.sh --check   # Check-only mode (no prompts)
 #
 # This will check for required tools (Python, Node, Git) and recommend
 # optional tools that improve the experience (GitHub CLI, Yarn, etc.)
@@ -22,14 +23,142 @@ DIM='\033[2m'
 BOLD='\033[1m'
 NC='\033[0m'
 
+# Mode: interactive or check-only
+INTERACTIVE=true
+if [ "$1" = "--check" ] || [ "$1" = "-c" ]; then
+    INTERACTIVE=false
+fi
+
+# Counters
+mandatory_errors=0
+recommended_warnings=0
+installed_count=0
+
+# =============================================================================
+# PLATFORM DETECTION
+# =============================================================================
+detect_platform() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        PLATFORM="macos"
+        if command -v brew &> /dev/null; then
+            PKG_MANAGER="brew"
+        else
+            PKG_MANAGER="none"
+        fi
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        PLATFORM="linux"
+        if command -v apt-get &> /dev/null; then
+            PKG_MANAGER="apt"
+        elif command -v yum &> /dev/null; then
+            PKG_MANAGER="yum"
+        elif command -v dnf &> /dev/null; then
+            PKG_MANAGER="dnf"
+        else
+            PKG_MANAGER="none"
+        fi
+    else
+        PLATFORM="unknown"
+        PKG_MANAGER="none"
+    fi
+}
+
+# =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
+
+# Prompt user yes/no
+prompt_yn() {
+    local prompt="$1"
+    local default="${2:-n}"
+    
+    if [ "$INTERACTIVE" = false ]; then
+        return 1
+    fi
+    
+    if [ "$default" = "y" ]; then
+        read -p "$prompt [Y/n] " -n 1 -r choice
+    else
+        read -p "$prompt [y/N] " -n 1 -r choice
+    fi
+    echo ""
+    
+    case "$choice" in
+        [Yy]) return 0 ;;
+        [Nn]) return 1 ;;
+        "") 
+            if [ "$default" = "y" ]; then
+                return 0
+            else
+                return 1
+            fi
+            ;;
+        *) return 1 ;;
+    esac
+}
+
+# Run install command with error handling
+run_install() {
+    local name="$1"
+    local cmd="$2"
+    
+    echo -e "     ${CYAN}Installing $name...${NC}"
+    echo -e "     ${DIM}Running: $cmd${NC}"
+    echo ""
+    
+    if eval "$cmd"; then
+        echo ""
+        echo -e "     ${GREEN}✅ $name installed successfully!${NC}"
+        installed_count=$((installed_count + 1))
+        return 0
+    else
+        echo ""
+        echo -e "     ${RED}❌ Installation failed. Please install manually.${NC}"
+        return 1
+    fi
+}
+
+# Install Homebrew (macOS)
+install_homebrew() {
+    echo -e "  ${YELLOW}Homebrew not found - it's needed to install other tools${NC}"
+    if prompt_yn "  Install Homebrew?"; then
+        echo ""
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        
+        # Add to PATH for this session
+        if [ -f "/opt/homebrew/bin/brew" ]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        elif [ -f "/usr/local/bin/brew" ]; then
+            eval "$(/usr/local/bin/brew shellenv)"
+        fi
+        
+        if command -v brew &> /dev/null; then
+            PKG_MANAGER="brew"
+            echo -e "  ${GREEN}✅ Homebrew installed!${NC}"
+            return 0
+        fi
+    fi
+    return 1
+}
+
+detect_platform
+
 echo ""
 echo -e "${BLUE}${BOLD}╔════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}${BOLD}║      Elastic Demo Starter - Pre-flight Check               ║${NC}"
 echo -e "${BLUE}${BOLD}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
+echo -e "${DIM}Platform: $PLATFORM | Package manager: $PKG_MANAGER${NC}"
+if [ "$INTERACTIVE" = true ]; then
+    echo -e "${DIM}Mode: Interactive (will offer to install missing tools)${NC}"
+else
+    echo -e "${DIM}Mode: Check-only (use without --check for interactive mode)${NC}"
+fi
+echo ""
 
-mandatory_errors=0
-recommended_warnings=0
+# Check for Homebrew on macOS first
+if [ "$PLATFORM" = "macos" ] && [ "$PKG_MANAGER" = "none" ]; then
+    install_homebrew
+fi
 
 # =============================================================================
 # MANDATORY PREREQUISITES
@@ -41,6 +170,7 @@ echo ""
 # -----------------------------------------------------------------------------
 # Python 3.8+
 # -----------------------------------------------------------------------------
+PYTHON_OK=false
 if command -v python3 &> /dev/null; then
     PY_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null)
     PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
@@ -48,10 +178,9 @@ if command -v python3 &> /dev/null; then
     
     if [ "$PY_MAJOR" -ge 3 ] && [ "$PY_MINOR" -ge 8 ]; then
         echo -e "  ${GREEN}✅ Python $PY_VERSION${NC}"
+        PYTHON_OK=true
     else
         echo -e "  ${RED}❌ Python $PY_VERSION (need 3.8+)${NC}"
-        echo -e "     ${DIM}Install: https://www.python.org/downloads/${NC}"
-        mandatory_errors=$((mandatory_errors + 1))
     fi
 elif command -v python &> /dev/null; then
     PY_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null)
@@ -61,53 +190,106 @@ elif command -v python &> /dev/null; then
         PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
         if [ "$PY_MINOR" -ge 8 ]; then
             echo -e "  ${GREEN}✅ Python $PY_VERSION${NC}"
+            PYTHON_OK=true
         else
             echo -e "  ${RED}❌ Python $PY_VERSION (need 3.8+)${NC}"
-            mandatory_errors=$((mandatory_errors + 1))
         fi
     else
         echo -e "  ${RED}❌ Python 2.x detected (need Python 3.8+)${NC}"
+    fi
+fi
+
+if [ "$PYTHON_OK" = false ]; then
+    if [ "$PKG_MANAGER" = "brew" ]; then
+        if prompt_yn "  Install Python 3 via Homebrew?"; then
+            if run_install "Python" "brew install python3"; then
+                PYTHON_OK=true
+            fi
+        fi
+    elif [ "$PKG_MANAGER" = "apt" ]; then
+        if prompt_yn "  Install Python 3 via apt?"; then
+            if run_install "Python" "sudo apt-get update && sudo apt-get install -y python3 python3-venv python3-pip"; then
+                PYTHON_OK=true
+            fi
+        fi
+    else
+        echo -e "     ${DIM}Install from: https://www.python.org/downloads/${NC}"
+    fi
+    
+    if [ "$PYTHON_OK" = false ]; then
         mandatory_errors=$((mandatory_errors + 1))
     fi
-else
-    echo -e "  ${RED}❌ Python not found${NC}"
-    echo -e "     ${DIM}Install: https://www.python.org/downloads/${NC}"
-    echo -e "     ${DIM}macOS: brew install python3${NC}"
-    mandatory_errors=$((mandatory_errors + 1))
 fi
 
 # -----------------------------------------------------------------------------
 # Node.js 18+
 # -----------------------------------------------------------------------------
+NODE_OK=false
 if command -v node &> /dev/null; then
     NODE_VERSION=$(node --version | sed 's/v//')
     NODE_MAJOR=$(echo "$NODE_VERSION" | cut -d. -f1)
     
     if [ "$NODE_MAJOR" -ge 18 ]; then
         echo -e "  ${GREEN}✅ Node.js $NODE_VERSION${NC}"
+        NODE_OK=true
     else
         echo -e "  ${RED}❌ Node.js $NODE_VERSION (need 18+)${NC}"
-        echo -e "     ${DIM}Install: https://nodejs.org/${NC}"
+    fi
+fi
+
+if [ "$NODE_OK" = false ]; then
+    if [ "$PKG_MANAGER" = "brew" ]; then
+        if prompt_yn "  Install Node.js via Homebrew?"; then
+            if run_install "Node.js" "brew install node"; then
+                NODE_OK=true
+            fi
+        fi
+    elif [ "$PKG_MANAGER" = "apt" ]; then
+        echo -e "     ${DIM}For Node 18+, we recommend using NodeSource:${NC}"
+        if prompt_yn "  Install Node.js 20 via NodeSource?"; then
+            if run_install "Node.js" "curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs"; then
+                NODE_OK=true
+            fi
+        fi
+    else
+        echo -e "     ${DIM}Install from: https://nodejs.org/${NC}"
+    fi
+    
+    if [ "$NODE_OK" = false ]; then
         mandatory_errors=$((mandatory_errors + 1))
     fi
-else
-    echo -e "  ${RED}❌ Node.js not found${NC}"
-    echo -e "     ${DIM}Install: https://nodejs.org/${NC}"
-    echo -e "     ${DIM}macOS: brew install node${NC}"
-    mandatory_errors=$((mandatory_errors + 1))
 fi
 
 # -----------------------------------------------------------------------------
 # Git
 # -----------------------------------------------------------------------------
+GIT_OK=false
 if command -v git &> /dev/null; then
     GIT_VERSION=$(git --version | cut -d' ' -f3)
     echo -e "  ${GREEN}✅ Git $GIT_VERSION${NC}"
-else
-    echo -e "  ${RED}❌ Git not found${NC}"
-    echo -e "     ${DIM}Install: https://git-scm.com/downloads${NC}"
-    echo -e "     ${DIM}macOS: xcode-select --install${NC}"
-    mandatory_errors=$((mandatory_errors + 1))
+    GIT_OK=true
+fi
+
+if [ "$GIT_OK" = false ]; then
+    if [ "$PLATFORM" = "macos" ]; then
+        if prompt_yn "  Install Git via Xcode Command Line Tools?"; then
+            if run_install "Git" "xcode-select --install"; then
+                GIT_OK=true
+            fi
+        fi
+    elif [ "$PKG_MANAGER" = "apt" ]; then
+        if prompt_yn "  Install Git via apt?"; then
+            if run_install "Git" "sudo apt-get update && sudo apt-get install -y git"; then
+                GIT_OK=true
+            fi
+        fi
+    else
+        echo -e "     ${DIM}Install from: https://git-scm.com/downloads${NC}"
+    fi
+    
+    if [ "$GIT_OK" = false ]; then
+        mandatory_errors=$((mandatory_errors + 1))
+    fi
 fi
 
 echo ""
@@ -130,14 +312,26 @@ if command -v gh &> /dev/null; then
     if gh auth status &> /dev/null; then
         echo -e "     ${DIM}└─ Authenticated ✓${NC}"
     else
-        echo -e "     ${YELLOW}└─ Not authenticated (run: gh auth login)${NC}"
-        recommended_warnings=$((recommended_warnings + 1))
+        echo -e "     ${YELLOW}└─ Not authenticated${NC}"
+        if prompt_yn "     Run 'gh auth login' now?"; then
+            gh auth login
+        fi
     fi
 else
     echo -e "  ${YELLOW}⚠️  GitHub CLI not found${NC}"
     echo -e "     ${DIM}Makes cloning easier: gh repo clone elastic/elastic-demo-starter${NC}"
-    echo -e "     ${DIM}Install: https://cli.github.com/${NC}"
-    echo -e "     ${DIM}macOS: brew install gh${NC}"
+    
+    if [ "$PKG_MANAGER" = "brew" ]; then
+        if prompt_yn "  Install GitHub CLI via Homebrew?"; then
+            run_install "GitHub CLI" "brew install gh"
+        fi
+    elif [ "$PKG_MANAGER" = "apt" ]; then
+        if prompt_yn "  Install GitHub CLI via apt?"; then
+            run_install "GitHub CLI" "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && echo 'deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null && sudo apt update && sudo apt install gh -y"
+        fi
+    else
+        echo -e "     ${DIM}Install: https://cli.github.com/${NC}"
+    fi
     recommended_warnings=$((recommended_warnings + 1))
 fi
 
@@ -149,8 +343,13 @@ if command -v yarn &> /dev/null; then
     echo -e "  ${GREEN}✅ Yarn $YARN_VERSION${NC}"
 else
     echo -e "  ${YELLOW}⚠️  Yarn not found (npm will be used)${NC}"
-    echo -e "     ${DIM}Yarn is faster for installing frontend dependencies${NC}"
-    echo -e "     ${DIM}Install: npm install -g yarn${NC}"
+    echo -e "     ${DIM}Yarn is 2-3x faster for installing frontend dependencies${NC}"
+    
+    if command -v npm &> /dev/null; then
+        if prompt_yn "  Install Yarn via npm?"; then
+            run_install "Yarn" "npm install -g yarn"
+        fi
+    fi
     recommended_warnings=$((recommended_warnings + 1))
 fi
 
@@ -161,8 +360,50 @@ if [ -d "/Applications/Cursor.app" ] || command -v cursor &> /dev/null; then
     echo -e "  ${GREEN}✅ Cursor IDE${NC}"
 else
     echo -e "  ${YELLOW}⚠️  Cursor IDE not detected${NC}"
-    echo -e "     ${DIM}Recommended for AI-assisted coding${NC}"
-    echo -e "     ${DIM}Install: https://cursor.sh/${NC}"
+    echo -e "     ${DIM}Recommended for AI-assisted \"vibe coding\"${NC}"
+    echo -e "     ${DIM}Download: https://cursor.sh/${NC}"
+    recommended_warnings=$((recommended_warnings + 1))
+fi
+
+# -----------------------------------------------------------------------------
+# Beads (AI-friendly task tracking)
+# https://github.com/steveyegge/beads
+# -----------------------------------------------------------------------------
+if command -v bd &> /dev/null; then
+    BD_VERSION=$(bd version 2>/dev/null | head -1 || echo "installed")
+    echo -e "  ${GREEN}✅ Beads CLI (bd) $BD_VERSION${NC}"
+else
+    echo -e "  ${YELLOW}⚠️  Beads CLI not installed${NC}"
+    echo -e "     ${DIM}AI-friendly task tracking - helps agents manage complex work${NC}"
+    
+    # Offer installation options
+    if prompt_yn "  Install Beads?"; then
+        echo ""
+        echo -e "     ${CYAN}Choose installation method:${NC}"
+        echo -e "     ${DIM}1) Quick install script (recommended)${NC}"
+        echo -e "     ${DIM}2) Homebrew${NC}"
+        echo -e "     ${DIM}3) npm${NC}"
+        echo -e "     ${DIM}4) Skip${NC}"
+        read -p "     Choice [1-4]: " -n 1 -r bd_choice
+        echo ""
+        
+        case "$bd_choice" in
+            1)
+                run_install "Beads" "curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash"
+                ;;
+            2)
+                run_install "Beads" "brew install steveyegge/beads/bd"
+                ;;
+            3)
+                run_install "Beads" "npm install -g @beads/bd"
+                ;;
+            *)
+                echo -e "     ${DIM}Skipped. Install later: https://github.com/steveyegge/beads${NC}"
+                ;;
+        esac
+    else
+        echo -e "     ${DIM}More info: https://github.com/steveyegge/beads${NC}"
+    fi
     recommended_warnings=$((recommended_warnings + 1))
 fi
 
@@ -178,12 +419,10 @@ echo ""
 # -----------------------------------------------------------------------------
 # Firecrawl MCP (for AI branding extraction)
 # -----------------------------------------------------------------------------
-# Check if Firecrawl API key is set or MCP config exists
 FIRECRAWL_CONFIGURED=false
 if [ -n "$FIRECRAWL_API_KEY" ]; then
     FIRECRAWL_CONFIGURED=true
 fi
-# Check common MCP config locations
 if [ -f "$HOME/.cursor/mcp.json" ]; then
     if grep -q "firecrawl" "$HOME/.cursor/mcp.json" 2>/dev/null; then
         FIRECRAWL_CONFIGURED=true
@@ -199,14 +438,15 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Beads (task tracking)
+# Docker (for containerized deployment)
 # -----------------------------------------------------------------------------
-if command -v bd &> /dev/null; then
-    echo -e "  ${GREEN}✅ Beads CLI (bd)${NC}"
+if command -v docker &> /dev/null; then
+    DOCKER_VERSION=$(docker --version | cut -d' ' -f3 | tr -d ',')
+    echo -e "  ${GREEN}✅ Docker $DOCKER_VERSION${NC}"
 else
-    echo -e "  ${DIM}○  Beads CLI not installed${NC}"
-    echo -e "     ${DIM}Local issue tracking for your project${NC}"
-    echo -e "     ${DIM}Install: go install github.com/benbarten/beads/cmd/bd@latest${NC}"
+    echo -e "  ${DIM}○  Docker not installed${NC}"
+    echo -e "     ${DIM}Required only for containerized deployment${NC}"
+    echo -e "     ${DIM}Install: https://www.docker.com/products/docker-desktop${NC}"
 fi
 
 # -----------------------------------------------------------------------------
@@ -217,7 +457,18 @@ if command -v jq &> /dev/null; then
 else
     echo -e "  ${DIM}○  jq not installed${NC}"
     echo -e "     ${DIM}Useful for debugging API responses${NC}"
-    echo -e "     ${DIM}macOS: brew install jq${NC}"
+    
+    if [ "$PKG_MANAGER" = "brew" ]; then
+        if prompt_yn "  Install jq via Homebrew?"; then
+            run_install "jq" "brew install jq"
+        fi
+    elif [ "$PKG_MANAGER" = "apt" ]; then
+        if prompt_yn "  Install jq via apt?"; then
+            run_install "jq" "sudo apt-get install -y jq"
+        fi
+    else
+        echo -e "     ${DIM}macOS: brew install jq | Linux: apt install jq${NC}"
+    fi
 fi
 
 echo ""
@@ -263,6 +514,11 @@ echo ""
 echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
 echo ""
 
+if [ $installed_count -gt 0 ]; then
+    echo -e "${GREEN}${BOLD}📦 Installed $installed_count tool(s) during this run${NC}"
+    echo ""
+fi
+
 if [ $mandatory_errors -eq 0 ]; then
     echo -e "${GREEN}${BOLD}✅ All mandatory prerequisites met!${NC}"
     echo ""
@@ -273,7 +529,10 @@ if [ $mandatory_errors -eq 0 ]; then
     echo ""
     echo -e "${BOLD}You're ready to run:${NC}"
     echo ""
-    echo -e "  ${CYAN}gh repo clone elastic/elastic-demo-starter my-demo${NC}"
+    echo -e "  ${CYAN}./setup.sh${NC}"
+    echo ""
+    echo -e "${DIM}Or if you haven't cloned yet:${NC}"
+    echo -e "  ${CYAN}git clone https://github.com/elastic/elastic-demo-starter.git my-demo${NC}"
     echo -e "  ${CYAN}cd my-demo${NC}"
     echo -e "  ${CYAN}git submodule update --init --recursive${NC}"
     echo -e "  ${CYAN}./setup.sh${NC}"
@@ -281,8 +540,12 @@ if [ $mandatory_errors -eq 0 ]; then
 else
     echo -e "${RED}${BOLD}❌ $mandatory_errors mandatory prerequisite(s) missing${NC}"
     echo ""
-    echo -e "Please install the missing tools above before proceeding."
-    echo -e "${DIM}Run this script again after installing to verify.${NC}"
+    if [ "$INTERACTIVE" = true ]; then
+        echo -e "Some required tools couldn't be installed automatically."
+        echo -e "Please install them manually and run this script again."
+    else
+        echo -e "Run ${CYAN}./preflight-check.sh${NC} (without --check) for interactive installation."
+    fi
     echo ""
     exit 1
 fi
