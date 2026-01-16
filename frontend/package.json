@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "prebuild": "npm run generate-icons",
+    "prebuild": "npm run generate-icons && npm run validate-icons",
     "generate-icons": "node scripts/generate-icon-cache.cjs",
+    "validate-icons": "node scripts/validate-icons.cjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

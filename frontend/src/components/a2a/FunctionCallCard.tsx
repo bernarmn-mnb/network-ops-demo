@@ -267,7 +267,7 @@ export function FunctionCallCard({ functionCall }: FunctionCallCardProps) {
                     case 'reasoning':
                       return (
                         <div key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                          <EuiIcon type="iInCircle" size="s" color="subdued" style={{ marginTop: '2px', flexShrink: 0 }} />
+                          <EuiIcon type="info" size="s" color="subdued" style={{ marginTop: '2px', flexShrink: 0 }} />
                           <EuiText size="xs" color="subdued" style={{ fontStyle: 'italic' }}>
                             {step.reasoning}
                           </EuiText>
