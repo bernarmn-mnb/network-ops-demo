@@ -186,8 +186,8 @@ export function WelcomePage() {
           if (llmResponse.ok) {
             const llmData = await llmResponse.json()
             llmProxyOk = llmData.status === 'healthy'
-        }
-      } catch {
+          }
+        } catch {
           // LLM proxy not configured - that's ok
         }
 
