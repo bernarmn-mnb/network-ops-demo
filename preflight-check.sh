@@ -369,9 +369,47 @@ fi
 # Beads (AI-friendly task tracking)
 # https://github.com/steveyegge/beads
 # -----------------------------------------------------------------------------
+# Check common install locations for bd
+BD_FOUND=false
+BD_PATH=""
+
 if command -v bd &> /dev/null; then
-    BD_VERSION=$(bd version 2>/dev/null | head -1 || echo "installed")
+    BD_FOUND=true
+    BD_PATH=$(which bd)
+elif [ -x "/opt/homebrew/bin/bd" ]; then
+    BD_FOUND=true
+    BD_PATH="/opt/homebrew/bin/bd"
+elif [ -x "/usr/local/bin/bd" ]; then
+    BD_FOUND=true
+    BD_PATH="/usr/local/bin/bd"
+elif [ -x "$HOME/.local/bin/bd" ]; then
+    BD_FOUND=true
+    BD_PATH="$HOME/.local/bin/bd"
+elif [ -x "$HOME/go/bin/bd" ]; then
+    BD_FOUND=true
+    BD_PATH="$HOME/go/bin/bd"
+fi
+
+if [ "$BD_FOUND" = true ]; then
+    BD_VERSION=$("$BD_PATH" version 2>/dev/null | head -1 || echo "installed")
     echo -e "  ${GREEN}✅ Beads CLI (bd) $BD_VERSION${NC}"
+    
+    # Check if it's in PATH
+    if ! command -v bd &> /dev/null; then
+        echo -e "     ${YELLOW}Note: bd found at $BD_PATH but not in PATH${NC}"
+        
+        # Determine shell config file
+        SHELL_CONFIG=""
+        if [ -n "$ZSH_VERSION" ] || [ "$SHELL" = "/bin/zsh" ]; then
+            SHELL_CONFIG="$HOME/.zshrc"
+        elif [ -n "$BASH_VERSION" ] || [ "$SHELL" = "/bin/bash" ]; then
+            SHELL_CONFIG="$HOME/.bashrc"
+        fi
+        
+        BD_DIR=$(dirname "$BD_PATH")
+        echo -e "     ${DIM}Add to PATH by running:${NC}"
+        echo -e "     ${CYAN}echo 'export PATH=\"$BD_DIR:\$PATH\"' >> $SHELL_CONFIG && source $SHELL_CONFIG${NC}"
+    fi
 else
     echo -e "  ${YELLOW}⚠️  Beads CLI not installed${NC}"
     echo -e "     ${DIM}AI-friendly task tracking - helps agents manage complex work${NC}"
@@ -380,27 +418,58 @@ else
     if prompt_yn "  Install Beads?"; then
         echo ""
         echo -e "     ${CYAN}Choose installation method:${NC}"
-        echo -e "     ${DIM}1) Quick install script (recommended)${NC}"
-        echo -e "     ${DIM}2) Homebrew${NC}"
-        echo -e "     ${DIM}3) npm${NC}"
+        echo -e "     ${DIM}1) Homebrew (recommended for macOS)${NC}"
+        echo -e "     ${DIM}2) npm (cross-platform)${NC}"
+        echo -e "     ${DIM}3) Install script${NC}"
         echo -e "     ${DIM}4) Skip${NC}"
         read -p "     Choice [1-4]: " -n 1 -r bd_choice
         echo ""
         
+        BD_INSTALLED=false
         case "$bd_choice" in
             1)
-                run_install "Beads" "curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash"
+                if run_install "Beads" "brew install steveyegge/beads/bd"; then
+                    BD_INSTALLED=true
+                fi
                 ;;
             2)
-                run_install "Beads" "brew install steveyegge/beads/bd"
+                if run_install "Beads" "npm install -g @beads/bd"; then
+                    BD_INSTALLED=true
+                    # npm global installs may need PATH update
+                    NPM_BIN=$(npm bin -g 2>/dev/null)
+                    if [ -n "$NPM_BIN" ] && ! echo "$PATH" | grep -q "$NPM_BIN"; then
+                        echo ""
+                        echo -e "     ${YELLOW}Note: You may need to add npm global bin to PATH${NC}"
+                        echo -e "     ${DIM}Add to PATH:${NC}"
+                        echo -e "     ${CYAN}export PATH=\"$NPM_BIN:\$PATH\"${NC}"
+                    fi
+                fi
                 ;;
             3)
-                run_install "Beads" "npm install -g @beads/bd"
+                if run_install "Beads" "curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash"; then
+                    BD_INSTALLED=true
+                fi
                 ;;
             *)
                 echo -e "     ${DIM}Skipped. Install later: https://github.com/steveyegge/beads${NC}"
                 ;;
         esac
+        
+        # Verify installation and provide PATH guidance
+        if [ "$BD_INSTALLED" = true ]; then
+            echo ""
+            # Check if bd is now available
+            if command -v bd &> /dev/null; then
+                echo -e "     ${GREEN}✅ bd is ready to use!${NC}"
+            else
+                echo -e "     ${YELLOW}⚠️  bd installed but not in current PATH${NC}"
+                echo ""
+                echo -e "     ${DIM}To use bd in this terminal, run one of:${NC}"
+                echo -e "     ${CYAN}source ~/.zshrc${NC}  (if using zsh)"
+                echo -e "     ${CYAN}source ~/.bashrc${NC} (if using bash)"
+                echo -e "     ${DIM}Or open a new terminal window.${NC}"
+            fi
+        fi
     else
         echo -e "     ${DIM}More info: https://github.com/steveyegge/beads${NC}"
     fi
