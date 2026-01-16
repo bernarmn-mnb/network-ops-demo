@@ -66,7 +66,7 @@ const FEATURES: Feature[] = [
     path: '/chat',
     title: 'Agent Chat',
     description: 'Streaming chat interface with your Elastic Agent Builder agent. Shows reasoning steps, tool calls, and real-time responses.',
-    icon: 'discuss',
+    icon: 'newChat',
     category: 'demo',
     requirements: { agentConnection: true },
     useCase: 'Build customer-facing chat demos with your Agent Builder agents',

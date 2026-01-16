@@ -47,7 +47,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     path: '/chat',
     label: 'Chat',
-    icon: 'discuss',
+    icon: 'newChat',
     description: 'Chat with your Agent Builder agent',
     category: 'demo',
     requiresAgent: true,
