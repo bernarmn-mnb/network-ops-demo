@@ -41,8 +41,11 @@ Once we have the requirements:
 
 Now, let's make it look like *my* project, not a template.
 
-1.  **Documentation**: Update `README.md` to reflect the new "Project Brief". Remove generic "starter template" text and replace it with my project's specific setup instructions.
-2.  **Branding**:
+1.  **Architecture Audit**:
+    *   Read `docs/PAGES.md` to understand what features are already built.
+    *   *Goal*: Map my requirements to existing pages (e.g., "Use `/search` for the product catalog", "Use `/chat` for the assistant"). Don't reinvent the wheel!
+2.  **Documentation**: Update `README.md` to reflect the new "Project Brief". Remove generic "starter template" text and replace it with my project's specific setup instructions.
+3.  **Branding**:
     *   Ask for a brand name and a website URL.
     *   Use the **AI Branding Extraction** workflow (refer to `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md`) to generate a theme.
     *   Apply this theme as the default.
