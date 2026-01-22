@@ -57,7 +57,31 @@ You'll need access to an **Elastic Agent Builder** deployment:
 
 ## Quick Start
 
-### 0. Pre-flight Check (Recommended)
+### ⚡️ The "Vibe Coding" Way (Recommended)
+
+The fastest way to get started is to let your AI assistant do the work.
+
+1.  **Clone the repo**:
+    ```bash
+    git clone https://github.com/elastic/elastic-demo-starter.git my-demo
+    cd my-demo
+    ```
+
+2.  **Open in your AI Editor**:
+    *   **Cursor**: Open the folder, press `Cmd+L` (Chat), and type:
+        > "Read WELCOME_PROMPT.md and follow the instructions."
+    *   **Claude Code**: Run `claude` in the terminal and type:
+        > "Read WELCOME_PROMPT.md and follow the instructions."
+
+3.  **Follow the AI's lead**: It will interview you about your project goals, run the setup scripts, and create a customized execution plan.
+
+---
+
+### 🐢 The Manual Way
+
+If you prefer to run commands yourself:
+
+### 0. Pre-flight Check
 
 After cloning, verify your environment has all prerequisites:
 
@@ -138,6 +162,8 @@ Both servers **auto-reload** on code changes - no restart needed!
 - Backend API: http://localhost:8001/docs
 
 ### After Setup: Onboarding Your AI Assistant
+
+> **Note**: If you used the "Vibe Coding" Quick Start above, you can skip this section.
 
 Once the servers are running, **open the project in Cursor or VS Code** and tell your AI:
 
