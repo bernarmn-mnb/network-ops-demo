@@ -47,6 +47,7 @@ interface UseA2AChatOptions {
   systemPrompt?: string // Custom system instructions
   clientFunctions?: ClientFunctionDef[] // NEW: Client-side functions (executed in browser)
   onClientFunctionCall?: (functionName: string, args: Record<string, unknown>) => unknown // NEW: Handler for client functions
+  endpoint?: string // NEW: Custom API endpoint
 }
 
 interface UseA2AChatReturn {
@@ -67,6 +68,7 @@ export function useA2AChat({
   systemPrompt,
   clientFunctions,
   onClientFunctionCall,
+  endpoint,
 }: UseA2AChatOptions = {}): UseA2AChatReturn {
   // Initialize with optional greeting message
   const [messages, setMessages] = useState<A2AMessage[]>(() =>
@@ -446,7 +448,8 @@ export function useA2AChat({
         },
         abortController.signal,
         systemPrompt,
-        clientFunctions
+        clientFunctions,
+        endpoint
       )
 
       // Mark message as complete

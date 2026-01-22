@@ -37,12 +37,18 @@ export interface A2AChatContainerProps {
   greeting?: string
   /** Placeholder text for the input field */
   placeholder?: string
+  /** API Endpoint for chat */
+  endpoint?: string
+  /** Skip health check (for demo modes like Agno) */
+  skipHealthCheck?: boolean
 }
 
 export function A2AChatContainer({
   title = 'A2A Chat',
   greeting = 'Hello! I\'m a coordinator agent that can call other specialized agents to help you. What would you like to do?',
   placeholder = 'Ask me anything...',
+  endpoint,
+  skipHealthCheck = false,
 }: A2AChatContainerProps) {
   const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([])
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = useState(false) // Collapsed by default
@@ -50,8 +56,8 @@ export function A2AChatContainer({
   const [systemInstructions, setSystemInstructions] = useState<string>('')
   
   // Health check state
-  const [healthStatus, setHealthStatus] = useState<A2AHealthStatus | null>(null)
-  const [isCheckingHealth, setIsCheckingHealth] = useState(true)
+  const [healthStatus, setHealthStatus] = useState<A2AHealthStatus | null>(skipHealthCheck ? { status: 'healthy', llm_proxy_configured: true } : null)
+  const [isCheckingHealth, setIsCheckingHealth] = useState(!skipHealthCheck)
   
   const {
     messages,
@@ -63,13 +69,19 @@ export function A2AChatContainer({
     initialGreeting: greeting,
     selectedAgents: selectedAgentIds,
     systemPrompt: systemInstructions || undefined,
+    endpoint,
   })
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
-  // Check A2A health on mount
+  // Check A2A health on mount and when skipHealthCheck changes
   const checkHealth = useCallback(async () => {
+    if (skipHealthCheck) {
+      setHealthStatus({ status: 'healthy', llm_proxy_configured: true })
+      setIsCheckingHealth(false)
+      return
+    }
     setIsCheckingHealth(true)
     try {
       const status = await checkA2AHealth()
@@ -83,8 +95,9 @@ export function A2AChatContainer({
     } finally {
       setIsCheckingHealth(false)
     }
-  }, [])
+  }, [skipHealthCheck])
 
+  // Re-run health check when checkHealth changes (which depends on skipHealthCheck)
   useEffect(() => {
     checkHealth()
   }, [checkHealth])

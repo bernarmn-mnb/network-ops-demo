@@ -57,6 +57,7 @@ function normalizeA2AEvent(rawData: Record<string, unknown>): A2AEvent {
  * @param signal - AbortSignal for cancellation
  * @param systemPrompt - Optional custom system instructions
  * @param clientFunctions - Optional client-side functions (executed in browser)
+ * @param endpoint - Optional API endpoint (default: /api/a2a/chat)
  */
 export async function streamA2AChat(
   message: string,
@@ -64,7 +65,8 @@ export async function streamA2AChat(
   onEvent: (event: A2AEvent) => void,
   signal?: AbortSignal,
   systemPrompt?: string,
-  clientFunctions?: ClientFunctionDef[]
+  clientFunctions?: ClientFunctionDef[],
+  endpoint: string = '/api/a2a/chat'
 ): Promise<void> {
   // Build request body, only including optional fields if they have values
   const requestBody: Record<string, unknown> = {
@@ -81,7 +83,7 @@ export async function streamA2AChat(
   }
   
   // Use relative path - Vite proxy handles routing to backend
-  const response = await fetch('/api/a2a/chat', {
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requestBody),
