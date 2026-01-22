@@ -66,7 +66,10 @@ This project uses a shared knowledge base at `./hive-mind` (git submodule).
 
 ### EUI-Specific Rules
 
-1. **Icons**: All EUI icons must be registered in `frontend/src/iconCache.ts`
+1. **Icons**: All EUI icons must be registered in `frontend/src/iconCache.ts`.
+   - The `npm run dev` script now auto-generates this cache on start.
+   - If you add a new icon while the server is running, you must restart the server or run `npm run generate-icons`.
+   - **GUARANTEE**: If an icon is missing, the app will not crash but the icon will not render. Always verify icons exist in the cache.
 2. **Theme**: Use EUI theme variables, support light/dark modes
 3. **Colors for EuiAvatar**: Must use hex values, not CSS variables
 

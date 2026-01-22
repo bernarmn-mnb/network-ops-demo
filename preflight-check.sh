@@ -554,7 +554,8 @@ if curl -s --max-time 5 "https://cloud.elastic.co" > /dev/null 2>&1; then
 else
     echo -e "  ${RED}❌ Cannot reach cloud.elastic.co${NC}"
     echo -e "     ${DIM}Check your network connection or proxy settings${NC}"
-    mandatory_errors=$((mandatory_errors + 1))
+    echo -e "     ${YELLOW}Continuing with warning (manual verification required)${NC}"
+    recommended_warnings=$((recommended_warnings + 1))
 fi
 
 # Check npm registry

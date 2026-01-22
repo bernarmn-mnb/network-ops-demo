@@ -33,6 +33,8 @@ export interface BrandTheme {
     border: string
     [key: string]: string  // Allow additional colors
   }
+  /** Optional: Dark mode color overrides */
+  colorsDark?: Partial<BrandTheme['colors']>
   fonts: {
     heading: string
     body: string
@@ -93,6 +95,7 @@ function brandingToTheme(
       border: branding.colors.border,
       ...branding.colors, // Include any additional colors
     },
+    colorsDark: branding.colorsDark,
     fonts: {
       heading: branding.fonts.heading,
       body: branding.fonts.body,

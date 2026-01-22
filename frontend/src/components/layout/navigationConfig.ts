@@ -73,6 +73,13 @@ export const NAV_ITEMS: NavItem[] = [
     description: 'Create and manage brand themes',
     category: 'demo',
   },
+  {
+    path: '/search',
+    label: 'Search',
+    icon: 'search',
+    description: 'Product search with faceted filtering',
+    category: 'demo',
+  },
   
   // Development Tools
   {

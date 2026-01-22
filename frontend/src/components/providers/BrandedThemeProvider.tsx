@@ -69,43 +69,42 @@ export function useBrand() {
 function generateCssVariables(brand: BrandTheme, colorMode: EuiThemeColorMode): string {
   const isDark = colorMode === 'dark'
   
-  // Adjust colors for dark mode
-  const adjustedColors = isDark ? {
-    // In dark mode, swap background and adjust text colors
-    primary: brand.colors.primary,
-    accent: brand.colors.accent,
-    background: '#1D1E24',  // Dark background
-    surface: '#25262E',     // Slightly lighter surface
-    white: '#25262E',       // Cards become dark
-    black: '#FFFFFF',       // Text becomes white
-    textPrimary: '#FFFFFF',
-    textBody: '#B4B7C1',
-    border: '#404040',
+  // Base colors from brand
+  const baseColors = brand.colors
+  
+  // Dark mode overrides
+  const darkColors = brand.colorsDark || {}
+  
+  // Calculate final colors
+  const finalColors = isDark ? {
+    // Default dark mode mappings if no override provided
+    primary: darkColors.primary || baseColors.primary,
+    accent: darkColors.accent || baseColors.accent,
+    background: darkColors.background || '#1D1E24',
+    surface: darkColors.surface || '#25262E',
+    white: darkColors.white || '#25262E',
+    black: darkColors.black || '#FFFFFF',
+    textPrimary: darkColors.textPrimary || '#FFFFFF',
+    textBody: darkColors.textBody || '#B4B7C1',
+    border: darkColors.border || '#404040',
+    // Merge any other dark overrides
+    ...darkColors
   } : {
-    // Light mode uses brand colors directly
-    primary: brand.colors.primary,
-    accent: brand.colors.accent,
-    background: brand.colors.background,
-    surface: brand.colors.white,
-    white: brand.colors.white,
-    black: brand.colors.black,
-    textPrimary: brand.colors.textPrimary,
-    textBody: brand.colors.textBody,
-    border: brand.colors.border,
+    // Light mode uses base colors
+    ...baseColors
   }
+  
+  // Generate CSS variables for all keys in finalColors
+  const colorVars = Object.entries(finalColors).map(([key, value]) => {
+    // Convert camelCase to kebab-case for CSS var name
+    const varName = key.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
+    return `--brand-${varName}: ${value};`
+  }).join('\n      ')
   
   return `
     :root {
       /* Brand Colors (mode-aware) */
-      --brand-primary: ${adjustedColors.primary};
-      --brand-accent: ${adjustedColors.accent};
-      --brand-background: ${adjustedColors.background};
-      --brand-surface: ${adjustedColors.surface};
-      --brand-white: ${adjustedColors.white};
-      --brand-black: ${adjustedColors.black};
-      --brand-text-primary: ${adjustedColors.textPrimary};
-      --brand-text-body: ${adjustedColors.textBody};
-      --brand-border: ${adjustedColors.border};
+      ${colorVars}
       
       /* Brand Spacing */
       --brand-border-radius: ${brand.spacing.borderRadius};
@@ -151,6 +150,7 @@ interface ApiBrand {
   }
   logoLight?: { url: string; alt: string }
   logoDark?: { url: string; alt: string }
+  colorsDark?: Partial<BrandTheme['colors']>
 }
 
 // Convert API brand to full BrandTheme
@@ -170,6 +170,7 @@ function apiBrandToTheme(api: ApiBrand): BrandTheme {
       textBody: api.colors.text,
       border: '#D3DAE6',
     },
+    colorsDark: api.colorsDark,
     fonts: {
       heading: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
       body: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',

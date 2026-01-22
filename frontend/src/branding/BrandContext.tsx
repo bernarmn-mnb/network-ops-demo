@@ -37,6 +37,7 @@ interface ApiBrand {
   }
   logoLight?: { url: string; alt: string }
   logoDark?: { url: string; alt: string }
+  colorsDark?: Partial<BrandTheme['colors']>
 }
 
 function apiBrandToTheme(api: ApiBrand): BrandTheme {
@@ -55,6 +56,7 @@ function apiBrandToTheme(api: ApiBrand): BrandTheme {
       textBody: api.colors.text,
       border: '#D3DAE6',
     },
+    colorsDark: api.colorsDark,
     fonts: {
       heading: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
       body: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
