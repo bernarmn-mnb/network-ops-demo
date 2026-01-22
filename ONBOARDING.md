@@ -100,7 +100,7 @@ The project *intends* to use beads for issue tracking. Now verify the CLI is wor
    > "Beads folder exists but CLI not found. Install with: `brew install steveyegge/beads/bd` or see https://github.com/steveyegge/beads"
 4. **If `bd` fails with database error:** The database needs initialization. Run:
    ```
-   bd stats
+   bd init
    ```
    This creates the database. Then retry `bd ready`.
 

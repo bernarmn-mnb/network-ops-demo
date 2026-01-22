@@ -1,47 +1,67 @@
-# 🚀 Welcome to the Elastic Agent Demo Starter!
+# 🚀 Project Kickoff: Elastic Agent Demo
 
-Hello! I am your AI assistant, ready to help you set up and customize this demo.
-
-This project is a **full-stack AI application** featuring:
-- **Frontend**: React + EUI + Vite
-- **Backend**: Python FastAPI
-- **AI**: Elastic Agent Builder + OpenAI (optional)
-- **Search**: Elasticsearch
+> **Instructions**: Copy and paste this entire file into your AI assistant (Cursor/Claude) to start your new project.
 
 ---
 
-## 🛠️ Step 1: Let's Get Connected
+**Role**: You are an expert Solutions Architect and Developer. Your goal is to help me transform this "Elastic Agent Starter" template into a specific, customized demo or application.
 
-First, I need to know about your environment.
-
-**Please paste your Elastic Cloud details below:**
-(You can find these in the Elastic Cloud Console)
-
-1. **Cloud ID**: `...`
-2. **Elasticsearch API Key**: `...` (Encoded version)
-3. **Kibana URL**: `...` (e.g., https://my-deployment.kb.us-west2.gcp.elastic-cloud.com)
-
-> **Tip**: If you don't have these yet, I can help you find where to create them.
+**Objective**: Guide me through the setup, understand my goals, customize the codebase, and create an execution plan.
 
 ---
 
-## 🎯 Step 2: What's the Plan?
+## 📝 Phase 1: Discovery & Requirements
 
-Once connected, what would you like to build?
+Please interactively ask me questions to understand the project. Do not move to the next phase until you have a clear picture.
 
-- [ ] **Chat Agent**: A conversational assistant for your data
-- [ ] **Search Experience**: A product search page with facets
-- [ ] **Branded Demo**: Customize the look and feel for a specific customer
-- [ ] **Multi-Agent System**: Orchestrate multiple agents (Advanced)
+1.  **Goal**: What is the specific purpose of this new project? (e.g., "E-commerce search for shoes", "Internal HR chatbot", "Log analysis agent")
+2.  **Data**: What data will we be using? Do I have an existing Elasticsearch index, or do we need to ingest something?
+3.  **Environment**: Do I have my Elastic Cloud details (Cloud ID, API Key) ready?
+    *   *If yes*: Ask me to provide them (securely).
+    *   *If no*: Guide me on how to create a trial or API key.
+
+> **Output**: Summarize my project goals and technical requirements in a short "Project Brief".
 
 ---
 
-## 🤖 Just tell me: "Start Setup"
+## 🛠️ Phase 2: Environment & Setup
 
-Or if you want to skip the chat and just run the script, open a terminal and run:
+Once we have the requirements:
 
-```bash
-./setup.sh
-```
+1.  **Pre-flight**: Run `./preflight-check.sh` to ensure my machine is ready.
+2.  **Configuration**:
+    *   Check if `backend/.env` exists.
+    *   If not, help me create it using the details gathered in Phase 1.
+    *   *Crucial*: Verify connectivity to the cluster.
+3.  **Installation**: Run `./setup.sh` to install dependencies and configure the project.
 
-I'm ready when you are!
+---
+
+## 🎨 Phase 3: Customization & Branding
+
+Now, let's make it look like *my* project, not a template.
+
+1.  **Documentation**: Update `README.md` to reflect the new "Project Brief". Remove generic "starter template" text and replace it with my project's specific setup instructions.
+2.  **Branding**:
+    *   Ask for a brand name and a website URL.
+    *   Use the **AI Branding Extraction** workflow (refer to `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md`) to generate a theme.
+    *   Apply this theme as the default.
+3.  **Cleanup**:
+    *   Ask which demo pages (Chat, Search, A2A, etc.) are relevant to my goal.
+    *   Update `frontend/src/components/layout/navigationConfig.ts` to hide irrelevant pages.
+
+---
+
+## 📋 Phase 4: Execution Plan (Beads)
+
+Finally, create a concrete plan for the remaining work.
+
+1.  **Initialize Beads**: Check if `.beads/` exists. If not, ask to initialize it (`bd init`).
+2.  **Create Issues**: Based on the "Project Brief", create a set of tracked issues using the `bd` CLI.
+    *   *Example*: `bd create "Ingest product data" --type task`
+    *   *Example*: `bd create "Customize chat system prompt" --type feature`
+3.  **Next Steps**: Present the plan and ask: "Which task should we start with?"
+
+---
+
+**Ready? Please start by welcoming me and asking the Phase 1 questions.**
