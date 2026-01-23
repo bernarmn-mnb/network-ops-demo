@@ -11,12 +11,9 @@ import {
   EuiPanel,
   EuiFieldText,
   EuiFormRow,
-  EuiColorPicker,
-  EuiFilePicker,
   EuiCard,
   EuiIcon,
   EuiCallOut,
-  EuiImage,
   EuiBadge,
   EuiHorizontalRule,
   EuiModal,
@@ -25,7 +22,6 @@ import {
   EuiModalBody,
   EuiModalFooter,
   EuiLoadingSpinner,
-  useGeneratedHtmlId,
 } from '@elastic/eui'
 import { AppHeader } from '../components/layout/AppHeader'
 import { PageInfoButton, PAGE_INFO } from '../components/layout/PageInfoButton'
@@ -110,19 +106,6 @@ async function deleteBrand(id: string): Promise<void> {
     const error = await response.json()
     throw new Error(error.detail || 'Failed to delete brand')
   }
-}
-
-// ============================================================================
-// Helper: Convert file to base64 data URL
-// ============================================================================
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
 }
 
 // ============================================================================
@@ -229,8 +212,6 @@ function BrandEditorModal({
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  const modalTitleId = useGeneratedHtmlId()
 
   const handleSave = async () => {
     if (!formData.id || !formData.name) {
@@ -251,28 +232,10 @@ function BrandEditorModal({
     }
   }
 
-  const handleLogoUpload = async (files: FileList | null, mode: 'light' | 'dark') => {
-    if (!files || files.length === 0) return
-    
-    const file = files[0]
-    try {
-      const dataUrl = await fileToDataUrl(file)
-      setFormData(prev => ({
-        ...prev,
-        [mode === 'light' ? 'logoLight' : 'logoDark']: {
-          url: dataUrl,
-          alt: prev.name || 'Logo',
-        },
-      }))
-    } catch {
-      setError('Failed to read logo file')
-    }
-  }
-
   return (
-    <EuiModal onClose={onClose} style={{ width: 600 }}>
+    <EuiModal onClose={onClose}>
       <EuiModalHeader>
-        <EuiModalHeaderTitle id={modalTitleId}>
+        <EuiModalHeaderTitle>
           {isNew ? 'Create New Brand' : `Edit: ${brand?.name}`}
         </EuiModalHeaderTitle>
       </EuiModalHeader>
@@ -280,183 +243,162 @@ function BrandEditorModal({
       <EuiModalBody>
         {error && (
           <>
-            <EuiCallOut title={error} color="danger" iconType="error" size="s" />
+            <EuiCallOut title={error} color="danger" iconType="alert" size="s" />
             <EuiSpacer size="m" />
           </>
         )}
 
-        {/* Basic Info */}
-        <EuiFlexGroup gutterSize="m">
-          <EuiFlexItem>
-            <EuiFormRow label="Brand ID" helpText="Lowercase, no spaces">
-              <EuiFieldText
-                value={formData.id}
-                onChange={e => setFormData(prev => ({ 
-                  ...prev, 
-                  id: e.target.value.toLowerCase().replace(/\s/g, '-') 
-                }))}
-                disabled={!isNew}
-                placeholder="my-brand"
-              />
-            </EuiFormRow>
-          </EuiFlexItem>
-          <EuiFlexItem>
-            <EuiFormRow label="Display Name">
-              <EuiFieldText
-                value={formData.name}
-                onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="My Brand"
-              />
-            </EuiFormRow>
-          </EuiFlexItem>
-        </EuiFlexGroup>
+        <EuiFormRow label="Brand ID" helpText="Lowercase, no spaces (e.g., my-brand)">
+          <EuiFieldText
+            value={formData.id}
+            onChange={e => setFormData(prev => ({ 
+              ...prev, 
+              id: e.target.value.toLowerCase().replace(/\s/g, '-') 
+            }))}
+            disabled={!isNew}
+            placeholder="my-brand"
+          />
+        </EuiFormRow>
+
+        <EuiSpacer size="m" />
+
+        <EuiFormRow label="Display Name">
+          <EuiFieldText
+            value={formData.name}
+            onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="My Brand"
+          />
+        </EuiFormRow>
 
         <EuiSpacer size="l" />
         <EuiHorizontalRule margin="none" />
         <EuiSpacer size="l" />
-
-        {/* Colors */}
+        
         <EuiTitle size="xs"><h4>Colors</h4></EuiTitle>
         <EuiSpacer size="m" />
-        
-        <EuiFlexGroup gutterSize="m" wrap>
-          <EuiFlexItem grow={false} style={{ width: 140 }}>
-            <EuiFormRow label="Primary">
-              <EuiColorPicker
-                color={formData.colors.primary}
-                onChange={color => setFormData(prev => ({
-                  ...prev,
-                  colors: { ...prev.colors, primary: color }
-                }))}
-              />
-            </EuiFormRow>
-          </EuiFlexItem>
-          <EuiFlexItem grow={false} style={{ width: 140 }}>
-            <EuiFormRow label="Accent">
-              <EuiColorPicker
-                color={formData.colors.accent}
-                onChange={color => setFormData(prev => ({
-                  ...prev,
-                  colors: { ...prev.colors, accent: color }
-                }))}
-              />
-            </EuiFormRow>
-          </EuiFlexItem>
-          <EuiFlexItem grow={false} style={{ width: 140 }}>
-            <EuiFormRow label="Background">
-              <EuiColorPicker
-                color={formData.colors.background}
-                onChange={color => setFormData(prev => ({
-                  ...prev,
-                  colors: { ...prev.colors, background: color }
-                }))}
-              />
-            </EuiFormRow>
-          </EuiFlexItem>
-          <EuiFlexItem grow={false} style={{ width: 140 }}>
-            <EuiFormRow label="Text">
-              <EuiColorPicker
-                color={formData.colors.text}
-                onChange={color => setFormData(prev => ({
-                  ...prev,
-                  colors: { ...prev.colors, text: color }
-                }))}
-              />
-            </EuiFormRow>
-          </EuiFlexItem>
-        </EuiFlexGroup>
 
-        <EuiSpacer size="l" />
-        <EuiHorizontalRule margin="none" />
-        <EuiSpacer size="l" />
+        <EuiFormRow label="Primary Color" helpText="Main brand color for buttons and links">
+          <EuiFieldText
+            value={formData.colors.primary}
+            onChange={e => setFormData(prev => ({
+              ...prev,
+              colors: { ...prev.colors, primary: e.target.value }
+            }))}
+            placeholder="#0077CC"
+            prepend={
+              <div style={{ 
+                width: 24, 
+                height: 24, 
+                backgroundColor: formData.colors.primary,
+                borderRadius: 4,
+                border: '1px solid #ccc'
+              }} />
+            }
+          />
+        </EuiFormRow>
 
-        {/* Logos */}
-        <EuiTitle size="xs"><h4>Logos</h4></EuiTitle>
         <EuiSpacer size="m" />
-        
-        <EuiFlexGroup gutterSize="l">
-          <EuiFlexItem>
-            <EuiFormRow label="Light Mode Logo" helpText="For light backgrounds">
-              <EuiFilePicker
-                accept="image/*"
-                onChange={files => handleLogoUpload(files, 'light')}
-                display="default"
-              />
-            </EuiFormRow>
-            {formData.logoLight.url && (
-              <div style={{ marginTop: 8, padding: 16, backgroundColor: '#fff', borderRadius: 4 }}>
-                <EuiImage src={formData.logoLight.url} alt="Light logo preview" style={{ maxHeight: 40 }} />
-              </div>
-            )}
-          </EuiFlexItem>
-          <EuiFlexItem>
-            <EuiFormRow label="Dark Mode Logo" helpText="For dark backgrounds">
-              <EuiFilePicker
-                accept="image/*"
-                onChange={files => handleLogoUpload(files, 'dark')}
-                display="default"
-              />
-            </EuiFormRow>
-            {formData.logoDark.url && (
-              <div style={{ marginTop: 8, padding: 16, backgroundColor: '#1D1E24', borderRadius: 4 }}>
-                <EuiImage src={formData.logoDark.url} alt="Dark logo preview" style={{ maxHeight: 40 }} />
-              </div>
-            )}
-          </EuiFlexItem>
-        </EuiFlexGroup>
 
-        <EuiSpacer size="l" />
-        <EuiHorizontalRule margin="none" />
-        <EuiSpacer size="l" />
+        <EuiFormRow label="Accent Color" helpText="Secondary highlight color">
+          <EuiFieldText
+            value={formData.colors.accent}
+            onChange={e => setFormData(prev => ({
+              ...prev,
+              colors: { ...prev.colors, accent: e.target.value }
+            }))}
+            placeholder="#00BFB3"
+            prepend={
+              <div style={{ 
+                width: 24, 
+                height: 24, 
+                backgroundColor: formData.colors.accent,
+                borderRadius: 4,
+                border: '1px solid #ccc'
+              }} />
+            }
+          />
+        </EuiFormRow>
 
-        {/* Preview */}
-        <EuiTitle size="xs"><h4>Preview</h4></EuiTitle>
         <EuiSpacer size="m" />
+
+        <EuiFormRow label="Background Color">
+          <EuiFieldText
+            value={formData.colors.background}
+            onChange={e => setFormData(prev => ({
+              ...prev,
+              colors: { ...prev.colors, background: e.target.value }
+            }))}
+            placeholder="#FFFFFF"
+            prepend={
+              <div style={{ 
+                width: 24, 
+                height: 24, 
+                backgroundColor: formData.colors.background,
+                borderRadius: 4,
+                border: '1px solid #ccc'
+              }} />
+            }
+          />
+        </EuiFormRow>
+
+        <EuiSpacer size="m" />
+
+        <EuiFormRow label="Text Color">
+          <EuiFieldText
+            value={formData.colors.text}
+            onChange={e => setFormData(prev => ({
+              ...prev,
+              colors: { ...prev.colors, text: e.target.value }
+            }))}
+            placeholder="#1A1C21"
+            prepend={
+              <div style={{ 
+                width: 24, 
+                height: 24, 
+                backgroundColor: formData.colors.text,
+                borderRadius: 4,
+                border: '1px solid #ccc'
+              }} />
+            }
+          />
+        </EuiFormRow>
+
+        <EuiSpacer size="l" />
         
+        {/* Live Preview */}
         <EuiPanel 
+          paddingSize="m"
           style={{ 
             backgroundColor: formData.colors.background,
-            border: `1px solid ${formData.colors.primary}20`,
+            border: `2px solid ${formData.colors.primary}`,
           }}
-          paddingSize="l"
         >
-          <EuiFlexGroup alignItems="center" gutterSize="m">
-            {formData.logoLight.url && (
-              <EuiFlexItem grow={false}>
-                <EuiImage src={formData.logoLight.url} alt="Logo" style={{ height: 32 }} />
-              </EuiFlexItem>
-            )}
-            <EuiFlexItem>
-              <EuiText style={{ color: formData.colors.text }}>
-                <strong>{formData.name || 'Brand Name'}</strong>
-              </EuiText>
-            </EuiFlexItem>
-          </EuiFlexGroup>
-          <EuiSpacer size="m" />
-          <EuiFlexGroup gutterSize="s">
-            <EuiFlexItem grow={false}>
-              <EuiButton
-                fill
-                style={{ 
-                  backgroundColor: formData.colors.primary,
-                  borderColor: formData.colors.primary,
-                }}
-              >
-                Primary Button
-              </EuiButton>
-            </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              <EuiButton
-                style={{ 
-                  backgroundColor: formData.colors.accent,
-                  borderColor: formData.colors.accent,
-                  color: '#fff',
-                }}
-              >
-                Accent Button
-              </EuiButton>
-            </EuiFlexItem>
-          </EuiFlexGroup>
+          <EuiText size="s" style={{ color: formData.colors.text }}>
+            <strong>{formData.name || 'Brand Name'}</strong>
+            <p style={{ margin: '8px 0 0 0' }}>Preview of your brand colors</p>
+          </EuiText>
+          <EuiSpacer size="s" />
+          <EuiButton 
+            size="s"
+            style={{ 
+              backgroundColor: formData.colors.primary,
+              borderColor: formData.colors.primary,
+              color: '#fff'
+            }}
+          >
+            Primary
+          </EuiButton>
+          {' '}
+          <EuiButton 
+            size="s"
+            style={{ 
+              backgroundColor: formData.colors.accent,
+              borderColor: formData.colors.accent,
+              color: '#fff'
+            }}
+          >
+            Accent
+          </EuiButton>
         </EuiPanel>
       </EuiModalBody>
 
