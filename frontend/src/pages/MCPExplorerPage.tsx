@@ -92,6 +92,7 @@ interface ToolsResponse {
   custom_count: number
   builtin_tools: Tool[]
   custom_tools: Tool[]
+  error?: string
 }
 
 interface ToolResult {
@@ -464,6 +465,10 @@ export function MCPExplorerPage() {
                 
                 {toolsLoading ? (
                   <EuiLoadingSpinner />
+                ) : tools?.error ? (
+                  <EuiCallOut title="Tools Unavailable" color="warning" iconType="alert">
+                    <p>{tools.error}</p>
+                  </EuiCallOut>
                 ) : tools ? (
                   <>
                     {/* Custom Tools */}

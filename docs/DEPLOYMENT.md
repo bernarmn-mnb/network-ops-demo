@@ -75,6 +75,82 @@ gcloud artifacts repositories create cloud-run-source-deploy \
 
 ---
 
+## ⚠️ IMPORTANT: URL Map and BASE_PATH
+
+The shared demo infrastructure uses a **single load balancer** (`demos.gcp.elasticsa.co`) with a **URL map** that routes different paths to different Cloud Run services.
+
+### How It Works
+
+```
+demos.gcp.elasticsa.co
+    │
+    ├── /template/*     → elastic-agent-template-backend
+    ├── /ecommerce/*    → search-otel-ubi-backend  
+    ├── /my-demo/*      → my-demo-backend
+    └── /*              → demos-landing-backend (fallback)
+```
+
+### The BASE_PATH Must Match the URL Map
+
+When you deploy, your `BASE_PATH` environment variable **must match** a path configured in the URL map:
+
+| If you set... | The URL will be... | URL map must have... |
+|---------------|--------------------|-----------------------|
+| `BASE_PATH=/template/` | `demos.gcp.elasticsa.co/template/` | `/template/*` route |
+| `BASE_PATH=/ecommerce/` | `demos.gcp.elasticsa.co/ecommerce/` | `/ecommerce/*` route |
+| `BASE_PATH=/my-demo/` | `demos.gcp.elasticsa.co/my-demo/` | `/my-demo/*` route |
+
+**If there's a mismatch**, your app will appear to deploy successfully but requests will hit the **fallback landing page** instead of your service!
+
+### Check Available Paths
+
+The deploy script automatically validates this, but you can also check manually:
+
+```bash
+# List configured paths in the URL map
+gcloud compute url-maps describe elastic-demos-gateway \
+    --project=elastic-sa \
+    --format="yaml(pathMatchers.pathRules)"
+```
+
+### Adding a New Path
+
+To add a new path for your demo:
+
+1. **Create the NEG and Backend Service** (the deploy script outputs these commands)
+
+2. **Export the current URL map:**
+   ```bash
+   gcloud compute url-maps export elastic-demos-gateway \
+       --destination=url-map.yaml --project=elastic-sa
+   ```
+
+3. **Add your path rule** to the YAML:
+   ```yaml
+   pathMatchers:
+   - name: demos-paths
+     pathRules:
+     - paths:
+       - /my-new-demo
+       - /my-new-demo/*
+       service: https://www.googleapis.com/compute/v1/projects/elastic-sa/global/backendServices/my-new-demo-backend
+   ```
+
+4. **Import the updated URL map:**
+   ```bash
+   gcloud compute url-maps import elastic-demos-gateway \
+       --source=url-map.yaml --project=elastic-sa
+   ```
+
+### Common Mistake
+
+❌ **Wrong:** Deploy with `BASE_PATH=/elastic-agent-template/` when URL map has `/template/*`
+✅ **Right:** Deploy with `BASE_PATH=/template/` to match the URL map
+
+The deploy script will warn you if your BASE_PATH doesn't exist in the URL map.
+
+---
+
 ## Deployment Options
 
 | Option | Containers | Best For |

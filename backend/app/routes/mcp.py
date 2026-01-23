@@ -122,28 +122,36 @@ async def get_mcp_info():
     """
     mcp_url = get_mcp_url()
     
-    # Try to initialize and get server info
-    try:
-        result = await mcp_request("initialize", {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {
-                "name": "mcp-explorer",
-                "version": "1.0.0"
-            }
-        })
-        
-        server_info = result.get("result", {}).get("serverInfo", {})
-        protocol_version = result.get("result", {}).get("protocolVersion", "unknown")
-        capabilities = result.get("result", {}).get("capabilities", {})
-        connected = True
-        error = None
-    except HTTPException as e:
+    # Check if MCP is configured
+    if not KIBANA_URL:
         server_info = {}
         protocol_version = "unknown"
         capabilities = {}
         connected = False
-        error = e.detail
+        error = "KIBANA_URL not configured - set up Agent Builder connection to use MCP"
+    else:
+        # Try to initialize and get server info
+        try:
+            result = await mcp_request("initialize", {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {
+                    "name": "mcp-explorer",
+                    "version": "1.0.0"
+                }
+            })
+            
+            server_info = result.get("result", {}).get("serverInfo", {})
+            protocol_version = result.get("result", {}).get("protocolVersion", "unknown")
+            capabilities = result.get("result", {}).get("capabilities", {})
+            connected = True
+            error = None
+        except HTTPException as e:
+            server_info = {}
+            protocol_version = "unknown"
+            capabilities = {}
+            connected = False
+            error = e.detail
     
     return {
         "connected": connected,
@@ -198,15 +206,46 @@ async def list_tools():
     """
     List all available tools from the MCP server.
     
+    Returns empty lists if KIBANA_URL is not configured (graceful degradation).
+    
     Returns both built-in and custom tools with their schemas.
     """
-    result = await mcp_request("tools/list", {}, request_id=2)
+    # Check if MCP is configured
+    if not KIBANA_URL:
+        return {
+            "total": 0,
+            "builtin_count": 0,
+            "custom_count": 0,
+            "builtin_tools": [],
+            "custom_tools": [],
+            "all_tools": [],
+            "error": "KIBANA_URL not configured - MCP tools unavailable"
+        }
+    
+    try:
+        result = await mcp_request("tools/list", {}, request_id=2)
+    except HTTPException as e:
+        # Return empty list with error instead of raising
+        return {
+            "total": 0,
+            "builtin_count": 0,
+            "custom_count": 0,
+            "builtin_tools": [],
+            "custom_tools": [],
+            "all_tools": [],
+            "error": str(e.detail)
+        }
     
     if "error" in result:
-        raise HTTPException(
-            status_code=500,
-            detail=f"MCP error: {result['error'].get('message', 'Unknown error')}"
-        )
+        return {
+            "total": 0,
+            "builtin_count": 0,
+            "custom_count": 0,
+            "builtin_tools": [],
+            "custom_tools": [],
+            "all_tools": [],
+            "error": f"MCP error: {result['error'].get('message', 'Unknown error')}"
+        }
     
     tools = result.get("result", {}).get("tools", [])
     
