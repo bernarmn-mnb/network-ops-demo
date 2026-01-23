@@ -55,6 +55,7 @@ This project uses a shared knowledge base at `./hive-mind` (git submodule).
 | EUI + Vite Setup | `hive-mind/patterns/eui/EUI_VITE_INTEGRATION.md` | Setting up EUI with Vite, icon cache issues |
 | Branding Extraction | `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md` | Extracting brand colors/fonts from websites |
 | **Dynamic Port Config** | `hive-mind/patterns/deployment/DYNAMIC_PORT_CONFIGURATION.md` | **Port conflicts, discovering actual running ports** |
+| **Cloud Run Sidecar** | `hive-mind/patterns/deployment/CLOUDRUN_SIDECAR_DEPLOYMENT.md` | **Deploying to GCP Cloud Run with IAP** |
 
 ---
 
@@ -128,6 +129,68 @@ cat .dev-pids/frontend.port       # Frontend port (e.g., 3000, 3001, ...)
 ```
 
 See `hive-mind/patterns/deployment/DYNAMIC_PORT_CONFIGURATION.md` for details.
+
+---
+
+## Cloud Run Deployment
+
+This project can be deployed to Google Cloud Run with IAP (Identity-Aware Proxy) protection.
+
+> 🔒 **SECURITY: Demos must ALWAYS be behind IAP authentication.**
+> Never deploy demos with public access (`--allow-unauthenticated` or `ingress=all`).
+> IAP ensures only authorized users (@elastic.co) can access the demo.
+> See `docs/DEPLOYMENT.md` for IAP setup instructions.
+
+> ⚠️ **IMPORTANT: Always use SIDECARS for Cloud Run deployment.**
+> The all-in-one approach (Dockerfile.cloudrun) has reliability issues with supervisor.
+> The sidecar approach is battle-tested and works correctly.
+
+> 💡 **CRITICAL IAP GOTCHA**: Cloud Run needs `allUsers` as invoker even with IAP!
+> This is counter-intuitive but required. IAP authenticates at the Load Balancer,
+> then the LB calls Cloud Run. Without `allUsers` invoker, you get 403 Forbidden
+> even after successful IAP authentication. This is secure because `ingress:
+> internal-and-cloud-load-balancing` blocks direct access - all traffic must
+> go through the IAP-protected Load Balancer. The deploy script now adds this
+> automatically. See `hive-mind/patterns/deployment/CLOUDRUN_SIDECAR_DEPLOYMENT.md`.
+
+### Quick Deploy (Sidecars - RECOMMENDED)
+
+```bash
+# Set your credentials
+export ELASTICSEARCH_URL="https://your-cluster.es.cloud.com"
+export ELASTIC_API_KEY="your-api-key"
+export SERVICE_NAME="my-demo"
+export BASE_PATH="/my-demo/"
+
+# Deploy with sidecars - THIS IS THE ONLY RECOMMENDED APPROACH
+./deploy/deploy-cloudrun.sh
+```
+
+### Deployment Options
+
+| Option | Command | Status |
+|--------|---------|--------|
+| **Sidecars** | `./deploy/deploy-cloudrun.sh` | ✅ **USE THIS** |
+| ~~All-in-One~~ | ~~`cloudbuild.yaml`~~ | ⚠️ Not recommended - supervisor issues |
+| **Debug** | `Dockerfile.cloudrun.simple` | For troubleshooting FastAPI only |
+
+### Key Files
+
+```
+deploy/                          # Deployment configurations
+├── Dockerfile.nginx             # Frontend container
+├── Dockerfile.fastapi           # Backend container
+├── Dockerfile.otel-collector    # OTel Collector
+├── nginx-sidecar.conf           # Nginx routing config
+├── service.yaml                 # Cloud Run service definition
+└── deploy-cloudrun.sh           # Main deployment script
+Dockerfile.cloudrun              # All-in-one image
+Dockerfile.cloudrun.simple       # Debug image (FastAPI only)
+cloudbuild.yaml                  # Cloud Build (all-in-one)
+cloudbuild-sidecar.yaml          # Cloud Build (sidecars)
+```
+
+See `docs/DEPLOYMENT.md` for full guide.
 
 ---
 

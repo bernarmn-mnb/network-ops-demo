@@ -23,7 +23,13 @@ import react from '@vitejs/plugin-react'
 const FRONTEND_PORT = parseInt(process.env.VITE_PORT || process.env.FRONTEND_PORT || '3000')
 const BACKEND_PORT = parseInt(process.env.VITE_BACKEND_PORT || process.env.BACKEND_PORT || process.env.PORT || '8001')
 
+// Base path for Cloud Run deployment (e.g., /template/, /ecommerce/)
+// Defaults to '/' for local development
+const BASE_PATH = process.env.VITE_BASE_PATH || '/'
+
 export default defineConfig({
+  // Base URL for assets - required for subpath deployments
+  base: BASE_PATH,
   plugins: [
     react({
       jsxImportSource: '@emotion/react',

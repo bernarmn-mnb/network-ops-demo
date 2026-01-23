@@ -1,0 +1,119 @@
+# Cloud Build config for Cloud Run with Sidecars
+#
+# Builds 3 containers: Nginx (frontend), FastAPI (backend), OTel Collector
+# More flexible than all-in-one: each container can scale independently
+# and OTel Collector handles browser + backend traces
+#
+# Usage:
+#   gcloud builds submit . --config=cloudbuild-sidecar.yaml \
+#       --substitutions=_ELASTICSEARCH_URL=...,_ELASTIC_API_KEY=...,_OTEL_EXPORTER_OTLP_ENDPOINT=...,_ELASTIC_APM_SECRET_TOKEN=...
+#
+# Notes:
+#   - Requires GCP project with Artifact Registry configured
+#   - Uses container dependencies to ensure proper startup order
+#   - OTel Collector uses the official image with custom config
+
+substitutions:
+  _REGION: us-central1
+  _SERVICE_NAME: my-demo
+  _BASE_PATH: /demo/
+  _ELASTICSEARCH_URL: ""
+  _ELASTIC_API_KEY: ""
+  _OTEL_EXPORTER_OTLP_ENDPOINT: ""
+  _ELASTIC_APM_SECRET_TOKEN: ""
+
+steps:
+  # Step 1: Build Nginx (frontend) image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-f'
+      - 'deploy/Dockerfile.nginx'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}-nginx:${BUILD_ID}'
+      - '--build-arg'
+      - 'VITE_BASE_PATH=${_BASE_PATH}'
+      - '--build-arg'
+      - 'VITE_OTEL_ENDPOINT=${_BASE_PATH}v1/traces'
+      - '--platform'
+      - 'linux/amd64'
+      - '.'
+
+  # Step 2: Build FastAPI (backend) image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-f'
+      - 'deploy/Dockerfile.fastapi'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}-fastapi:${BUILD_ID}'
+      - '--platform'
+      - 'linux/amd64'
+      - '.'
+
+  # Step 3: Build OTel Collector image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-f'
+      - 'deploy/Dockerfile.otel-collector'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}-otel:${BUILD_ID}'
+      - '--platform'
+      - 'linux/amd64'
+      - '.'
+
+  # Step 4: Push Nginx image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}-nginx:${BUILD_ID}'
+
+  # Step 5: Push FastAPI image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}-fastapi:${BUILD_ID}'
+
+  # Step 6: Push OTel Collector image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}-otel:${BUILD_ID}'
+
+  # Step 7: Deploy Cloud Run with sidecars
+  # Note: This uses gcloud CLI multi-container syntax
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # Generate service.yaml with actual values
+        cat deploy/service.yaml | \
+          sed "s|YOUR_SERVICE_NAME|${_SERVICE_NAME}|g" | \
+          sed "s|YOUR_PROJECT_ID|${PROJECT_ID}|g" | \
+          sed "s|YOUR_TEAM|demo-team|g" | \
+          sed "s|YOUR_EMAIL|cloud-build|g" | \
+          sed "s|YOUR_PROJECT|${_SERVICE_NAME}|g" | \
+          sed "s|${_SERVICE_NAME}-nginx:PLACEHOLDER|${_SERVICE_NAME}-nginx:${BUILD_ID}|g" | \
+          sed "s|${_SERVICE_NAME}-fastapi:PLACEHOLDER|${_SERVICE_NAME}-fastapi:${BUILD_ID}|g" | \
+          sed "s|${_SERVICE_NAME}-otel:PLACEHOLDER|${_SERVICE_NAME}-otel:${BUILD_ID}|g" | \
+          sed "s|ELASTICSEARCH_URL_PLACEHOLDER|${_ELASTICSEARCH_URL}|g" | \
+          sed "s|ELASTIC_API_KEY_PLACEHOLDER|${_ELASTIC_API_KEY}|g" | \
+          sed "s|OTEL_ENDPOINT_PLACEHOLDER|${_OTEL_EXPORTER_OTLP_ENDPOINT}|g" | \
+          sed "s|APM_TOKEN_PLACEHOLDER|${_ELASTIC_APM_SECRET_TOKEN}|g" \
+          > /tmp/service.yaml
+        
+        cat /tmp/service.yaml
+        
+        gcloud run services replace /tmp/service.yaml \
+          --region=${_REGION} \
+          --project=${PROJECT_ID}
+
+images:
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}-nginx:${BUILD_ID}'
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}-fastapi:${BUILD_ID}'
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE_NAME}-otel:${BUILD_ID}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

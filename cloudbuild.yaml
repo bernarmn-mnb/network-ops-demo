@@ -1,0 +1,82 @@
+# ============================================================================
+# ⚠️  WARNING: DO NOT USE THIS FOR CLOUD RUN DEPLOYMENT
+# ============================================================================
+#
+# This all-in-one approach has reliability issues with supervisor.
+# FastAPI may fail silently and you won't know until you check logs.
+#
+# USE SIDECARS INSTEAD: ./deploy/deploy-cloudrun.sh
+#
+# This file is kept for reference only.
+#
+# ============================================================================
+#
+# Cloud Build config for "All-in-One" Cloud Run Deployment (NOT RECOMMENDED)
+#
+# This builds a single container with both frontend and backend.
+# Has known reliability issues - use sidecars instead.
+#
+# Notes:
+#   - Uses $BUILD_ID (not $COMMIT_SHA) because $COMMIT_SHA is empty for manual builds
+#   - Memory set to 1Gi minimum for Python FastAPI apps
+
+substitutions:
+  _REGION: us-central1
+  _SERVICE_NAME: my-demo
+  _BASE_PATH: /demo/
+  _ELASTICSEARCH_URL: ""
+  _ELASTIC_API_KEY: ""
+  _SEARCH_INDEX: products
+  _OTEL_ENABLED: "false"
+
+steps:
+  # 1. Build the "All-in-One" Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'VITE_BASE_PATH=${_BASE_PATH}'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/${_SERVICE_NAME}:$BUILD_ID'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/${_SERVICE_NAME}:latest'
+      - '-f'
+      - 'Dockerfile.cloudrun'
+      - '.'
+
+  # 2. Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/${_SERVICE_NAME}'
+
+  # 3. Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/${_SERVICE_NAME}:$BUILD_ID'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'  # Allowed because IAP sits in front!
+      - '--port'
+      - '8080'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--set-env-vars'
+      - 'ELASTICSEARCH_URL=${_ELASTICSEARCH_URL},ELASTIC_API_KEY=${_ELASTIC_API_KEY},SEARCH_INDEX=${_SEARCH_INDEX},OTEL_ENABLED=${_OTEL_ENABLED},VITE_BASE_PATH=${_BASE_PATH}'
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/${_SERVICE_NAME}:$BUILD_ID'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/${_SERVICE_NAME}:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -6,15 +6,26 @@
 
 [![CI](https://github.com/elastic/elastic-demo-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/elastic/elastic-demo-starter/actions/workflows/ci.yml)
 
-A production-ready starter kit for building AI-powered demos with Elastic Agent Builder, EUI (Elastic UI Framework), and modern web technologies.
+A production-ready starter kit for building demos with Elastic. Covers **Search**, **AI Chat**, **Analytics**, and more — with modern UI components and best practices built in.
 
-This repository serves as a "Golden Master" for building custom Elastic demos. It comes pre-wired with correct architectural patterns for streaming chat, multi-agent orchestration, and brand theming - avoiding common pitfalls and accelerating development.
+This repository serves as a "Golden Master" for building custom Elastic demos. It comes pre-wired with correct architectural patterns for streaming chat, search experiences, analytics dashboards, and brand theming — avoiding common pitfalls and accelerating development.
+
+## 🎯 What Can You Build?
+
+| Demo Type | Features | Key Technologies |
+|-----------|----------|------------------|
+| **🔍 Search Experiences** | Full-text search, faceted filtering, relevance tuning | Elasticsearch, RetrieverBuilder |
+| **💬 AI Chat / Assistants** | Conversational AI, streaming responses, tool use | Agent Builder, SSE streaming |
+| **📊 Business Analytics** | Dashboards, visualizations, KPI tracking | ES\|QL, aggregations |
+| **🛡️ Fraud Analytics** | Anomaly detection, pattern analysis, alert workflows | ES\|QL, ML features |
+| **🔗 Multi-Agent Orchestration** | Coordinate multiple AI agents, complex workflows | A2A pattern, LLM coordinator |
+| **📈 Search Analytics** | CTR tracking, zero-results analysis, relevance metrics | OTel, custom events |
 
 ## Architecture
 
 ```
-Frontend (Vite + React + EUI)  <-->  Backend (FastAPI)  <-->  Elastic Agent Builder
-         :3000                           :8001                    (Kibana API)
+Frontend (Vite + React + EUI)  <-->  Backend (FastAPI)  <-->  Elastic Stack
+         :3000                           :8001                (ES, Kibana, Agent Builder)
 ```
 
 ## Prerequisites
@@ -48,10 +59,15 @@ Run `./preflight-check.sh` to verify all requirements, or check manually:
 
 ### Elastic Requirements
 
-You'll need access to an **Elastic Agent Builder** deployment:
-- Kibana URL (e.g., `https://my-deployment.kb.us-west2.gcp.elastic-cloud.com`)
-- API Key (created in Kibana → Stack Management → API Keys)
-- Agent ID (from Agent Builder)
+Depending on which features you want to use:
+
+| Feature | Requirements |
+|---------|-------------|
+| **Search** | Elasticsearch URL + API Key + Index name |
+| **AI Chat** | Kibana URL + API Key + Agent ID (from Agent Builder) |
+| **Analytics** | Elasticsearch URL + API Key |
+| **Multi-Agent** | Agent Builder + LLM Proxy URL |
+| **Observability** | APM Server URL (optional) |
 
 ---
 
@@ -130,10 +146,11 @@ The wizard will:
 2. 🔌 **Check network** - Verifies connectivity to Elastic Cloud, npm, PyPI
 3. 📦 **Initialize submodules** - Offers to fix if hive-mind is empty
 4. 🎯 **Ask which features you want to configure:**
-   - Agent Builder (Chat, Demo, Audit, MCP)
-   - Elasticsearch (Search Page, Analytics, Faceted Search)
-   - OpenTelemetry (APM Traces, Click Tracking)
-   - LLM Proxy (A2A Multi-Agent)
+   - **Search** - Elasticsearch search UI with facets
+   - **AI Chat** - Agent Builder integration (Chat, Demo, Audit, MCP)
+   - **Analytics** - ES|QL dashboards and visualizations
+   - **Multi-Agent** - A2A orchestration with LLM coordinator
+   - **Observability** - OpenTelemetry (APM Traces, Click Tracking)
 5. 🔧 **Validate credentials** - Warns if API key format looks wrong
 6. 📦 **Install dependencies** - Shows errors if installation fails
 7. 🎨 **Set up branding** (optional)
@@ -235,41 +252,71 @@ No `.env` needed! The Vite config proxies `/api` to the backend automatically.
 
 ## Features
 
-### Agent Builder Integration
+### 🔍 Search
+
+Build powerful search experiences with Elasticsearch:
+
+- ✅ Full-text search with relevance tuning
+- ✅ Faceted filtering (categories, brands, price ranges)
+- ✅ RetrieverBuilder for advanced query composition
+- ✅ Search-as-you-type suggestions
+- ✅ Result highlighting and pagination
+
+### 💬 AI Chat (Agent Builder)
+
+Create conversational AI assistants:
+
 - ✅ SSE streaming chat with Agent Builder
-- ✅ Real-time reasoning display
+- ✅ Real-time reasoning display (agent thinking)
 - ✅ Tool call visualization
 - ✅ Conversation persistence & audit trail
 - ✅ Stream cancellation
 
-### Search & Analytics
-- ✅ Elasticsearch search with faceted filtering
-- ✅ RetrieverBuilder for advanced queries
-- ✅ Search analytics (CTR, MRR, zero-results tracking)
-- ✅ ES|QL powered dashboards
+### 📊 Analytics
 
-### Multi-Agent (A2A)
+Build dashboards and track metrics:
+
+- ✅ ES|QL powered queries
+- ✅ Search analytics (CTR, MRR, zero-results tracking)
+- ✅ Click tracking & user journey analysis
+- ✅ Custom event pipelines
+
+### 🔗 Multi-Agent (A2A)
+
+Orchestrate complex AI workflows:
+
 - ✅ LLM coordinator for multi-agent orchestration
 - ✅ Connect multiple Agent Builder agents
 - ✅ Unified conversation interface
+- ✅ Agent routing based on intent
 
-### Observability
+### 📡 Observability
+
+Monitor and debug your demos:
+
 - ✅ OpenTelemetry instrumentation
 - ✅ APM traces for backend & search
-- ✅ Click tracking & user journey analysis
+- ✅ Distributed tracing across services
 
-### UI & Branding
+### 🎨 UI & Branding
+
+Professional, customizable interfaces:
+
 - ✅ Dark/light theme toggle
 - ✅ Multi-brand theming with Brand Editor
 - ✅ AI-powered brand extraction from websites
 - ✅ EUI (Elastic UI) components
-- ✅ Accessible chat interface
+- ✅ Accessible, responsive design
 
-### Developer Experience
+### 🛠️ Developer Experience
+
+Tools to accelerate development:
+
 - ✅ Pre-flight environment check script
 - ✅ Interactive setup wizard with validation
 - ✅ Hot-reload for frontend & backend
 - ✅ MCP server explorer
+- ✅ Conversation audit tools
 
 ## Branding
 
@@ -368,9 +415,10 @@ This project includes **Hive Mind** (`./hive-mind/`), a shared knowledge base of
 ```
 hive-mind/
 ├── patterns/              # 🏗️ Reusable Architecture
-│   ├── elastic/           # Agent Builder, Search, RAG integration
+│   ├── elastic/           # Search, Agent Builder, RAG integration
 │   │   ├── AGENT_BUILDER_INTEGRATION.md
-│   │   └── STREAMING_CHAT_UI_PATTERNS.md
+│   │   ├── STREAMING_CHAT_UI_PATTERNS.md
+│   │   └── ESQL_ANALYTICS_PATTERNS.md
 │   ├── eui/               # UI Framework patterns
 │   │   ├── EUI_VITE_INTEGRATION.md
 │   │   └── EUI_NEXTJS_INTEGRATION.md
@@ -429,8 +477,13 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 │   ├── app/
 │   │   ├── main.py           # FastAPI app entry
 │   │   ├── config.py         # Environment config
+│   │   ├── elasticsearch/    # ES client, search, queries
 │   │   └── routes/
 │   │       ├── agent.py      # Agent Builder proxy
+│   │       ├── search.py     # Search endpoints
+│   │       ├── analytics.py  # ES|QL analytics
+│   │       ├── tracking.py   # Click/event tracking
+│   │       ├── a2a/          # Multi-agent orchestration
 │   │       └── branding.py   # Brand CRUD API
 │   ├── data/
 │   │   └── brands.json       # Stored brand configs
@@ -440,8 +493,13 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 │   ├── src/
 │   │   ├── App.tsx           # Router setup
 │   │   ├── pages/            # Page components
+│   │   │   ├── ChatPage.tsx      # AI chat interface
+│   │   │   ├── SearchPageSimple.tsx  # Search UI
+│   │   │   ├── A2AChatPage.tsx   # Multi-agent chat
+│   │   │   └── AuditPage.tsx     # Conversation audit
 │   │   ├── components/
 │   │   │   ├── chat/         # Chat UI components
+│   │   │   ├── search/       # Search components
 │   │   │   ├── layout/       # Headers, theme toggle
 │   │   │   └── branding/     # Brand switcher
 │   │   ├── branding/         # Theme definitions
@@ -486,18 +544,9 @@ cp DEMO_GUIDE_TEMPLATE.md DEMO_GUIDE.md
 
 Then fill in the sections to document your demo's configuration, flow, and customizations.
 
-## Key Lessons Learned
+## Key Technical Notes
 
-### API Endpoint Discovery
-
-The Agent Builder streaming endpoint is:
-```
-POST /api/agent_builder/converse/async
-```
-
-NOT `/api/agent_builder/agent/{id}/chat` as you might expect.
-
-### SSE Event Types
+### SSE Event Types (Agent Builder)
 
 | Event | Description |
 |-------|-------------|
@@ -506,10 +555,6 @@ NOT `/api/agent_builder/agent/{id}/chat` as you might expect.
 | `thinking_complete` | Ready for text |
 | `message_chunk` | Streaming text chunk |
 | `message_complete` | Full response complete |
-
-### Keepalive Handling
-
-Agent Builder sends keepalive lines (`: 000000...`) that must be filtered out in the SSE parser.
 
 ### Backend Proxy Pattern
 
@@ -536,6 +581,20 @@ Content-Type: application/json
 ```
 
 Returns: SSE stream
+
+### Search Endpoint
+
+```bash
+POST http://localhost:8001/api/search
+Content-Type: application/json
+
+{
+  "query": "laptop",
+  "filters": { "category": ["Electronics"] },
+  "page": 1,
+  "size": 20
+}
+```
 
 ### Health Check
 
@@ -606,7 +665,7 @@ git submodule update --init --recursive  # Also update hive-mind
 ## Re-running Setup
 
 You can re-run `./setup.sh` anytime to:
-- Add new feature configurations (Agent Builder, LLM Proxy, etc.)
+- Add new feature configurations (Search, AI Chat, Analytics, etc.)
 - Modify existing connections
 - Reset and start fresh
 
