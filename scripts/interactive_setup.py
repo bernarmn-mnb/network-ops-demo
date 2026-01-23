@@ -1338,7 +1338,7 @@ def main():
     print()
     print(f"Open in {Colors.BOLD}Cursor{Colors.ENDC} or {Colors.BOLD}VS Code + Claude{Colors.ENDC} and tell your AI:")
     print()
-    print(f'   {Colors.CYAN}"Read and follow ONBOARDING.md"{Colors.ENDC}')
+    print(f'   {Colors.CYAN}"Read and follow docs/ONBOARDING.md"{Colors.ENDC}')
     print()
     
     # ==========================================================================

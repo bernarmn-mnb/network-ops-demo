@@ -1,42 +1,41 @@
-"""
-Elasticsearch client initialization and management.
+"""Elasticsearch client initialization and management.
 
 Supports both Elastic Cloud (via Cloud ID) and direct URL connections.
 """
 
-from elasticsearch import Elasticsearch
-from typing import Optional
 import logging
+from typing import Optional
+
+from elasticsearch import Elasticsearch
 
 from ..config import settings
 
 logger = logging.getLogger(__name__)
 
 # Global client instance (lazy initialized)
-_es_client: Optional[Elasticsearch] = None
+_es_client: Elasticsearch | None = None
 
 
 def get_es_client() -> Elasticsearch:
-    """
-    Get or create the Elasticsearch client.
-    
+    """Get or create the Elasticsearch client.
+
     Uses Cloud ID if available, otherwise falls back to direct URL.
     Authentication is via API key.
-    
+
     Returns:
         Elasticsearch client instance
-        
+
     Raises:
         ValueError: If neither Cloud ID nor URL is configured
     """
     global _es_client
-    
+
     if _es_client is not None:
         return _es_client
-    
+
     if not settings.ELASTIC_API_KEY:
         raise ValueError("ELASTIC_API_KEY is required")
-    
+
     if settings.ELASTIC_CLOUD_ID:
         logger.info("Connecting to Elastic Cloud via Cloud ID")
         _es_client = Elasticsearch(
@@ -50,19 +49,20 @@ def get_es_client() -> Elasticsearch:
             api_key=settings.ELASTIC_API_KEY,
         )
     else:
-        raise ValueError("Either ELASTIC_CLOUD_ID or ELASTICSEARCH_URL must be configured")
-    
+        raise ValueError(
+            "Either ELASTIC_CLOUD_ID or ELASTICSEARCH_URL must be configured"
+        )
+
     # Verify connection
     info = _es_client.info()
     logger.info(f"Connected to Elasticsearch cluster: {info['cluster_name']}")
-    
+
     return _es_client
 
 
 def es_client() -> Elasticsearch:
-    """
-    Dependency injection helper for FastAPI.
-    
+    """Dependency injection helper for FastAPI.
+
     Usage:
         @app.get("/search")
         def search(es: Elasticsearch = Depends(es_client)):
@@ -78,4 +78,3 @@ def close_es_client() -> None:
         _es_client.close()
         _es_client = None
         logger.info("Elasticsearch client closed")
-

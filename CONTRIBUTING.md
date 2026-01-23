@@ -5,6 +5,7 @@ This guide helps you identify and contribute reusable functionality back to the 
 ## Git Setup
 
 This project uses two remotes:
+
 - **`origin`**: Your demo/fork repository (where you push your work)
 - **`upstream`**: The template repository (`elastic-demo-starter`)
 
@@ -83,6 +84,7 @@ Run the helper script to identify potential contributions:
 ```
 
 This will:
+
 - List new files that might be reusable
 - Identify demo-specific code (brand names, customer names)
 - Suggest which files could be contributed
@@ -92,16 +94,19 @@ This will:
 Before contributing:
 
 1. **Remove demo-specific references**:
+
    - Replace hardcoded brand names with variables
    - Remove customer-specific data
    - Generalize component names if needed
 
 2. **Make it configurable**:
+
    - Use environment variables
    - Add configuration options
    - Support multiple use cases
 
 3. **Document it**:
+
    - Add JSDoc/type hints
    - Update README if needed
    - Add to hive-mind patterns if it's a pattern
@@ -142,27 +147,34 @@ git push upstream feature/reusable-feature-name
 #### Option B: Fork Workflow (recommended)
 
 1. Fork `elastic-demo-starter` on GitHub
+
 2. Add your fork as a remote:
+
    ```bash
    git remote add my-fork https://github.com/YOUR-USERNAME/elastic-demo-starter.git
    ```
+
 3. Push your changes:
+
    ```bash
    git push my-fork feature/reusable-feature-name
    ```
+
 4. Open PR from your fork to upstream
 
 ## Example: Contributing a New Component
 
 ### Example 1: ErrorBoundary Component
 
-**1. Original (Demo-Specific)**
+#### 1. Original (Demo-Specific)
+
 ```tsx
 // frontend/src/components/ErrorBoundary.tsx
 // Line 49: "The kitchen page encountered an error:" ❌ Too specific
 ```
 
-**2. Sanitized (Reusable)**
+#### 2. Sanitized (Reusable)
+
 ```tsx
 // frontend/src/components/ErrorBoundary.tsx
 interface ErrorBoundaryProps {
@@ -179,7 +191,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
 
 ### Example 2: QuickPrompts Component
 
-**1. Original (Demo-Specific)**
+#### 1. Original (Demo-Specific)
+
 ```tsx
 // frontend/src/components/chat/QuickPrompts.tsx
 // Before: Hardcoded domain-specific prompts ❌
@@ -189,7 +202,8 @@ const QUICK_PROMPTS = [
 ]
 ```
 
-**2. Sanitized (Reusable)**
+#### 2. Sanitized (Reusable)
+
 ```tsx
 // frontend/src/components/chat/QuickPrompts.tsx
 interface QuickPrompt {
@@ -210,10 +224,10 @@ const DEFAULT_PROMPTS: QuickPrompt[] = [
   // Generic prompts ✅
 ]
 
-export function QuickPrompts({ 
+export function QuickPrompts({
   prompts = DEFAULT_PROMPTS,  // ✅ Configurable
-  onSelect, 
-  disabled = false 
+  onSelect,
+  disabled = false
 }: QuickPromptsProps) {
   // Use prompts prop instead of hardcoded constant
 }
@@ -239,14 +253,14 @@ cd ..
 
 ### Common Reusable Features
 
-| Feature | Location | Template Path |
-|---------|----------|---------------|
-| Error Boundaries | `frontend/src/components/ErrorBoundary.tsx` | `frontend/src/components/` |
-| Branding System | `frontend/src/branding/` | `frontend/src/branding/` |
-| Chat Components | `frontend/src/components/chat/` | `frontend/src/components/chat/` |
-| Hive Mind Patterns | `hive-mind/patterns/` | `hive-mind/patterns/` |
-| Setup Scripts | `scripts/` | `scripts/` |
-| Dev Tools | `dev`, `setup.sh` | Root |
+| Feature            | Location                                    | Template Path                   |
+| ------------------ | ------------------------------------------- | ------------------------------- |
+| Error Boundaries   | `frontend/src/components/ErrorBoundary.tsx` | `frontend/src/components/`      |
+| Branding System    | `frontend/src/branding/`                    | `frontend/src/branding/`        |
+| Chat Components    | `frontend/src/components/chat/`             | `frontend/src/components/chat/` |
+| Hive Mind Patterns | `hive-mind/patterns/`                       | `hive-mind/patterns/`           |
+| Setup Scripts      | `scripts/`                                  | `scripts/`                      |
+| Dev Tools          | `dev`, `setup.sh`                           | Root                            |
 
 ### Files to Always Contribute
 
@@ -262,7 +276,6 @@ cd ..
 - Review `hive-mind/patterns/` for similar patterns
 - Ask in the template repo's discussions
 
----
+______________________________________________________________________
 
 **Remember**: The goal is to make the template better for everyone. If in doubt, make it more generic and configurable!
-

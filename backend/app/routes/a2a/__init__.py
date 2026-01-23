@@ -1,5 +1,4 @@
-"""
-A2A Routes Package
+"""A2A Routes Package
 
 Agent-to-Agent communication routes using OpenAI function calling.
 Provides a coordinator LLM that can call Agent Builder agents and
@@ -40,13 +39,15 @@ router.include_router(chat_router)
 
 # Re-export commonly used functions for external use
 from .agents import fetch_agent_card, fetch_all_agent_cards
-from .functions import build_function_from_agent_card, extract_agent_id_from_function_name
+from .functions import (
+    build_function_from_agent_card,
+    extract_agent_id_from_function_name,
+)
 
 __all__ = [
-    "router",
-    "fetch_agent_card",
-    "fetch_all_agent_cards",
     "build_function_from_agent_card",
     "extract_agent_id_from_function_name",
+    "fetch_agent_card",
+    "fetch_all_agent_cards",
+    "router",
 ]
-

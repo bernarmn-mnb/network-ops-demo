@@ -20,6 +20,13 @@ backend/.env
 .venv
 env/
 ENV/
+.hypothesis/
+.ipynb_checkpoints/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.tox/
+.nox/
 
 # Build outputs
 dist/
@@ -47,6 +54,8 @@ yarn-error.log*
 coverage/
 .pytest_cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
 
 # Temp files

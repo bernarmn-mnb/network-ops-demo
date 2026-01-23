@@ -1,22 +1,20 @@
-"""
-Branding Extraction Module
+"""Branding Extraction Module.
 
 Tools for extracting brand identity from customer websites.
 """
 
 from .test_extraction import (
-    extract_css_variables,
-    extract_computed_styles,
-    detect_logos,
     analyze_stylesheets,
+    detect_logos,
     extract_all_branding,
+    extract_computed_styles,
+    extract_css_variables,
 )
 
 __all__ = [
-    'extract_css_variables',
-    'extract_computed_styles', 
-    'detect_logos',
-    'analyze_stylesheets',
-    'extract_all_branding',
+    "analyze_stylesheets",
+    "detect_logos",
+    "extract_all_branding",
+    "extract_computed_styles",
+    "extract_css_variables",
 ]
-

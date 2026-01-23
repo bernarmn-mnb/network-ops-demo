@@ -1,5 +1,4 @@
-"""
-Agent Builder Proxy Route
+"""Agent Builder Proxy Route
 
 This route proxies requests to the Elastic Agent Builder API,
 keeping API keys secure on the backend while enabling streaming.
@@ -15,11 +14,12 @@ API ENDPOINTS:
 """
 
 import json
+from typing import Optional
+
 import requests
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import Optional
 
 from ..config import settings
 
@@ -28,8 +28,9 @@ router = APIRouter(prefix="/api/agent", tags=["agent"])
 
 class ChatRequest(BaseModel):
     """Request body for chat endpoint."""
+
     input: str
-    conversation_id: Optional[str] = None
+    conversation_id: str | None = None
 
 
 def get_streaming_api_url() -> str:
@@ -50,9 +51,8 @@ def get_auth_headers() -> dict:
 
 @router.post("/chat")
 async def chat_agent(request: ChatRequest):
-    """
-    Proxy chat requests to the Elastic Agent Builder.
-    
+    """Proxy chat requests to the Elastic Agent Builder.
+
     Streams SSE events from Agent Builder back to the frontend.
     This keeps the API key secure while enabling real-time streaming.
     """
@@ -62,11 +62,11 @@ async def chat_agent(request: ChatRequest):
         "input": request.input,
         "agent_id": settings.AGENT_ID,
     }
-    
+
     # Include conversation_id if provided (for multi-turn conversations)
     if request.conversation_id:
         payload["conversation_id"] = request.conversation_id
-    
+
     try:
         # Make streaming request to Agent Builder
         upstream_response = requests.post(
@@ -76,19 +76,18 @@ async def chat_agent(request: ChatRequest):
             stream=True,  # CRITICAL: Enable streaming
             timeout=120,  # Agent responses can take time
         )
-        
+
         # Check for upstream errors
         if not upstream_response.ok:
             error_body = upstream_response.text
             raise HTTPException(
                 status_code=upstream_response.status_code,
-                detail=f"Agent Builder error: {error_body}"
+                detail=f"Agent Builder error: {error_body}",
             )
-        
+
         def event_generator():
-            """
-            Generate SSE events from upstream response.
-            
+            """Generate SSE events from upstream response.
+
             CRITICAL: Use iter_content() NOT iter_lines()
             iter_lines() strips empty lines which breaks SSE protocol
             """
@@ -99,14 +98,11 @@ async def chat_agent(request: ChatRequest):
                         yield chunk
             except Exception as e:
                 # Graceful error handling - send error as SSE event
-                error_msg = json.dumps({
-                    "event": "error", 
-                    "data": {"message": str(e)}
-                })
-                yield f"data: {error_msg}\n\n".encode('utf-8')
+                error_msg = json.dumps({"event": "error", "data": {"message": str(e)}})
+                yield f"data: {error_msg}\n\n".encode()
             finally:
                 upstream_response.close()
-        
+
         return StreamingResponse(
             event_generator(),
             media_type="text/event-stream",
@@ -114,13 +110,12 @@ async def chat_agent(request: ChatRequest):
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
                 "X-Accel-Buffering": "no",  # Disable nginx buffering
-            }
+            },
         )
-        
+
     except requests.RequestException as e:
         raise HTTPException(
-            status_code=502,
-            detail=f"Failed to connect to Agent Builder: {str(e)}"
+            status_code=502, detail=f"Failed to connect to Agent Builder: {e!s}"
         )
 
 
@@ -140,4 +135,3 @@ async def health_check():
             "status": "unhealthy",
             "error": str(e),
         }
-

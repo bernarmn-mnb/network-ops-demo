@@ -1,5 +1,4 @@
-"""
-A2A Health Check Endpoint
+"""A2A Health Check Endpoint
 
 Provides health and configuration status for A2A functionality.
 Used by frontend to determine if LLM proxy is configured before
@@ -19,12 +18,11 @@ router = APIRouter()
 
 @router.get("/health")
 async def a2a_health():
-    """
-    Check A2A configuration health.
-    
+    """Check A2A configuration health.
+
     Returns status information about LLM proxy configuration
     and optionally tests connectivity.
-    
+
     Response:
     - status: 'healthy' | 'not_configured' | 'unhealthy'
     - llm_proxy_configured: bool
@@ -35,17 +33,18 @@ async def a2a_health():
     """
     # Check if LLM proxy is configured
     llm_proxy_configured = bool(settings.LLM_PROXY_URL and settings.LLM_PROXY_API_KEY)
-    
+
     # Mask the URL for security (show domain only)
     masked_url = ""
     if settings.LLM_PROXY_URL:
         try:
             from urllib.parse import urlparse
+
             parsed = urlparse(settings.LLM_PROXY_URL)
             masked_url = f"{parsed.scheme}://{parsed.netloc}/..."
         except Exception:
             masked_url = "configured"
-    
+
     if not llm_proxy_configured:
         return {
             "status": "not_configured",
@@ -57,10 +56,10 @@ async def a2a_health():
                 "Edit backend/.env file",
                 "Add LLM_PROXY_URL=<your-llm-proxy-url>",
                 "Add LLM_PROXY_API_KEY=<your-api-key>",
-                "Restart the backend: ./dev restart"
-            ]
+                "Restart the backend: ./dev restart",
+            ],
         }
-    
+
     # Configuration exists - return healthy status
     # Note: We don't test connectivity here to keep the endpoint fast
     # Actual connectivity issues will be caught when chat is attempted
@@ -74,12 +73,11 @@ async def a2a_health():
 
 @router.get("/health/test")
 async def a2a_health_test():
-    """
-    Test A2A connectivity by making a simple request to LLM proxy.
-    
+    """Test A2A connectivity by making a simple request to LLM proxy.
+
     This is slower than /health but actually verifies the connection works.
     Use this when troubleshooting configuration issues.
-    
+
     Response includes all fields from /health plus:
     - connectivity_tested: bool
     - connectivity_ok: bool
@@ -87,23 +85,23 @@ async def a2a_health_test():
     """
     # First get basic health
     base_health = await a2a_health()
-    
+
     if base_health["status"] == "not_configured":
         return {
             **base_health,
             "connectivity_tested": False,
             "connectivity_ok": False,
         }
-    
+
     # Test connectivity with a simple models list request
     try:
         test_url = f"{settings.LLM_PROXY_URL}/models"
         headers = {
             "Authorization": f"Bearer {settings.LLM_PROXY_API_KEY}",
         }
-        
+
         response = requests.get(test_url, headers=headers, timeout=10)
-        
+
         if response.status_code == 200:
             return {
                 **base_health,
@@ -120,7 +118,7 @@ async def a2a_health_test():
                 "connectivity_ok": False,
                 "error": "Authentication failed - API key may be invalid or expired",
                 "error_code": "LLM_PROXY_AUTH_FAILED",
-                "setup_hint": "Check your LLM_PROXY_API_KEY in backend/.env - it may be expired. Contact your LLM proxy administrator for a new key."
+                "setup_hint": "Check your LLM_PROXY_API_KEY in backend/.env - it may be expired. Contact your LLM proxy administrator for a new key.",
             }
         elif response.status_code == 403:
             return {
@@ -132,7 +130,7 @@ async def a2a_health_test():
                 "connectivity_ok": False,
                 "error": "Access forbidden - API key may not have required permissions",
                 "error_code": "LLM_PROXY_FORBIDDEN",
-                "setup_hint": "Your API key may not have the required permissions. Contact your LLM proxy administrator."
+                "setup_hint": "Your API key may not have the required permissions. Contact your LLM proxy administrator.",
             }
         else:
             return {
@@ -145,7 +143,7 @@ async def a2a_health_test():
                 "error": f"LLM proxy returned status {response.status_code}",
                 "error_code": "LLM_PROXY_ERROR",
             }
-            
+
     except requests.exceptions.ConnectionError:
         return {
             "status": "unhealthy",
@@ -156,7 +154,7 @@ async def a2a_health_test():
             "connectivity_ok": False,
             "error": "Could not connect to LLM proxy",
             "error_code": "LLM_PROXY_UNREACHABLE",
-            "setup_hint": "Check LLM_PROXY_URL in backend/.env and verify your network connection."
+            "setup_hint": "Check LLM_PROXY_URL in backend/.env and verify your network connection.",
         }
     except requests.exceptions.Timeout:
         return {
@@ -168,7 +166,7 @@ async def a2a_health_test():
             "connectivity_ok": False,
             "error": "Connection to LLM proxy timed out",
             "error_code": "LLM_PROXY_TIMEOUT",
-            "setup_hint": "The LLM proxy is not responding. It may be down or there may be network issues."
+            "setup_hint": "The LLM proxy is not responding. It may be down or there may be network issues.",
         }
     except Exception as e:
         return {
@@ -181,4 +179,3 @@ async def a2a_health_test():
             "error": str(e),
             "error_code": "LLM_PROXY_ERROR",
         }
-

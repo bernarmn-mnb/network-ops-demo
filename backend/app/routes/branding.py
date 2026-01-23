@@ -1,5 +1,4 @@
-"""
-Branding API Routes
+"""Branding API Routes
 
 Simple CRUD for brand themes stored in a JSON file.
 Designed for starter project simplicity - no database required.
@@ -8,13 +7,12 @@ Storage: backend/data/brands.json
 """
 
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-
 
 router = APIRouter(prefix="/api/branding", tags=["branding"])
 
@@ -27,8 +25,10 @@ BRANDS_FILE = DATA_DIR / "brands.json"
 # Models - Keep it simple: just essential colors + light/dark logos
 # ============================================================================
 
+
 class BrandColors(BaseModel):
     """Essential brand colors only."""
+
     primary: str = Field(..., description="Main brand color (buttons, links)")
     accent: str = Field(..., description="Secondary highlight color")
     background: str = Field("#FFFFFF", description="Page background")
@@ -37,17 +37,18 @@ class BrandColors(BaseModel):
 
 class BrandLogo(BaseModel):
     """Logo for a single mode (light or dark)."""
+
     url: str = Field("", description="Logo URL or data:image/... base64")
     alt: str = Field("Logo", description="Alt text for accessibility")
 
 
 class Brand(BaseModel):
-    """
-    Simplified brand theme.
-    
+    """Simplified brand theme.
+
     Just the essentials: colors + logos for light/dark mode.
     Auto-extracted themes (via vibe coding) can add more detail.
     """
+
     id: str = Field(..., description="Unique identifier (lowercase, no spaces)")
     name: str = Field(..., description="Display name")
     colors: BrandColors
@@ -59,24 +60,27 @@ class Brand(BaseModel):
 
 class BrandCreate(BaseModel):
     """Request body for creating a brand."""
+
     id: str
     name: str
     colors: BrandColors
-    logoLight: Optional[BrandLogo] = None
-    logoDark: Optional[BrandLogo] = None
+    logoLight: BrandLogo | None = None
+    logoDark: BrandLogo | None = None
 
 
 class BrandUpdate(BaseModel):
     """Request body for updating a brand (all fields optional)."""
-    name: Optional[str] = None
-    colors: Optional[BrandColors] = None
-    logoLight: Optional[BrandLogo] = None
-    logoDark: Optional[BrandLogo] = None
+
+    name: str | None = None
+    colors: BrandColors | None = None
+    logoLight: BrandLogo | None = None
+    logoDark: BrandLogo | None = None
 
 
 # ============================================================================
 # Storage Helpers
 # ============================================================================
+
 
 def ensure_data_dir():
     """Create data directory if it doesn't exist."""
@@ -86,7 +90,7 @@ def ensure_data_dir():
 def load_brands() -> dict[str, Brand]:
     """Load brands from JSON file."""
     ensure_data_dir()
-    
+
     if not BRANDS_FILE.exists():
         # Initialize with default brand
         default_brands = {
@@ -105,9 +109,9 @@ def load_brands() -> dict[str, Brand]:
         }
         save_brands(default_brands)
         return default_brands
-    
+
     try:
-        with open(BRANDS_FILE, "r") as f:
+        with open(BRANDS_FILE) as f:
             data = json.load(f)
             return {k: Brand(**v) for k, v in data.items()}
     except (json.JSONDecodeError, Exception) as e:
@@ -118,7 +122,7 @@ def load_brands() -> dict[str, Brand]:
 def save_brands(brands: dict[str, Brand]):
     """Save brands to JSON file."""
     ensure_data_dir()
-    
+
     with open(BRANDS_FILE, "w") as f:
         # Convert to dict for JSON serialization
         data = {k: v.model_dump() for k, v in brands.items()}
@@ -128,6 +132,7 @@ def save_brands(brands: dict[str, Brand]):
 # ============================================================================
 # API Endpoints
 # ============================================================================
+
 
 @router.get("/")
 async def list_brands() -> list[Brand]:
@@ -140,10 +145,10 @@ async def list_brands() -> list[Brand]:
 async def get_brand(brand_id: str) -> Brand:
     """Get a specific brand by ID."""
     brands = load_brands()
-    
+
     if brand_id not in brands:
         raise HTTPException(status_code=404, detail=f"Brand '{brand_id}' not found")
-    
+
     return brands[brand_id]
 
 
@@ -151,16 +156,16 @@ async def get_brand(brand_id: str) -> Brand:
 async def create_brand(brand_data: BrandCreate) -> Brand:
     """Create a new brand."""
     brands = load_brands()
-    
+
     # Normalize ID
     brand_id = brand_data.id.lower().replace(" ", "-")
-    
+
     if brand_id in brands:
         raise HTTPException(
-            status_code=400, 
-            detail=f"Brand '{brand_id}' already exists. Use PUT to update."
+            status_code=400,
+            detail=f"Brand '{brand_id}' already exists. Use PUT to update.",
         )
-    
+
     # Create brand
     brand = Brand(
         id=brand_id,
@@ -169,10 +174,10 @@ async def create_brand(brand_data: BrandCreate) -> Brand:
         logoLight=brand_data.logoLight or BrandLogo(),
         logoDark=brand_data.logoDark or BrandLogo(),
     )
-    
+
     brands[brand_id] = brand
     save_brands(brands)
-    
+
     return brand
 
 
@@ -180,12 +185,12 @@ async def create_brand(brand_data: BrandCreate) -> Brand:
 async def update_brand(brand_id: str, brand_data: BrandUpdate) -> Brand:
     """Update an existing brand."""
     brands = load_brands()
-    
+
     if brand_id not in brands:
         raise HTTPException(status_code=404, detail=f"Brand '{brand_id}' not found")
-    
+
     existing = brands[brand_id]
-    
+
     # Update only provided fields
     if brand_data.name is not None:
         existing.name = brand_data.name
@@ -195,12 +200,12 @@ async def update_brand(brand_id: str, brand_data: BrandUpdate) -> Brand:
         existing.logoLight = brand_data.logoLight
     if brand_data.logoDark is not None:
         existing.logoDark = brand_data.logoDark
-    
+
     existing.updatedAt = datetime.now().isoformat()
-    
+
     brands[brand_id] = existing
     save_brands(brands)
-    
+
     return existing
 
 
@@ -208,17 +213,14 @@ async def update_brand(brand_id: str, brand_data: BrandUpdate) -> Brand:
 async def delete_brand(brand_id: str):
     """Delete a brand."""
     brands = load_brands()
-    
+
     if brand_id not in brands:
         raise HTTPException(status_code=404, detail=f"Brand '{brand_id}' not found")
-    
+
     if brand_id == "default":
         raise HTTPException(status_code=400, detail="Cannot delete the default brand")
-    
+
     del brands[brand_id]
     save_brands(brands)
-    
+
     return {"message": f"Brand '{brand_id}' deleted"}
-
-
-

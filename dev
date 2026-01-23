@@ -130,11 +130,6 @@ check_dependencies() {
         missing+=("yarn or npm (Node.js package manager)")
     fi
     
-    # Check for Python venv
-    if [ ! -f "backend/venv/bin/python" ]; then
-        missing+=("backend Python venv (backend/venv)")
-    fi
-    
     if [ ${#missing[@]} -gt 0 ]; then
         echo -e "${RED}❌ Missing dependencies:${NC}"
         for dep in "${missing[@]}"; do
@@ -145,9 +140,6 @@ check_dependencies() {
         if [[ " ${missing[*]} " =~ "yarn or npm" ]]; then
             echo -e "   Install Node.js: ${BLUE}https://nodejs.org/${NC}"
             echo -e "   Or with Homebrew: ${BLUE}brew install node${NC}"
-        fi
-        if [[ " ${missing[*]} " =~ " backend Python venv " ]]; then
-            echo -e "   Create Python venv: ${BLUE}cd backend && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt${NC}"
         fi
         echo ""
         echo -e "Then run ${BLUE}./setup.sh${NC} to complete setup."
@@ -163,6 +155,16 @@ get_pkg_manager() {
         echo "npm"
     else
         echo ""
+    fi
+}
+
+get_backend_command() {
+    if command -v uv &> /dev/null; then
+        echo "uv run elastic-demo-starter-backend"
+    else
+        echo -e "${YELLOW}⚠️  uv not found. Falling back to system Python.${NC}"
+        echo "  Install uv for faster, reproducible installs: https://docs.astral.sh/uv/"
+        echo "python run.py"
     fi
 }
 
@@ -199,7 +201,9 @@ cmd_start() {
         
         echo -e "Starting backend on port ${GREEN}$BACKEND_PORT${NC}..."
         cd backend
-        PORT=$BACKEND_PORT nohup ./venv/bin/python run.py > "../$LOG_DIR/backend.log" 2>&1 &
+        local backend_cmd
+        backend_cmd=$(get_backend_command)
+        PORT=$BACKEND_PORT nohup bash -c "$backend_cmd" > "../$LOG_DIR/backend.log" 2>&1 &
         echo $! > "../$BACKEND_PID_FILE"
         cd ..
         echo -e "${GREEN}✅ Backend started${NC} (PID: $(get_pid $BACKEND_PID_FILE))"
@@ -549,11 +553,11 @@ cmd_verify() {
         all_pass=false
     fi
     
-    # Check 3: Python venv
-    if [ -f "backend/venv/bin/python" ]; then
-        echo -e "✅ Python virtual environment"
+    # Check 3: uv installed
+    if command -v uv &> /dev/null; then
+        echo -e "✅ uv installed"
     else
-        echo -e "${RED}❌ Missing backend/venv${NC}"
+        echo -e "${RED}❌ Missing uv${NC}"
         all_pass=false
     fi
     

@@ -1,5 +1,4 @@
-"""
-Elasticsearch utilities and client management.
+"""Elasticsearch utilities and client management.
 
 Provides:
 - Client connection management
@@ -8,18 +7,18 @@ Provides:
 - Search execution helpers
 """
 
-from .client import get_es_client, es_client, close_es_client
-from .search import search_products
-from .query_builder import QueryBuilder, get_index_fields, build_filter_clauses
+from .client import close_es_client, es_client, get_es_client
+from .query_builder import QueryBuilder, build_filter_clauses, get_index_fields
 from .retriever_builder import RetrieverBuilder
+from .search import search_products
 
 __all__ = [
-    "get_es_client", 
-    "es_client",
-    "close_es_client",
-    "search_products",
     "QueryBuilder",
     "RetrieverBuilder",
-    "get_index_fields",
     "build_filter_clauses",
+    "close_es_client",
+    "es_client",
+    "get_es_client",
+    "get_index_fields",
+    "search_products",
 ]

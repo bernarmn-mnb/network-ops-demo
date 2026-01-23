@@ -1,5 +1,4 @@
-"""
-FastAPI Backend for Elastic Demo Starter
+"""FastAPI Backend for Elastic Demo Starter
 
 This backend acts as a proxy between the frontend and Elastic Agent Builder,
 keeping API keys secure while enabling SSE streaming.
@@ -13,16 +12,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .otel import init_otel
+from .routes.a2a import router as a2a_router
+from .routes.agno_demo import router as agno_router
 from .routes.agent import router as agent_router
+from .routes.analytics import router as analytics_router
 from .routes.audit import router as audit_router
 from .routes.branding import router as branding_router
 from .routes.mcp import router as mcp_router
-from .routes.a2a import router as a2a_router
-from .routes.agno_demo import router as agno_router
-from .routes.search_simple import router as search_simple_router
 from .routes.search import router as search_router
 from .routes.search_fields import router as search_fields_router
-from .routes.analytics import router as analytics_router
+from .routes.search_simple import router as search_simple_router
 from .routes.tracking import router as tracking_router
 
 # Create FastAPI application
@@ -81,10 +80,10 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "app.main:app",
         host=settings.HOST,
         port=settings.PORT,
         reload=True,
     )
-

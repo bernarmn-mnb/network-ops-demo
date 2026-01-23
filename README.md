@@ -48,12 +48,13 @@ Run `./preflight-check.sh` to verify all requirements, or check manually:
 
 | Requirement | Minimum | Purpose | Status |
 |-------------|---------|---------|--------|
-| **Python** | 3.8+ | Backend server (FastAPI) | **Required** - setup fails if missing/old |
+| **Python** | 3.12+ | Backend server (FastAPI) | **Required** - setup fails if missing/old |
 | **Node.js** | 18+ | Frontend build (Vite) | **Required** - warns if older |
 | **Git** | Any | Clone repo, submodules | **Required** |
 | GitHub CLI (`gh`) | Any | Easier cloning/auth | Recommended |
+| **uv** | Latest | Backend dependency manager | **Required** for backend/dev (setup can fall back) |
 | Yarn | Any | Faster npm alternative | Recommended |
-| Firecrawl MCP | - | AI branding extraction | Optional (see [PREREQUISITES.md](./PREREQUISITES.md)) |
+| Firecrawl MCP | - | AI branding extraction | Optional (see [PREREQUISITES.md](./docs/PREREQUISITES.md)) |
 | Docker | Any | Container deployment | Optional |
 | Beads (`bd`) | Any | Issue tracking | Optional |
 
@@ -85,9 +86,9 @@ The fastest way to get started is to let your AI assistant do the work.
 
 2.  **Open in your AI Editor**:
     *   **Cursor**: Open the folder, press `Cmd+L` (Chat), and type:
-        > "Read WELCOME_PROMPT.md and follow the instructions."
+        > "Read docs/prompts/WELCOME_PROMPT.md and follow the instructions."
     *   **Claude Code**: Run `claude` in the terminal and type:
-        > "Read WELCOME_PROMPT.md and follow the instructions."
+        > "Read docs/prompts/WELCOME_PROMPT.md and follow the instructions."
 
 3.  **Follow the AI's lead**: It will interview you about your project goals, run the setup scripts, and create a customized execution plan.
 
@@ -105,9 +106,9 @@ After cloning, verify your environment has all prerequisites:
 ./preflight-check.sh
 ```
 
-This checks for Python 3.8+, Node.js 18+, Git, and optional tools like GitHub CLI and Yarn. Run this **before** `./setup.sh` to catch issues early.
+This checks for Python 3.12+, Node.js 18+, Git, and optional tools like GitHub CLI and Yarn. Run this **before** `./setup.sh` to catch issues early.
 
-> **Full prerequisites guide**: See [PREREQUISITES.md](./PREREQUISITES.md) for detailed installation instructions.
+> **Full prerequisites guide**: See [PREREQUISITES.md](./docs/PREREQUISITES.md) for detailed installation instructions.
 
 ### 1. Clone the Repository
 
@@ -142,7 +143,7 @@ This downloads the `hive-mind/` shared knowledge base.
 ```
 
 The wizard will:
-1. ✅ **Validate environment** - Python 3.8+ (fails early if too old), Node.js 18+ (warns if older)
+1. ✅ **Validate environment** - Python 3.12+ (fails early if too old), Node.js 18+ (warns if older)
 2. 🔌 **Check network** - Verifies connectivity to Elastic Cloud, npm, PyPI
 3. 📦 **Initialize submodules** - Offers to fix if hive-mind is empty
 4. 🎯 **Ask which features you want to configure:**
@@ -175,7 +176,20 @@ After setup, use the `./dev` script to manage servers:
 
 Both servers **auto-reload** on code changes - no restart needed!
 
-- Frontend: http://localhost:3000  
+### Makefile Shortcuts (Optional)
+
+If you prefer Make targets, the Makefile quick reference maps to the most common tasks:
+
+```bash
+make start   # Start development servers
+make stop    # Stop servers
+make status  # Check server status
+make test    # Run all tests
+make check   # Run lint and test
+make help    # Show all available targets
+```
+
+- Frontend: http://localhost:3000
 - Backend API: http://localhost:8001/docs
 
 ### After Setup: Onboarding Your AI Assistant
@@ -185,7 +199,7 @@ Both servers **auto-reload** on code changes - no restart needed!
 Once the servers are running, **open the project in Cursor or VS Code** and tell your AI:
 
 ```
-Read and follow ONBOARDING.md
+Read and follow docs/ONBOARDING.md
 ```
 
 This will:
@@ -201,13 +215,11 @@ After onboarding, you're ready to **vibe code** - ask your AI to add features, f
 If you prefer to skip the wizard and set things up manually:
 
 ```bash
-# Backend
+# Backend (uv)
 cd backend
-python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+uv sync
 cp .env.example .env      # Edit with your Elastic credentials
-python run.py
+uv run elastic-demo-starter-backend
 
 # Frontend (separate terminal)
 cd frontend
@@ -355,7 +367,7 @@ For complete branding documentation including:
 - Component patterns
 - Troubleshooting
 
-See **[BRANDING.md](./BRANDING.md)**
+See **[BRANDING.md](./docs/BRANDING.md)**
 
 ## Issue Tracking with Beads (Optional)
 
@@ -518,20 +530,20 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 ├── preflight-check.sh        # Pre-clone environment check
 ├── setup.sh                  # Setup launcher
 ├── dev                       # Server management script
-├── PREREQUISITES.md          # Detailed prerequisites guide
-├── ONBOARDING.md             # AI assistant onboarding prompt
-└── BRANDING.md               # Branding documentation
+├── docs/PREREQUISITES.md     # Detailed prerequisites guide
+├── docs/ONBOARDING.md        # AI assistant onboarding prompt
+└── docs/BRANDING.md          # Branding documentation
 ```
 
 ## Documentation
 
 | Document | Purpose |
 |----------|---------|
-| [ONBOARDING.md](./ONBOARDING.md) | First-time setup guide for AI assistants |
-| [CUSTOMIZATION.md](./CUSTOMIZATION.md) | Chat interface customization options |
-| [BRANDING.md](./BRANDING.md) | Brand theming system documentation |
+| [ONBOARDING.md](./docs/ONBOARDING.md) | First-time setup guide for AI assistants |
+| [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md) | Chat interface customization options |
+| [BRANDING.md](./docs/BRANDING.md) | Brand theming system documentation |
 | [docs/PAGES.md](./docs/PAGES.md) | Page reference for demo builders |
-| [DEMO_GUIDE_TEMPLATE.md](./DEMO_GUIDE_TEMPLATE.md) | Template for documenting your demo |
+| [DEMO_GUIDE_TEMPLATE.md](./docs/DEMO_GUIDE_TEMPLATE.md) | Template for documenting your demo |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | How to contribute to the template |
 
 ### Creating a Demo Guide
@@ -539,7 +551,7 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 When building a demo for a specific customer or use case, copy the template:
 
 ```bash
-cp DEMO_GUIDE_TEMPLATE.md DEMO_GUIDE.md
+cp docs/DEMO_GUIDE_TEMPLATE.md docs/DEMO_GUIDE.md
 ```
 
 Then fill in the sections to document your demo's configuration, flow, and customizations.
@@ -689,7 +701,7 @@ The wizard remembers what's already configured and lets you choose what to updat
 
 | Issue | Solution |
 |-------|----------|
-| "Python not found" or version too old | Install Python 3.8+: `brew install python3` |
+| "Python not found" or version too old | Install Python 3.12+: `brew install python3` |
 | "Node not found" or version too old | Install Node 18+: `brew install node` |
 | hive-mind folder empty | Run: `git submodule update --init --recursive` |
 | API key errors (401) | Regenerate key in Kibana → Stack Management → API Keys |

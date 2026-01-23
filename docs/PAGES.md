@@ -2,35 +2,36 @@
 
 > Documentation for demo builders: what each page does and how to customize it.
 
----
+______________________________________________________________________
 
 ## Overview
 
 The demo starter includes these pages:
 
-| Page | Path | Purpose | Requires |
-|------|------|---------|----------|
-| [Welcome](#welcome-page) | `/` | Feature showcase & onboarding | Nothing |
-| [Demo Guide](#demo-guide-page) | `/guide` | Presenter guide with demo flow | Nothing |
-| [Chat](#chat-page) | `/chat` | Agent Builder chat interface | Agent connection |
-| [Branded Demo](#branded-demo-page) | `/branded` | Full-screen presentation mode | Agent connection |
-| [Brand Editor](#brand-editor-page) | `/brands` | Create/manage brand themes | Nothing |
-| [Audit](#audit-page) | `/audit` | Review conversation history | Agent connection |
-| [MCP Explorer](#mcp-explorer-page) | `/mcp` | Browse MCP server tools | Agent connection |
-| [A2A Chat](#a2a-chat-page) | `/a2a-chat` | Multi-agent orchestration | Agent + LLM Proxy |
-| [Search](#search-page) | `/search` | Elasticsearch search UI | ES connection |
+| Page                               | Path        | Purpose                        | Requires          |
+| ---------------------------------- | ----------- | ------------------------------ | ----------------- |
+| [Welcome](#welcome-page)           | `/`         | Feature showcase & onboarding  | Nothing           |
+| [Demo Guide](#demo-guide-page)     | `/guide`    | Presenter guide with demo flow | Nothing           |
+| [Chat](#chat-page)                 | `/chat`     | Agent Builder chat interface   | Agent connection  |
+| [Branded Demo](#branded-demo-page) | `/branded`  | Full-screen presentation mode  | Agent connection  |
+| [Brand Editor](#brand-editor-page) | `/brands`   | Create/manage brand themes     | Nothing           |
+| [Audit](#audit-page)               | `/audit`    | Review conversation history    | Agent connection  |
+| [MCP Explorer](#mcp-explorer-page) | `/mcp`      | Browse MCP server tools        | Agent connection  |
+| [A2A Chat](#a2a-chat-page)         | `/a2a-chat` | Multi-agent orchestration      | Agent + LLM Proxy |
+| [Search](#search-page)             | `/search`   | Elasticsearch search UI        | ES connection     |
 
----
+______________________________________________________________________
 
 ## Welcome Page
 
-**Path**: `/`  
-**File**: `frontend/src/pages/WelcomePage.tsx`  
+**Path**: `/`\
+**File**: `frontend/src/pages/WelcomePage.tsx`\
 **Category**: Core
 
 ### Purpose
 
 The landing page that shows:
+
 - Connection status (Agent Builder, LLM Proxy)
 - Available features organized by category
 - Setup guidance (collapsible)
@@ -64,17 +65,18 @@ const FEATURES: Feature[] = [
 
 **Change category labels**: Edit `CATEGORY_LABELS` in the same file.
 
----
+______________________________________________________________________
 
 ## Demo Guide Page
 
-**Path**: `/guide`  
-**File**: `frontend/src/pages/DemoGuidePage.tsx`  
+**Path**: `/guide`\
+**File**: `frontend/src/pages/DemoGuidePage.tsx`\
 **Category**: Tools
 
 ### Purpose
 
 A presenter's guide for demonstrating the application:
+
 - Demo overview and capabilities
 - Structured demo flow with numbered scenarios
 - Talking points for each section
@@ -144,17 +146,18 @@ const RESOURCES = {
 - Use demo pills to make navigation seamless during presentations
 - Update the "Key Messages" section with your top 3-4 points
 
----
+______________________________________________________________________
 
 ## Chat Page
 
-**Path**: `/chat`  
-**File**: `frontend/src/pages/ChatPage.tsx`  
+**Path**: `/chat`\
+**File**: `frontend/src/pages/ChatPage.tsx`\
 **Category**: Demo Building
 
 ### Purpose
 
 The primary chat interface for interacting with your Agent Builder agent. Features:
+
 - Streaming responses with real-time text
 - Reasoning steps visualization (agent thinking)
 - Tool call cards (what tools the agent uses)
@@ -169,7 +172,7 @@ The primary chat interface for interacting with your Agent Builder agent. Featur
 
 ### Customization
 
-See [CUSTOMIZATION.md](../CUSTOMIZATION.md) for detailed options:
+See [CUSTOMIZATION.md](./CUSTOMIZATION.md) for detailed options:
 
 ```tsx
 <ChatContainer
@@ -183,22 +186,24 @@ See [CUSTOMIZATION.md](../CUSTOMIZATION.md) for detailed options:
 ```
 
 **Key customization points**:
+
 - `greeting` - Initial assistant message
 - `placeholder` - Input field placeholder text
 - `suggestions` - Quick prompt chips
 - `emptyState` - Custom empty state component
 
----
+______________________________________________________________________
 
 ## Branded Demo Page
 
-**Path**: `/branded`  
-**File**: `frontend/src/pages/BrandedDemoPage.tsx`  
+**Path**: `/branded`\
+**File**: `frontend/src/pages/BrandedDemoPage.tsx`\
 **Category**: Demo Building
 
 ### Purpose
 
 A full-screen, presentation-ready version of the chat interface with:
+
 - Brand-specific theming
 - Minimal chrome/distractions
 - Clean layout for customer presentations
@@ -217,17 +222,18 @@ The page automatically uses the currently selected brand. To change brands:
 2. **Brand selector**: Use the dropdown in the header
 3. **Default brand**: Modify `getSelectedBrandId()` in `frontend/src/branding/index.ts`
 
----
+______________________________________________________________________
 
 ## Brand Editor Page
 
-**Path**: `/brands`  
-**File**: `frontend/src/pages/BrandEditorPage.tsx`  
+**Path**: `/brands`\
+**File**: `frontend/src/pages/BrandEditorPage.tsx`\
 **Category**: Demo Building
 
 ### Purpose
 
 Visual editor for creating and managing brand themes:
+
 - Color pickers for primary/accent colors
 - Logo upload for light/dark modes
 - Live preview
@@ -245,19 +251,20 @@ Brands created here are stored in `backend/data/brands.json`.
 
 ### Limitations
 
-For advanced branding (custom fonts, gradients, CSS variables), use the AI-powered extraction approach instead. See [BRANDING.md](../BRANDING.md).
+For advanced branding (custom fonts, gradients, CSS variables), use the AI-powered extraction approach instead. See [BRANDING.md](./BRANDING.md).
 
----
+______________________________________________________________________
 
 ## Audit Page
 
-**Path**: `/audit`  
-**File**: `frontend/src/pages/AuditPage.tsx`  
+**Path**: `/audit`\
+**File**: `frontend/src/pages/AuditPage.tsx`\
 **Category**: Development Tools
 
 ### Purpose
 
 Review conversation history with full visibility into:
+
 - All messages (user and assistant)
 - Agent reasoning steps
 - Tool calls and their results
@@ -274,17 +281,18 @@ Review conversation history with full visibility into:
 
 Conversations are retrieved from Agent Builder's conversation API. Only conversations from the configured agent are shown.
 
----
+______________________________________________________________________
 
 ## MCP Explorer Page
 
-**Path**: `/mcp`  
-**File**: `frontend/src/pages/MCPExplorerPage.tsx`  
+**Path**: `/mcp`\
+**File**: `frontend/src/pages/MCPExplorerPage.tsx`\
 **Category**: Development Tools
 
 ### Purpose
 
 Browse and test Model Context Protocol (MCP) server tools:
+
 - List available tools
 - View tool schemas (inputs/outputs)
 - Test tools with sample inputs
@@ -299,17 +307,18 @@ Browse and test Model Context Protocol (MCP) server tools:
 
 The agent must have MCP tools configured in Agent Builder.
 
----
+______________________________________________________________________
 
 ## A2A Chat Page
 
-**Path**: `/a2a-chat`  
-**File**: `frontend/src/pages/A2AChatPage.tsx`  
+**Path**: `/a2a-chat`\
+**File**: `frontend/src/pages/A2AChatPage.tsx`\
 **Category**: Advanced
 
 ### Purpose
 
 Multi-agent orchestration using Agent-to-Agent (A2A) pattern:
+
 - Coordinator LLM decides which agent to call
 - Multiple Agent Builder agents available
 - Visual indicator of which agent is responding
@@ -329,7 +338,7 @@ Multi-agent orchestration using Agent-to-Agent (A2A) pattern:
 
 ### Architecture
 
-```
+```text
 User Query
     │
     ▼
@@ -346,17 +355,18 @@ User Query
 
 See `hive-mind/patterns/elastic/A2A_COORDINATOR_PATTERN.md` for details.
 
----
+______________________________________________________________________
 
 ## Search Page
 
-**Path**: `/search`  
-**File**: `frontend/src/pages/SearchPageSimple.tsx`  
+**Path**: `/search`\
+**File**: `frontend/src/pages/SearchPageSimple.tsx`\
 **Category**: Optional (requires ES)
 
 ### Purpose
 
 Elasticsearch search interface with:
+
 - Full-text search
 - Faceted filtering
 - Result cards with images
@@ -389,7 +399,7 @@ export const searchConfig: SearchConfig = {
   },
   display: {
     title: "title",
-    description: "description", 
+    description: "description",
     image: "image_url",
     price: "price",
   },
@@ -400,7 +410,7 @@ export const searchConfig: SearchConfig = {
 }
 ```
 
----
+______________________________________________________________________
 
 ## Adding New Pages
 
@@ -460,31 +470,38 @@ export const NAV_ITEMS: NavItem[] = [
 
 Edit the `FEATURES` array in `WelcomePage.tsx` to show it on the landing page.
 
----
+______________________________________________________________________
 
 ## Page Categories
 
 Pages are organized into three categories:
 
 ### Demo Building (`demo`)
+
 Features for creating customer presentations:
+
 - Chat, Branded Demo, Brand Editor
 
 ### Development Tools (`tools`)
+
 Features for debugging and exploration:
+
 - Audit, MCP Explorer
 
 ### Advanced (`advanced`)
+
 Features requiring additional setup:
+
 - A2A Chat, Search (when ES not configured)
 
----
+______________________________________________________________________
 
 ## Navigation System
 
 Navigation is centralized in `frontend/src/components/layout/navigationConfig.ts`.
 
 Two header variants are available:
+
 - `AppHeader.tsx` - Full navigation with all pages
 - `AppHeaderSimple.tsx` - Minimal header for focused demos
 

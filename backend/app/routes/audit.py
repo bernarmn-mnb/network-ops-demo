@@ -1,5 +1,4 @@
-"""
-Audit API Routes - Conversation History
+"""Audit API Routes - Conversation History
 
 Provides endpoints to retrieve conversation history from Elastic Agent Builder
 for audit and review purposes. Proxies requests to Kibana's conversation API.
@@ -9,9 +8,10 @@ Endpoints:
 - GET /api/audit/conversations/{conversation_id} - Get full conversation detail
 """
 
+from typing import Optional
+
 import requests
 from fastapi import APIRouter, HTTPException, Query
-from typing import Optional
 
 from ..config import settings
 
@@ -33,11 +33,10 @@ def get_conversations_url() -> str:
 
 @router.get("/conversations")
 async def list_conversations(
-    agent_id: Optional[str] = Query(None, description="Filter by agent ID")
+    agent_id: str | None = Query(None, description="Filter by agent ID"),
 ):
-    """
-    List all conversations from Agent Builder.
-    
+    """List all conversations from Agent Builder.
+
     Optionally filter by agent_id to show only conversations for a specific agent.
     Returns conversation summaries (id, title, agent, user, timestamps).
     """
@@ -47,34 +46,32 @@ async def list_conversations(
         params = {}
         if agent_id:
             params["agent_id"] = agent_id
-        
+
         response = requests.get(
             url,
             headers=get_auth_headers(),
             params=params,
             timeout=30,
         )
-        
+
         if not response.ok:
             raise HTTPException(
                 status_code=response.status_code,
-                detail=f"Failed to fetch conversations: {response.text}"
+                detail=f"Failed to fetch conversations: {response.text}",
             )
-        
+
         return response.json()
-        
+
     except requests.RequestException as e:
         raise HTTPException(
-            status_code=502,
-            detail=f"Failed to connect to Agent Builder: {str(e)}"
+            status_code=502, detail=f"Failed to connect to Agent Builder: {e!s}"
         )
 
 
 @router.get("/conversations/{conversation_id}")
 async def get_conversation(conversation_id: str):
-    """
-    Get full conversation detail by ID.
-    
+    """Get full conversation detail by ID.
+
     Returns complete conversation including:
     - Metadata (id, title, agent, user, timestamps)
     - Rounds (each user→assistant exchange)
@@ -84,31 +81,29 @@ async def get_conversation(conversation_id: str):
     """
     try:
         url = f"{get_conversations_url()}/{conversation_id}"
-        
+
         response = requests.get(
             url,
             headers=get_auth_headers(),
             timeout=30,
         )
-        
+
         if response.status_code == 404:
             raise HTTPException(
-                status_code=404,
-                detail=f"Conversation not found: {conversation_id}"
+                status_code=404, detail=f"Conversation not found: {conversation_id}"
             )
-        
+
         if not response.ok:
             raise HTTPException(
                 status_code=response.status_code,
-                detail=f"Failed to fetch conversation: {response.text}"
+                detail=f"Failed to fetch conversation: {response.text}",
             )
-        
+
         return response.json()
-        
+
     except requests.RequestException as e:
         raise HTTPException(
-            status_code=502,
-            detail=f"Failed to connect to Agent Builder: {str(e)}"
+            status_code=502, detail=f"Failed to connect to Agent Builder: {e!s}"
         )
 
 
@@ -122,7 +117,7 @@ async def audit_health():
             headers=get_auth_headers(),
             timeout=10,
         )
-        
+
         return {
             "status": "healthy" if response.ok else "unhealthy",
             "kibana_connected": response.ok,
@@ -133,4 +128,3 @@ async def audit_health():
             "status": "unhealthy",
             "error": str(e),
         }
-

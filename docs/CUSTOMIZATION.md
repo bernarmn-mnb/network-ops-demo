@@ -2,7 +2,7 @@
 
 This guide covers common customization patterns for the chat interface. These configurations allow you to create branded, domain-specific demos without modifying core components.
 
----
+______________________________________________________________________
 
 ## Quick Prompts
 
@@ -46,7 +46,7 @@ interface Suggestion {
 - **Mix emojis and icons** - Emojis add personality, EUI icons feel professional
 - **Cover key capabilities** - Show the range of what your assistant can do
 
----
+______________________________________________________________________
 
 ## Custom Empty States
 
@@ -91,14 +91,14 @@ interface Props {
 
 export function MyEmptyState({ onSelectPrompt }: Props) {
   const options = [
-    { 
-      icon: 'calendar', 
+    {
+      icon: 'calendar',
       title: 'Weekly Plan',
       description: 'Create a meal plan for the week',
       prompt: 'Help me plan meals for this week'
     },
-    { 
-      icon: 'search', 
+    {
+      icon: 'search',
       title: 'Find Recipes',
       description: 'Search by ingredients',
       prompt: 'Find recipes using chicken and rice'
@@ -122,7 +122,7 @@ export function MyEmptyState({ onSelectPrompt }: Props) {
 }
 ```
 
----
+______________________________________________________________________
 
 ## Greeting Messages
 
@@ -141,7 +141,7 @@ Set the initial assistant message that appears when the chat loads.
 - **Match the brand voice** - Formal for enterprise, friendly for consumer
 - **Keep it concise** - 2-3 sentences maximum
 
----
+______________________________________________________________________
 
 ## Placeholder Text
 
@@ -153,7 +153,7 @@ Customize the input field placeholder:
 />
 ```
 
----
+______________________________________________________________________
 
 ## Title
 
@@ -165,7 +165,7 @@ Set the chat header title:
 />
 ```
 
----
+______________________________________________________________________
 
 ## Standalone SuggestionChips
 
@@ -192,7 +192,7 @@ function MyComponent() {
 }
 ```
 
----
+______________________________________________________________________
 
 ## Complete Example
 
@@ -218,7 +218,7 @@ function RetailDemo() {
 }
 ```
 
----
+______________________________________________________________________
 
 ## Branding
 
@@ -228,17 +228,16 @@ For visual customization (colors, fonts, logos), see the branding system:
 - `hive-mind/patterns/branding/` - Brand extraction patterns
 - `backend/app/routes/branding.py` - Brand API endpoints
 
----
+______________________________________________________________________
 
 ## What NOT to Do
 
-❌ **Don't hardcode domain content in core components** - Always use props  
-❌ **Don't fork ChatContainer** - Use the customization props instead  
-❌ **Don't add use-case specific logic** - Keep the template generic  
+❌ **Don't hardcode domain content in core components** - Always use props\
+❌ **Don't fork ChatContainer** - Use the customization props instead\
+❌ **Don't add use-case specific logic** - Keep the template generic
 
 If you need functionality beyond these customization options, consider:
+
 1. Creating a wrapper component that uses `ChatContainer`
 2. Using the `emptyState` render prop for complex interactive states
 3. Proposing an enhancement to the template (see CLAUDE.md for contribution guidelines)
-
-

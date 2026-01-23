@@ -1,6 +1,5 @@
-"""
-Pytest configuration and fixtures for backend tests.
-"""
+"""Pytest configuration and fixtures for backend tests."""
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -20,4 +19,3 @@ def mock_env(monkeypatch):
     monkeypatch.setenv("ELASTIC_API_KEY", "test-api-key")
     monkeypatch.setenv("AGENT_ID", "test-agent-id")
     monkeypatch.setenv("PORT", "8001")
-

@@ -433,11 +433,11 @@ export function WelcomePage() {
             <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" responsive={false} gutterSize="s">
               <EuiFlexItem grow={false}>
                 <EuiText size="s">
-                  <strong style={{ fontFamily: 'monospace' }}>"Read and follow ONBOARDING.md"</strong>
+                  <strong style={{ fontFamily: 'monospace' }}>"Read and follow docs/ONBOARDING.md"</strong>
                 </EuiText>
               </EuiFlexItem>
               <EuiFlexItem grow={false}>
-                <EuiCopy textToCopy="Read and follow ONBOARDING.md">
+                <EuiCopy textToCopy="Read and follow docs/ONBOARDING.md">
                   {(copy) => (
                     <EuiButtonIcon
                       onClick={copy}

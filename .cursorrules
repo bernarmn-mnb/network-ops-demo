@@ -1,7 +1,7 @@
 # Project Rules
 
 > **This file exists for Cursor compatibility.**
-> The canonical rules are in `CLAUDE.md` - Cursor should auto-include it if configured.
-> If you're seeing this, ensure Cursor settings include CLAUDE.md, or read CLAUDE.md directly.
+> The canonical rules are in `AGENTS.md` - Cursor should auto-include it if configured.
+> If you're seeing this, ensure Cursor settings include AGENTS.md, or read AGENTS.md directly.
 
-See `CLAUDE.md` for all project rules, patterns, and conventions.
+See `AGENTS.md` for all project rules, patterns, and conventions.

@@ -19,7 +19,7 @@ elif command -v python &> /dev/null; then
 else
     echo -e "${RED}❌ Python is not installed.${NC}"
     echo ""
-    echo "Please install Python 3.8 or newer:"
+    echo "Please install Python 3.12 or newer:"
     echo "  • macOS: brew install python3"
     echo "  • Ubuntu: sudo apt install python3 python3-venv"
     echo "  • Download: https://www.python.org/downloads/"
@@ -28,20 +28,20 @@ else
     exit 1
 fi
 
-# Check Python version (need 3.8+)
+# Check Python version (need 3.12+)
 PY_VERSION=$($PYTHON -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null)
 PY_MAJOR=$($PYTHON -c "import sys; print(sys.version_info.major)" 2>/dev/null)
 PY_MINOR=$($PYTHON -c "import sys; print(sys.version_info.minor)" 2>/dev/null)
 
-if [ "$PY_MAJOR" -lt 3 ] || ([ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 8 ]); then
+if [ "$PY_MAJOR" -lt 3 ] || ([ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 12 ]); then
     echo -e "${RED}❌ Python $PY_VERSION is too old.${NC}"
     echo ""
-    echo "This project requires Python 3.8 or newer."
+    echo "This project requires Python 3.12 or newer."
     echo "Your version: Python $PY_VERSION"
     echo ""
     echo "Please upgrade Python:"
     echo "  • macOS: brew upgrade python3"
-    echo "  • Ubuntu: sudo apt install python3.10"
+    echo "  • Ubuntu: sudo apt install python3.12"
     echo "  • Download: https://www.python.org/downloads/"
     echo ""
     exit 1
@@ -49,8 +49,22 @@ fi
 
 echo -e "${GREEN}✓${NC} Python $PY_VERSION"
 
+# Check for uv (recommended)
+if command -v uv &> /dev/null; then
+    UV_AVAILABLE=true
+    echo -e "${GREEN}✓${NC} uv detected"
+else
+    UV_AVAILABLE=false
+    echo -e "${YELLOW}⚠️  uv not found. Falling back to system Python.${NC}"
+    echo "  Install uv for faster, reproducible installs: https://docs.astral.sh/uv/"
+fi
+
 # Get the directory where this script lives
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Run the interactive setup
-exec $PYTHON "$SCRIPT_DIR/scripts/interactive_setup.py"
+if [ "$UV_AVAILABLE" = true ]; then
+    exec uv run python "$SCRIPT_DIR/scripts/interactive_setup.py"
+else
+    exec $PYTHON "$SCRIPT_DIR/scripts/interactive_setup.py"
+fi

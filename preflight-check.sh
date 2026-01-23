@@ -70,22 +70,22 @@ detect_platform() {
 prompt_yn() {
     local prompt="$1"
     local default="${2:-n}"
-    
+
     if [ "$INTERACTIVE" = false ]; then
         return 1
     fi
-    
+
     if [ "$default" = "y" ]; then
         read -p "$prompt [Y/n] " -n 1 -r choice
     else
         read -p "$prompt [y/N] " -n 1 -r choice
     fi
     echo ""
-    
+
     case "$choice" in
         [Yy]) return 0 ;;
         [Nn]) return 1 ;;
-        "") 
+        "")
             if [ "$default" = "y" ]; then
                 return 0
             else
@@ -100,11 +100,11 @@ prompt_yn() {
 run_install() {
     local name="$1"
     local cmd="$2"
-    
+
     echo -e "     ${CYAN}Installing $name...${NC}"
     echo -e "     ${DIM}Running: $cmd${NC}"
     echo ""
-    
+
     if eval "$cmd"; then
         echo ""
         echo -e "     ${GREEN}✅ $name installed successfully!${NC}"
@@ -123,14 +123,14 @@ install_homebrew() {
     if prompt_yn "  Install Homebrew?"; then
         echo ""
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        
+
         # Add to PATH for this session
         if [ -f "/opt/homebrew/bin/brew" ]; then
             eval "$(/opt/homebrew/bin/brew shellenv)"
         elif [ -f "/usr/local/bin/brew" ]; then
             eval "$(/usr/local/bin/brew shellenv)"
         fi
-        
+
         if command -v brew &> /dev/null; then
             PKG_MANAGER="brew"
             echo -e "  ${GREEN}✅ Homebrew installed!${NC}"
@@ -168,34 +168,34 @@ echo -e "${DIM}These are required - setup will fail without them${NC}"
 echo ""
 
 # -----------------------------------------------------------------------------
-# Python 3.8+
+# Python 3.12+
 # -----------------------------------------------------------------------------
 PYTHON_OK=false
 if command -v python3 &> /dev/null; then
     PY_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null)
     PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
     PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
-    
-    if [ "$PY_MAJOR" -ge 3 ] && [ "$PY_MINOR" -ge 8 ]; then
+
+    if [ "$PY_MAJOR" -ge 3 ] && [ "$PY_MINOR" -ge 12 ]; then
         echo -e "  ${GREEN}✅ Python $PY_VERSION${NC}"
         PYTHON_OK=true
     else
-        echo -e "  ${RED}❌ Python $PY_VERSION (need 3.8+)${NC}"
+        echo -e "  ${RED}❌ Python $PY_VERSION (need 3.12+)${NC}"
     fi
 elif command -v python &> /dev/null; then
     PY_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null)
     PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
-    
+
     if [ "$PY_MAJOR" -ge 3 ]; then
         PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
-        if [ "$PY_MINOR" -ge 8 ]; then
+        if [ "$PY_MINOR" -ge 12 ]; then
             echo -e "  ${GREEN}✅ Python $PY_VERSION${NC}"
             PYTHON_OK=true
         else
-            echo -e "  ${RED}❌ Python $PY_VERSION (need 3.8+)${NC}"
+            echo -e "  ${RED}❌ Python $PY_VERSION (need 3.12+)${NC}"
         fi
     else
-        echo -e "  ${RED}❌ Python 2.x detected (need Python 3.8+)${NC}"
+        echo -e "  ${RED}❌ Python 2.x detected (need Python 3.12+)${NC}"
     fi
 fi
 
@@ -208,14 +208,14 @@ if [ "$PYTHON_OK" = false ]; then
         fi
     elif [ "$PKG_MANAGER" = "apt" ]; then
         if prompt_yn "  Install Python 3 via apt?"; then
-            if run_install "Python" "sudo apt-get update && sudo apt-get install -y python3 python3-venv python3-pip"; then
+            if run_install "Python" "sudo apt-get update && sudo apt-get install -y python3.12 python3.12-venv python3-pip"; then
                 PYTHON_OK=true
             fi
         fi
     else
         echo -e "     ${DIM}Install from: https://www.python.org/downloads/${NC}"
     fi
-    
+
     if [ "$PYTHON_OK" = false ]; then
         mandatory_errors=$((mandatory_errors + 1))
     fi
@@ -228,7 +228,7 @@ NODE_OK=false
 if command -v node &> /dev/null; then
     NODE_VERSION=$(node --version | sed 's/v//')
     NODE_MAJOR=$(echo "$NODE_VERSION" | cut -d. -f1)
-    
+
     if [ "$NODE_MAJOR" -ge 18 ]; then
         echo -e "  ${GREEN}✅ Node.js $NODE_VERSION${NC}"
         NODE_OK=true
@@ -254,7 +254,7 @@ if [ "$NODE_OK" = false ]; then
     else
         echo -e "     ${DIM}Install from: https://nodejs.org/${NC}"
     fi
-    
+
     if [ "$NODE_OK" = false ]; then
         mandatory_errors=$((mandatory_errors + 1))
     fi
@@ -286,7 +286,7 @@ if [ "$GIT_OK" = false ]; then
     else
         echo -e "     ${DIM}Install from: https://git-scm.com/downloads${NC}"
     fi
-    
+
     if [ "$GIT_OK" = false ]; then
         mandatory_errors=$((mandatory_errors + 1))
     fi
@@ -302,12 +302,35 @@ echo -e "${DIM}Not required, but significantly improve the experience${NC}"
 echo ""
 
 # -----------------------------------------------------------------------------
+# uv (Python dependency manager)
+# -----------------------------------------------------------------------------
+if command -v uv &> /dev/null; then
+    UV_VERSION=$(uv --version | head -1)
+    echo -e "  ${GREEN}✅ uv $UV_VERSION${NC}"
+else
+    echo -e "  ${YELLOW}⚠️  uv not found${NC}"
+    echo -e "     ${DIM}Faster, reproducible backend installs (setup can fall back)${NC}"
+    echo -e "     ${DIM}Install: https://docs.astral.sh/uv/${NC}"
+
+    if [ "$PKG_MANAGER" = "brew" ]; then
+        if prompt_yn "  Install uv via Homebrew?"; then
+            run_install "uv" "brew install uv"
+        fi
+    elif [ "$PLATFORM" = "linux" ]; then
+        if prompt_yn "  Install uv via the install script?"; then
+            run_install "uv" "curl -Ls https://astral.sh/uv/install.sh | sh"
+        fi
+    fi
+    recommended_warnings=$((recommended_warnings + 1))
+fi
+
+# -----------------------------------------------------------------------------
 # GitHub CLI (gh)
 # -----------------------------------------------------------------------------
 if command -v gh &> /dev/null; then
     GH_VERSION=$(gh --version | head -1 | cut -d' ' -f3)
     echo -e "  ${GREEN}✅ GitHub CLI $GH_VERSION${NC}"
-    
+
     # Check if authenticated
     if gh auth status &> /dev/null; then
         echo -e "     ${DIM}└─ Authenticated ✓${NC}"
@@ -320,7 +343,7 @@ if command -v gh &> /dev/null; then
 else
     echo -e "  ${YELLOW}⚠️  GitHub CLI not found${NC}"
     echo -e "     ${DIM}Makes cloning easier: gh repo clone elastic/elastic-demo-starter${NC}"
-    
+
     if [ "$PKG_MANAGER" = "brew" ]; then
         if prompt_yn "  Install GitHub CLI via Homebrew?"; then
             run_install "GitHub CLI" "brew install gh"
@@ -344,7 +367,7 @@ if command -v yarn &> /dev/null; then
 else
     echo -e "  ${YELLOW}⚠️  Yarn not found (npm will be used)${NC}"
     echo -e "     ${DIM}Yarn is 2-3x faster for installing frontend dependencies${NC}"
-    
+
     if command -v npm &> /dev/null; then
         if prompt_yn "  Install Yarn via npm?"; then
             run_install "Yarn" "npm install -g yarn"
@@ -393,11 +416,11 @@ fi
 if [ "$BD_FOUND" = true ]; then
     BD_VERSION=$("$BD_PATH" version 2>/dev/null | head -1 || echo "installed")
     echo -e "  ${GREEN}✅ Beads CLI (bd) $BD_VERSION${NC}"
-    
+
     # Check if it's in PATH
     if ! command -v bd &> /dev/null; then
         echo -e "     ${YELLOW}Note: bd found at $BD_PATH but not in PATH${NC}"
-        
+
         # Determine shell config file
         SHELL_CONFIG=""
         if [ -n "$ZSH_VERSION" ] || [ "$SHELL" = "/bin/zsh" ]; then
@@ -405,7 +428,7 @@ if [ "$BD_FOUND" = true ]; then
         elif [ -n "$BASH_VERSION" ] || [ "$SHELL" = "/bin/bash" ]; then
             SHELL_CONFIG="$HOME/.bashrc"
         fi
-        
+
         BD_DIR=$(dirname "$BD_PATH")
         echo -e "     ${DIM}Add to PATH by running:${NC}"
         echo -e "     ${CYAN}echo 'export PATH=\"$BD_DIR:\$PATH\"' >> $SHELL_CONFIG && source $SHELL_CONFIG${NC}"
@@ -413,7 +436,7 @@ if [ "$BD_FOUND" = true ]; then
 else
     echo -e "  ${YELLOW}⚠️  Beads CLI not installed${NC}"
     echo -e "     ${DIM}AI-friendly task tracking - helps agents manage complex work${NC}"
-    
+
     # Offer installation options
     if prompt_yn "  Install Beads?"; then
         echo ""
@@ -424,7 +447,7 @@ else
         echo -e "     ${DIM}4) Skip${NC}"
         read -p "     Choice [1-4]: " -n 1 -r bd_choice
         echo ""
-        
+
         BD_INSTALLED=false
         case "$bd_choice" in
             1)
@@ -454,7 +477,7 @@ else
                 echo -e "     ${DIM}Skipped. Install later: https://github.com/steveyegge/beads${NC}"
                 ;;
         esac
-        
+
         # Verify installation and provide PATH guidance
         if [ "$BD_INSTALLED" = true ]; then
             echo ""
@@ -526,7 +549,7 @@ if command -v jq &> /dev/null; then
 else
     echo -e "  ${DIM}○  jq not installed${NC}"
     echo -e "     ${DIM}Useful for debugging API responses${NC}"
-    
+
     if [ "$PKG_MANAGER" = "brew" ]; then
         if prompt_yn "  Install jq via Homebrew?"; then
             run_install "jq" "brew install jq"

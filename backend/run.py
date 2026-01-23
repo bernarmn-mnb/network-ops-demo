@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Development server runner.
+"""Development server runner.
 
 Usage:
     python run.py
@@ -10,12 +9,14 @@ Or with uvicorn directly:
 """
 
 import uvicorn
+
 from app.config import settings
 
-if __name__ == "__main__":
+
+def main() -> None:
     print(f"Starting Elastic Agent API on http://{settings.HOST}:{settings.PORT}")
     print(f"API Docs available at http://localhost:{settings.PORT}/docs")
-    
+
     uvicorn.run(
         "app.main:app",
         host=settings.HOST,
@@ -23,3 +24,6 @@ if __name__ == "__main__":
         reload=True,
     )
 
+
+if __name__ == "__main__":
+    main()
