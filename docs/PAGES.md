@@ -1,6 +1,31 @@
 # Page Reference
 
 > Documentation for demo builders: what each page does and how to customize it.
+>
+> **Not sure which pages you need?** See the [Feature Catalog](./FEATURE_CATALOG.md) first.
+
+______________________________________________________________________
+
+## Quick Reference: Which Pages Do I Need?
+
+**Building an overlay/injection demo?**
+You probably don't need most pages. The overlay chat connects directly to `/api/agent/chat`. You might use:
+- **Brand Editor** (`/brands`) — Optional, to match customer colors in the overlay
+
+**Building a standalone search + chat demo?**
+- **Chat** (`/chat`) — Main AI interface
+- **Search** (`/search`) — If you have an ES index to search
+- **Brand Editor** (`/brands`) — Customer branding
+- **Demo Guide** (`/guide`) — Your presenter notes
+
+**Building a multi-agent demo?**
+- **A2A Chat** (`/a2a-chat`) — Multi-agent orchestration
+- **Audit** (`/audit`) — See which agent handled what
+- **Chat** (`/chat`) — Single-agent comparison
+
+**Just exploring/testing?**
+- **Welcome** (`/`) — Status dashboard, feature overview
+- **MCP Explorer** (`/mcp`) — Browse available tools
 
 ______________________________________________________________________
 

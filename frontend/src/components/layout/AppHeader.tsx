@@ -19,10 +19,12 @@ import { getNavItems } from './navigationConfig'
  * App Header Component
  * 
  * Main application header with:
- * - Brand logo and name (from context)
+ * - Brand logo (from context) - logo should include brand name/text
  * - Consistent navigation across all pages
  * - Brand switcher for demos
  * - Dark/light mode toggle
+ * 
+ * Note: Uses --brand-header-background if defined, otherwise --brand-primary
  */
 export function AppHeader() {
   const navigate = useNavigate()
@@ -33,12 +35,32 @@ export function AppHeader() {
   const navItems = getNavItems()
   const currentPath = location.pathname
 
+  // Use header-specific colors if defined, otherwise fall back to primary
+  const hasHeaderBackground = brand.colors.headerBackground
+  const headerBgColor = hasHeaderBackground 
+    ? 'var(--brand-header-background)' 
+    : 'var(--brand-primary)'
+  const headerTextColor = brand.colors.headerText || '#FFFFFF'
+  
+  // Get the logo source (prefer url over svgDataUrl if both exist)
+  const logoSrc = brand.logo.url || brand.logo.svgDataUrl
+  
+  // Check if logo contains text - prefer explicit flag when available
+  // If true, we don't show the brand name separately (avoids duplication)
+  const logoContainsText = brand.logo.logoContainsText ?? 
+    !!brand.logo.svgDataUrl?.toLowerCase().includes('<text')
+  
+  // Get header height from layout config
+  const headerHeight = brand.layout?.headerHeight || '48px'
+  
   return (
     <EuiHeader 
       position="fixed"
       style={{
-        backgroundColor: 'var(--brand-primary)',
+        backgroundColor: headerBgColor,
         borderBottom: 'none',
+        height: headerHeight,
+        minHeight: headerHeight,
       }}
     >
       <EuiHeaderSection grow={false}>
@@ -57,9 +79,9 @@ export function AppHeader() {
               padding: '0 8px',
             }}
           >
-            {brand.logo.svgDataUrl ? (
+            {logoSrc ? (
               <EuiImage
-                src={brand.logo.svgDataUrl}
+                src={logoSrc}
                 alt={brand.logo.alt}
                 style={{ height: '28px', width: 'auto' }}
               />
@@ -68,12 +90,12 @@ export function AppHeader() {
                 style={{
                   width: '28px',
                   height: '28px',
-                  backgroundColor: 'var(--brand-white)',
-                  borderRadius: '4px',
+                  backgroundColor: headerTextColor,
+                  borderRadius: 'var(--brand-border-radius-small, 4px)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'var(--brand-primary)',
+                  color: headerBgColor,
                   fontSize: '14px',
                   fontWeight: 700,
                 }}
@@ -81,14 +103,17 @@ export function AppHeader() {
                 {brand.name.charAt(0)}
               </div>
             )}
-            <span style={{ 
-              color: 'var(--brand-white)',
-              fontWeight: 600,
-              fontSize: '16px',
-              fontFamily: 'var(--brand-font-heading)',
-            }}>
-              {brand.name}
-            </span>
+            {/* Only show brand name if logo doesn't already contain text */}
+            {!logoContainsText && (
+              <span style={{ 
+                color: headerTextColor,
+                fontWeight: 600,
+                fontSize: '16px',
+                fontFamily: 'var(--brand-font-heading)',
+              }}>
+                {brand.name}
+              </span>
+            )}
           </a>
         </EuiHeaderSectionItem>
         
@@ -112,7 +137,7 @@ export function AppHeader() {
                 aria-label="Navigation menu"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 size="s"
-                style={{ color: 'var(--brand-white)' }}
+                style={{ color: headerTextColor }}
               />
             }
             isOpen={isMenuOpen}

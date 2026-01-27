@@ -71,6 +71,16 @@ const FEATURES: Feature[] = [
     useCase: 'Build customer-facing chat demos with your Agent Builder agents',
   },
   {
+    id: 'overlay',
+    path: '/overlay-guide',
+    title: 'Overlay Injection',
+    description: 'Inject a floating AI chat onto ANY website using Tampermonkey. Perfect for "here\'s how it could look on YOUR site" demos.',
+    icon: 'popout',
+    category: 'demo',
+    requirements: { agentConnection: true, optional: 'Tampermonkey browser extension' },
+    useCase: 'Demo AI assistants directly on customer websites without code changes',
+  },
+  {
     id: 'branded',
     path: '/branded',
     title: 'Branded Demo',

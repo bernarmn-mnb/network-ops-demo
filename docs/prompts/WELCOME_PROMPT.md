@@ -6,13 +6,39 @@ ______________________________________________________________________
 
 **Role**: You are an expert Solutions Architect and Developer. Your goal is to help me transform this "Elastic Agent Starter" template into a specific, customized demo or application.
 
-**Objective**: Guide me through the setup, understand my goals, customize the codebase, and create an execution plan.
+**Objective**: Guide me through feature selection, setup, customization, and create an execution plan.
+
+______________________________________________________________________
+
+## 🧭 Phase 0: What Are You Building?
+
+Before diving into setup, let's identify which features you actually need. **Most demos use 3-5 features, not all 15+.**
+
+Ask me these questions to narrow down:
+
+1. **Delivery**: How will users access this demo?
+   - *"I'll present a standalone web app"* → Full Demo App
+   - *"I want to show AI on the customer's actual website"* → Overlay Chat (userscript injection)
+   - *"Customer wants a widget to embed in their app"* → Embeddable Widget
+
+2. **Core capability**: What's the main thing it does?
+   - *"Chat with an AI assistant"* → Agent Chat
+   - *"Search products/content"* → Search UI
+   - *"Both search and chat"* → Combined
+   - *"Multiple agents working together"* → Multi-Agent (A2A)
+
+3. **Nice-to-haves**: Do you need any of these?
+   - Custom branding (colors, logo)?
+   - Performance tracking (APM, analytics)?
+   - Conversation audit trail?
+
+> **Output**: Based on answers, recommend specific features from the **[Feature Catalog](../FEATURE_CATALOG.md)** and note which setup steps to skip.
 
 ______________________________________________________________________
 
 ## 📝 Phase 1: Discovery & Requirements
 
-Please interactively ask me questions to understand the project. Do not move to the next phase until you have a clear picture.
+Now let's get specific about the project. Do not move to the next phase until you have a clear picture.
 
 1. **Goal**: What is the specific purpose of this new project? (e.g., "E-commerce search for shoes", "Internal HR chatbot", "Log analysis agent")
 2. **Data**: What data will we be using? Do I have an existing Elasticsearch index, or do we need to ingest something?
@@ -20,7 +46,7 @@ Please interactively ask me questions to understand the project. Do not move to 
    - *If yes*: Ask me to provide them (securely).
    - *If no*: Guide me on how to create a trial or API key.
 
-> **Output**: Summarize my project goals and technical requirements in a short "Project Brief".
+> **Output**: Summarize my project goals and technical requirements in a short "Project Brief", including which features from Phase 0 are in scope.
 
 ______________________________________________________________________
 

@@ -101,6 +101,109 @@ function generateCssVariables(brand: BrandTheme, colorMode: EuiThemeColorMode): 
     return `--brand-${varName}: ${value};`
   }).join('\n      ')
   
+  // Generate link CSS variables
+  const linkVars = brand.links ? `
+      /* Link Styling */
+      --brand-link-color: ${brand.links.color};
+      --brand-link-hover-color: ${brand.links.hoverColor || brand.links.color};
+      --brand-link-underline-thickness: ${brand.links.underlineThickness || '1px'};
+      --brand-link-underline-offset: ${brand.links.underlineOffset || '.1em'};
+      --brand-link-focus-bg: ${brand.links.focus?.backgroundColor || 'transparent'};
+      --brand-link-focus-shadow: ${brand.links.focus?.boxShadow || 'none'};` : ''
+  
+  // Generate focus ring CSS variables
+  const focusVars = brand.focusRing ? `
+      /* Focus Ring */
+      --brand-focus-color: ${brand.focusRing.color};
+      --brand-focus-width: ${brand.focusRing.width || '3px'};
+      --brand-focus-offset: ${brand.focusRing.offset || '0'};
+      --brand-focus-shadow: ${brand.focusRing.boxShadow || `0 0 0 ${brand.focusRing.width || '3px'} ${brand.focusRing.color}`};` : ''
+  
+  // Generate button CSS variables
+  const buttonVars = brand.buttons?.primary ? `
+      /* Primary Button */
+      --brand-btn-primary-bg: ${brand.buttons.primary.backgroundColor};
+      --brand-btn-primary-color: ${brand.buttons.primary.textColor};
+      --brand-btn-primary-radius: ${brand.buttons.primary.borderRadius || brand.spacing.borderRadius};
+      --brand-btn-primary-shadow: ${brand.buttons.primary.boxShadow || 'none'};
+      --brand-btn-primary-border: ${brand.buttons.primary.border || 'none'};
+      --brand-btn-primary-padding: ${brand.buttons.primary.padding || '8px 16px'};
+      --brand-btn-primary-font-weight: ${brand.buttons.primary.fontWeight || '400'};
+      --brand-btn-primary-hover-bg: ${brand.buttons.primary.hover?.backgroundColor || brand.buttons.primary.backgroundColor};
+      --brand-btn-primary-focus-shadow: ${brand.buttons.primary.focus?.boxShadow || 'none'};` : ''
+  
+  const secondaryButtonVars = brand.buttons?.secondary ? `
+      /* Secondary Button */
+      --brand-btn-secondary-bg: ${brand.buttons.secondary.backgroundColor};
+      --brand-btn-secondary-color: ${brand.buttons.secondary.textColor};
+      --brand-btn-secondary-radius: ${brand.buttons.secondary.borderRadius || brand.spacing.borderRadius};
+      --brand-btn-secondary-shadow: ${brand.buttons.secondary.boxShadow || 'none'};
+      --brand-btn-secondary-border: ${brand.buttons.secondary.border || 'none'};
+      --brand-btn-secondary-hover-bg: ${brand.buttons.secondary.hover?.backgroundColor || brand.buttons.secondary.backgroundColor};` : ''
+  
+  // Generate layout CSS variables
+  const layoutVars = brand.layout ? `
+      /* Layout */
+      --brand-max-width: ${brand.layout.maxWidth || '1200px'};
+      --brand-container-padding: ${brand.layout.containerPadding || '0 15px'};
+      --brand-section-spacing: ${brand.layout.sectionSpacing || '30px'};
+      --brand-header-height: ${brand.layout.headerHeight || '48px'};` : `
+      /* Layout defaults */
+      --brand-header-height: 48px;`
+  
+  // Generate link styles if configured
+  const linkStyles = brand.links ? `
+    /* Brand Link Styles */
+    a:not(.euiLink):not([class*="eui"]) {
+      color: var(--brand-link-color);
+      text-decoration: underline;
+      text-decoration-thickness: var(--brand-link-underline-thickness);
+      text-underline-offset: var(--brand-link-underline-offset);
+    }
+    a:not(.euiLink):not([class*="eui"]):hover {
+      color: var(--brand-link-hover-color);
+      text-decoration-thickness: max(3px, .1875rem);
+    }
+    ${brand.links.focus ? `
+    a:not(.euiLink):not([class*="eui"]):focus {
+      outline: 3px solid transparent;
+      background-color: var(--brand-link-focus-bg);
+      box-shadow: var(--brand-link-focus-shadow);
+      ${brand.links.focus.removeUnderline ? 'text-decoration: none;' : ''}
+    }` : ''}` : ''
+  
+  // Generate focus ring styles if configured
+  const focusStyles = brand.focusRing ? `
+    /* Brand Focus Ring */
+    :focus-visible {
+      outline: var(--brand-focus-width) solid var(--brand-focus-color);
+      outline-offset: var(--brand-focus-offset);
+    }` : ''
+  
+  // Generate button styles if configured
+  const buttonStyles = brand.buttons?.primary ? `
+    /* Brand Button Styles */
+    .brand-btn-primary,
+    button[data-brand-style="primary"] {
+      font-family: var(--brand-font-body);
+      font-weight: var(--brand-btn-primary-font-weight);
+      background-color: var(--brand-btn-primary-bg);
+      color: var(--brand-btn-primary-color);
+      border-radius: var(--brand-btn-primary-radius);
+      box-shadow: var(--brand-btn-primary-shadow);
+      border: var(--brand-btn-primary-border);
+      padding: var(--brand-btn-primary-padding);
+      cursor: pointer;
+    }
+    .brand-btn-primary:hover,
+    button[data-brand-style="primary"]:hover {
+      background-color: var(--brand-btn-primary-hover-bg);
+    }
+    .brand-btn-primary:focus,
+    button[data-brand-style="primary"]:focus {
+      box-shadow: var(--brand-btn-primary-focus-shadow);
+    }` : ''
+  
   return `
     :root {
       /* Brand Colors (mode-aware) */
@@ -117,14 +220,32 @@ function generateCssVariables(brand: BrandTheme, colorMode: EuiThemeColorMode): 
       /* Original brand colors (unmodified) */
       --brand-primary-original: ${brand.colors.primary};
       --brand-accent-original: ${brand.colors.accent};
+      ${linkVars}
+      ${focusVars}
+      ${buttonVars}
+      ${secondaryButtonVars}
+      ${layoutVars}
     }
     
     /* Global body styles */
     body {
       background-color: var(--brand-background);
       color: var(--brand-text-body);
+      font-family: var(--brand-font-body);
       transition: background-color 0.2s ease, color 0.2s ease;
     }
+    
+    /* Headings use brand heading font */
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--brand-font-heading);
+      color: var(--brand-text-primary);
+    }
+    ${linkStyles}
+    ${focusStyles}
+    ${buttonStyles}
+    
+    /* Custom brand CSS */
+    ${brand.customCss || ''}
   `
 }
 

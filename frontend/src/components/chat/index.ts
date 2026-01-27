@@ -13,3 +13,4 @@ export { QuickPrompts } from './QuickPrompts';
 export { SuggestionChips, type Suggestion } from './SuggestionChips';
 export { ReasoningSteps } from './ReasoningSteps';
 export { ToolCallCard } from './ToolCallCard';
+export { FloatingChatWidget, type FloatingChatWidgetProps } from './FloatingChatWidget';

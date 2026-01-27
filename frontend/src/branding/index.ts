@@ -17,6 +17,83 @@
 // Brand Type Definition
 // ============================================================================
 
+// ============================================================================
+// Component Style Types
+// ============================================================================
+
+/** Link styling configuration */
+export interface BrandLinkStyle {
+  color: string
+  hoverColor?: string
+  /** Underline thickness (e.g., "1px", "max(1px, .0625rem)") */
+  underlineThickness?: string
+  /** Underline offset from text */
+  underlineOffset?: string
+  /** Focus state configuration */
+  focus?: {
+    backgroundColor?: string
+    /** Box shadow for focus ring */
+    boxShadow?: string
+    /** Whether to remove underline on focus */
+    removeUnderline?: boolean
+  }
+}
+
+/** Focus ring configuration for accessibility */
+export interface BrandFocusRing {
+  /** Focus ring color (e.g., "#FFDD00" for gov.uk yellow) */
+  color: string
+  /** Focus ring width */
+  width?: string
+  /** Focus ring offset from element */
+  offset?: string
+  /** Additional box-shadow for focus states */
+  boxShadow?: string
+}
+
+/** Button variant styling */
+export interface BrandButtonStyle {
+  backgroundColor: string
+  textColor: string
+  /** Border radius (overrides global if set) */
+  borderRadius?: string
+  /** Box shadow (e.g., "0 2px 0 #002d18" for gov.uk) */
+  boxShadow?: string
+  /** Border style */
+  border?: string
+  /** Padding */
+  padding?: string
+  /** Font weight */
+  fontWeight?: string
+  /** Hover state */
+  hover?: {
+    backgroundColor?: string
+    textColor?: string
+    boxShadow?: string
+  }
+  /** Focus state */
+  focus?: {
+    boxShadow?: string
+    outline?: string
+  }
+}
+
+/** Layout constraints */
+export interface BrandLayout {
+  /** Maximum content width (e.g., "960px" for gov.uk) */
+  maxWidth?: string
+  /** Container padding */
+  containerPadding?: string
+  /** Section spacing */
+  sectionSpacing?: string
+  /** Header height (e.g., "60px" for gov.uk) */
+  headerHeight?: string
+}
+
+// ============================================================================
+// Main Brand Theme Type
+// ============================================================================
+
 export interface BrandTheme {
   id: string
   name: string
@@ -45,14 +122,54 @@ export interface BrandTheme {
     borderRadiusSmall: string
   }
   logo: {
-    svgDataUrl: string
+    /** SVG data URL (e.g., "data:image/svg+xml,...") - for embedded logos */
+    svgDataUrl?: string
+    /** Image URL (e.g., "https://example.com/logo.svg") - for external logos */
+    url?: string
     alt: string
+    /** If true, logo already contains brand text - don't show brand name separately */
+    logoContainsText?: boolean
   }
   /** Optional: Dark variant of logo for light backgrounds */
   logoDark?: {
-    svgDataUrl: string
+    svgDataUrl?: string
+    url?: string
     alt: string
   }
+  
+  // ============================================================================
+  // Extended Branding (Tier 1-3)
+  // ============================================================================
+  
+  /** Link styling - color, underline, hover, focus */
+  links?: BrandLinkStyle
+  
+  /** Focus ring styling for accessibility */
+  focusRing?: BrandFocusRing
+  
+  /** Button variants */
+  buttons?: {
+    primary?: BrandButtonStyle
+    secondary?: BrandButtonStyle
+    /** Warning/destructive button style */
+    warning?: BrandButtonStyle
+  }
+  
+  /** Layout constraints */
+  layout?: BrandLayout
+  
+  /** 
+   * Custom CSS to inject for brand-specific overrides.
+   * Use sparingly - prefer structured properties above.
+   * This CSS is injected globally when the brand is active.
+   * 
+   * @example
+   * customCss: `
+   *   .govuk-tag { text-transform: uppercase; letter-spacing: 1px; }
+   *   .govuk-inset-text { border-left: 10px solid var(--brand-border); }
+   * `
+   */
+  customCss?: string
 }
 
 // ============================================================================
@@ -107,6 +224,12 @@ function brandingToTheme(
     },
     logo: branding.logo || { svgDataUrl: '', alt: brandId },
     logoDark: branding.logoDark,
+    // Extended branding (Tier 1-3)
+    links: branding.links,
+    focusRing: branding.focusRing,
+    buttons: branding.buttons,
+    layout: branding.layout,
+    customCss: branding.customCss,
   }
 }
 

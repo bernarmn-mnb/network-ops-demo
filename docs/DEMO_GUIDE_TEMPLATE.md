@@ -13,12 +13,19 @@ ______________________________________________________________________
 
 ### What This Demo Shows
 
-<!-- List the key capabilities this demo highlights -->
+<!-- List the key capabilities this demo highlights. See docs/FEATURE_CATALOG.md for all options. -->
 
+**Delivery Method:**
+- [ ] Full Demo App (standalone web app)
+- [ ] Overlay Chat (injected onto customer's website)
+- [ ] Embeddable Widget (FloatingChatWidget component)
+
+**Features:**
 - [ ] Agent Builder chat with streaming responses
 - [ ] Multi-agent orchestration (A2A)
 - [ ] Custom branding
 - [ ] Search with facets
+- [ ] APM/Observability tracking
 - [ ] [Add your own...]
 
 ______________________________________________________________________
@@ -74,6 +81,27 @@ ______________________________________________________________________
 ### 3. [Additional Pages...]
 
 <!-- Add sections for each page you want to include in the demo flow -->
+
+### Overlay Demo (if using injection approach)
+
+<!-- If your demo uses the overlay chat on a customer's website -->
+
+**Target Website**: [URL where overlay is injected]
+
+**Setup**:
+1. Install Tampermonkey browser extension
+2. Load the userscript from `frontend/src/scripts/overlay-chat.user.js`
+3. Configure `@match` pattern for target URL
+4. Set `backendUrl` to your running demo backend
+
+**What to show**:
+- [Describe the customer site and where chat appears]
+- [Key interactions to demonstrate]
+
+**Talking points**:
+- "This is running on [customer]'s actual website"
+- "No code changes required on their end"
+- "The chat connects securely to our backend"
 
 ______________________________________________________________________
 

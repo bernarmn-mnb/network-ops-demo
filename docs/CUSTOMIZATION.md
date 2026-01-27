@@ -1,6 +1,11 @@
 # Customizing the Chat Experience
 
-This guide covers common customization patterns for the chat interface. These configurations allow you to create branded, domain-specific demos without modifying core components.
+This guide covers customization patterns for chat interfaces. These configurations allow you to create branded, domain-specific demos without modifying core components.
+
+> **Which chat component do I need?**
+> - **ChatContainer** — Full-page chat for the demo app ([details below](#quick-prompts))
+> - **FloatingChatWidget** — Floating overlay for embedding in any page ([details](#floatingchatwidget))
+> - **Overlay Userscript** — Inject onto external websites ([Overlay Pattern](../hive-mind/patterns/elastic/USERSCRIPT_INJECTION_PATTERN.md))
 
 ______________________________________________________________________
 
@@ -227,6 +232,101 @@ For visual customization (colors, fonts, logos), see the branding system:
 - `frontend/src/branding/` - Brand context and theming
 - `hive-mind/patterns/branding/` - Brand extraction patterns
 - `backend/app/routes/branding.py` - Brand API endpoints
+
+______________________________________________________________________
+
+______________________________________________________________________
+
+## FloatingChatWidget
+
+A floating chat overlay that can be embedded on any page within the demo app. Appears as a circular button that expands into a chat panel.
+
+### When to Use
+
+- Embed chat alongside other content (e.g., search results page)
+- Create a "help assistant" that's always available
+- Build a widget customers could integrate into their own apps
+
+### Basic Usage
+
+```tsx
+import { FloatingChatWidget } from './components/chat/FloatingChatWidget'
+
+function MyPage() {
+  return (
+    <div>
+      {/* Your page content */}
+      <FloatingChatWidget
+        title="Help Assistant"
+        greeting="Hi! How can I help you today?"
+        position="bottom-right"
+      />
+    </div>
+  )
+}
+```
+
+### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `title` | string | "AI Assistant" | Header title |
+| `greeting` | string | "Hello! How can I help you today?" | Initial assistant message |
+| `placeholder` | string | "Type your message..." | Input placeholder |
+| `position` | `'bottom-right'` \| `'bottom-left'` \| `'top-right'` \| `'top-left'` | `'bottom-right'` | Widget position |
+| `defaultOpen` | boolean | `false` | Start with panel open |
+| `primaryColor` | string | Brand primary | Override the accent color |
+| `zIndex` | number | `9999` | CSS z-index |
+
+### Features
+
+- ✅ Streaming responses with real-time text
+- ✅ Reasoning steps visualization
+- ✅ Tool call display
+- ✅ Dark mode support (automatic)
+- ✅ Brand-aware theming
+- ✅ Stream cancellation (Escape key)
+- ✅ Keyboard navigation (Enter to send)
+
+### Example: Search Page with Chat Assistant
+
+```tsx
+function SearchWithAssistant() {
+  return (
+    <>
+      <SearchResults />
+      <FloatingChatWidget
+        title="Product Expert"
+        greeting="Need help finding something? I can search our catalog and answer questions."
+        position="bottom-right"
+      />
+    </>
+  )
+}
+```
+
+______________________________________________________________________
+
+## Overlay Chat (External Websites)
+
+For injecting chat onto websites you don't control (customer's live site), use the **Tampermonkey userscript** approach instead of React components.
+
+**Location**: `frontend/src/scripts/overlay-chat.user.js`
+
+**Setup**:
+1. Install [Tampermonkey](https://www.tampermonkey.net/) browser extension
+2. Create new script, paste contents of `overlay-chat.user.js`
+3. Configure the `@match` pattern for target website
+4. Configure `backendUrl` to point to your running demo backend
+
+**Features**:
+- Connects to your demo backend's `/api/agent/chat` endpoint
+- Streaming responses with reasoning display
+- Auto-fetches branding from backend
+- Works on sites with strict CSP (uses `GM_xmlhttpRequest`)
+- Configurable via Tampermonkey menu
+
+**Full documentation**: [Overlay Pattern](../hive-mind/patterns/elastic/USERSCRIPT_INJECTION_PATTERN.md)
 
 ______________________________________________________________________
 

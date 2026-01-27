@@ -80,6 +80,21 @@ export const NAV_ITEMS: NavItem[] = [
     description: 'Product search with faceted filtering',
     category: 'demo',
   },
+  {
+    path: '/overlay',
+    label: 'Overlay Demo',
+    icon: 'popout',
+    description: 'Floating chat widget on sample content',
+    category: 'demo',
+    requiresAgent: true,
+  },
+  {
+    path: '/overlay-guide',
+    label: 'Inject Guide',
+    icon: 'package',
+    description: 'Inject chat onto any external website',
+    category: 'demo',
+  },
   
   // Development Tools
   {

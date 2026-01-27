@@ -26,12 +26,15 @@ You are helping onboard a new user to this **Elastic Demo Starter** project. Thi
 
 - **Agent Builder Chat** - Streaming chat with Elastic Agent Builder
 - **A2A Multi-Agent** - Orchestrate multiple agents with a coordinator LLM
+- **Overlay Chat** - Inject chat onto any website via Tampermonkey userscript
 - **Elasticsearch Search** - Full-featured search with facets, analytics, and RetrieverBuilder
 - **Search Analytics** - CTR, MRR, zero-results tracking via ES|QL
 - **OpenTelemetry** - APM traces, click tracking, and observability
 - **MCP Server Explorer** - Browse and test MCP (Model Context Protocol) tools
 - **Conversation Audit** - View conversation history and agent reasoning
 - **Brand Theming** - Customize appearance for customer demos
+
+> **Tip**: Most demos don't need all features. See [FEATURE_CATALOG.md](./FEATURE_CATALOG.md) to pick just what you need.
 
 Please complete the following checklist to verify the environment is properly set up and ready for "vibe coding".
 
@@ -537,6 +540,7 @@ ______________________________________________________________________
 
 | Task                 | Command/Location                                             |
 | -------------------- | ------------------------------------------------------------ |
+| **Feature selection**| `docs/FEATURE_CATALOG.md` (pick your building blocks)        |
 | **Pre-flight check** | `./preflight-check.sh` (verify prerequisites)                |
 | Start servers        | `./dev start`                                                |
 | Stop servers         | `./dev stop`                                                 |
@@ -559,6 +563,8 @@ ______________________________________________________________________
 | Theme template       | `frontend/src/branding/exampleTheme.ts`                      |
 | Branding patterns    | `hive-mind/patterns/branding/`                               |
 | OTel patterns        | `hive-mind/patterns/elastic/OTEL_*.md`                       |
+| **Overlay userscript** | `frontend/src/scripts/overlay-chat.user.js`                |
+| Overlay pattern      | `hive-mind/patterns/elastic/USERSCRIPT_INJECTION_PATTERN.md` |
 | Beads issues         | `bd ready`, `bd list`                                        |
 
 ______________________________________________________________________

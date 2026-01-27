@@ -8,6 +8,8 @@ import { AuditPage } from './pages/AuditPage'
 import { MCPExplorerPage } from './pages/MCPExplorerPage'
 import { SearchPageSimple } from './pages/SearchPageSimple'
 import { DemoGuidePage } from './pages/DemoGuidePage'
+import { OverlayDemoPage } from './pages/OverlayDemoPage'
+import { OverlayGuidePage } from './pages/OverlayGuidePage'
 
 /**
  * Main App Component
@@ -22,6 +24,8 @@ import { DemoGuidePage } from './pages/DemoGuidePage'
  * - /audit : Conversation history and audit display
  * - /mcp : MCP Explorer for testing Agent Builder tools
  * - /search : Product search with faceted filtering
+ * - /overlay : Overlay chat demo (floating widget)
+ * - /overlay-guide : Guide for injecting chat onto external sites
  */
 function App() {
   return (
@@ -35,6 +39,8 @@ function App() {
       <Route path="/audit" element={<AuditPage />} />
       <Route path="/mcp" element={<MCPExplorerPage />} />
       <Route path="/search" element={<SearchPageSimple />} />
+      <Route path="/overlay" element={<OverlayDemoPage />} />
+      <Route path="/overlay-guide" element={<OverlayGuidePage />} />
     </Routes>
   )
 }

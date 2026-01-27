@@ -16,10 +16,13 @@ This repository serves as a "Golden Master" for building custom Elastic demos. I
 |-----------|----------|------------------|
 | **🔍 Search Experiences** | Full-text search, faceted filtering, relevance tuning | Elasticsearch, RetrieverBuilder |
 | **💬 AI Chat / Assistants** | Conversational AI, streaming responses, tool use | Agent Builder, SSE streaming |
+| **🌐 Overlay Chat** | Inject AI chat onto any website without code changes | Tampermonkey userscript |
 | **📊 Business Analytics** | Dashboards, visualizations, KPI tracking | ES\|QL, aggregations |
 | **🛡️ Fraud Analytics** | Anomaly detection, pattern analysis, alert workflows | ES\|QL, ML features |
 | **🔗 Multi-Agent Orchestration** | Coordinate multiple AI agents, complex workflows | A2A pattern, LLM coordinator |
 | **📈 Search Analytics** | CTR tracking, zero-results analysis, relevance metrics | OTel, custom events |
+
+> **Not sure what you need?** See the [Feature Catalog](./docs/FEATURE_CATALOG.md) for a guided selection of building blocks.
 
 ## Architecture
 
@@ -284,6 +287,18 @@ Create conversational AI assistants:
 - ✅ Conversation persistence & audit trail
 - ✅ Stream cancellation
 
+### 🌐 Overlay Chat (Website Injection)
+
+Demo AI on any website without modifying their code:
+
+- ✅ Tampermonkey userscript for browser injection
+- ✅ Floating chat widget on customer's live site
+- ✅ Connects to your demo backend securely
+- ✅ Auto-fetches branding from backend
+- ✅ Works on sites with strict CSP
+
+See [Overlay Pattern](./hive-mind/patterns/elastic/USERSCRIPT_INJECTION_PATTERN.md) for setup.
+
 ### 📊 Analytics
 
 Build dashboards and track metrics:
@@ -539,6 +554,7 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 
 | Document | Purpose |
 |----------|---------|
+| [FEATURE_CATALOG.md](./docs/FEATURE_CATALOG.md) | **Start here** — Pick the building blocks you need |
 | [ONBOARDING.md](./docs/ONBOARDING.md) | First-time setup guide for AI assistants |
 | [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md) | Chat interface customization options |
 | [BRANDING.md](./docs/BRANDING.md) | Brand theming system documentation |
