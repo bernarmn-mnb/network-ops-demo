@@ -8,6 +8,8 @@
 
 A production-ready starter kit for building demos with Elastic. Covers **Search**, **AI Chat**, **Analytics**, and more — with modern UI components and best practices built in.
 
+> Created by **[Matt Adams](mailto:matthew.adams@elastic.co)** · Search AI Solutions, Elastic
+
 This repository serves as a "Golden Master" for building custom Elastic demos. It comes pre-wired with correct architectural patterns for streaming chat, search experiences, analytics dashboards, and brand theming — avoiding common pitfalls and accelerating development.
 
 ## 📖 Project Vision
