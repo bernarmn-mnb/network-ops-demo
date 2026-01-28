@@ -5,12 +5,18 @@
 # Copy this to project-context.yaml and fill in your project details,
 # or let the setup wizard create it for you.
 
-# Project identification
+# =============================================================================
+# Project Identification
+# =============================================================================
+
 name: "My Demo Project"
 goal: "E-commerce search with AI recommendations for shoe retailer"
 customer: "Acme Corp"
 
-# Delivery and capabilities
+# =============================================================================
+# Delivery and Capabilities
+# =============================================================================
+
 delivery_type: "standalone"  # standalone | overlay | widget
 capabilities:
   - "search"       # Elasticsearch search UI
@@ -18,14 +24,129 @@ capabilities:
   - "analytics"    # OTel/APM observability
   # - "multi_agent"  # A2A multi-agent orchestration
 
+# =============================================================================
+# Demo Scenario & Value Proposition
+# =============================================================================
+# This section captures the "story" of the demo - who it's for, what problem
+# it solves, and what success looks like.
+
+demo_scenario:
+  # Who will see this demo?
+  audience: "external_customer"  # external_customer | internal | poc | training
+  
+  # The persona experiencing the demo
+  persona: "Retail buyer looking for sustainable products"
+  
+  # The user journey we're demonstrating (step by step)
+  journey:
+    - "Search for organic products"
+    - "Filter by dietary restrictions"
+    - "Ask AI for recommendations"
+    - "Add to cart with AI assistance"
+  
+  # Value proposition
+  value_proposition:
+    problem: "Product discovery is overwhelming with thousands of SKUs"
+    solution: "AI-powered search with natural language understanding"
+    differentiator: "Combines search + chat + analytics in one platform"
+  
+  # What does success look like?
+  success_metrics:
+    - "Audience understands AI search capabilities"
+    - "Customer requests follow-up meeting"
+    - "POC approved for next quarter"
+
+# =============================================================================
+# Data Configuration
+# =============================================================================
+# Defines where demo data comes from and how it's structured.
+
+data:
+  # Data source type
+  source: "existing"  # existing | dataset | generated
+  
+  # Dataset name (if using a known dataset)
+  # Options: open-food-facts, icecat, wands, recipes, custom
+  dataset: "open-food-facts"
+  
+  # Elasticsearch index name
+  index: "products"
+  
+  # Record count (approximate)
+  record_count: 500
+  
+  # Generation configuration (only if source is "generated")
+  generation_config:
+    # Generation method
+    type: "llm"  # llm | script
+    
+    # Number of records to generate
+    size: 50
+    
+    # Domain description for generation
+    domain: "organic grocery products"
+    
+    # Fidelity requirements (what must be realistic)
+    fidelity:
+      - "product images (working URLs)"
+      - "category hierarchy for facets"
+      - "price ranges ($1-$50)"
+      - "brand names"
+
+# =============================================================================
 # Branding
-branding_url: "https://example.com"
-branding_name: "example"
+# =============================================================================
 
-# Data configuration
-data_index: "products"
-data_source: "existing"  # existing | ingest | sample
+branding:
+  # Brand name (used in UI, file names)
+  name: "example"
+  
+  # Source URL for brand extraction
+  url: "https://example.com"
+  
+  # Generated theme file (in frontend/src/branding/)
+  theme_file: "exampleTheme.ts"
+  
+  # Primary colour (hex, extracted or manual)
+  primary_color: "#0077CC"
+  
+  # Logo URL or path
+  logo: ""
 
+# =============================================================================
+# Environment Configuration
+# =============================================================================
+
+environment:
+  # Elasticsearch connection
+  elasticsearch: "own_cluster"  # own_cluster | shared_serverless
+  
+  # Features enabled
+  agent_builder: true
+  llm_proxy: false
+  otel_enabled: true
+  
+  # Deployment target
+  deployment: "local"  # local | cloud_run | docker
+
+# =============================================================================
+# Planning & Tracking
+# =============================================================================
+
+planning:
+  # Demo plan file location
+  demo_plan: "DEMO_PLAN.md"
+  
+  # Beads epic ID (if using beads)
+  beads_epic: ""  # e.g., "bd-42"
+  
+  # Current phase
+  phase: "planning"  # planning | setup | customisation | testing | delivered
+
+# =============================================================================
 # Metadata (auto-populated)
-# created: "2026-01-27T10:00:00Z"
-# updated: "2026-01-27T15:30:00Z"
+# =============================================================================
+
+# created: "2026-01-28T10:00:00Z"
+# updated: "2026-01-28T15:30:00Z"
+# created_by: "AI Assistant"

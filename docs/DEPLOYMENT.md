@@ -4,6 +4,46 @@
 
 ---
 
+## Quick Start: Shared Serverless Project
+
+**Don't have your own Elasticsearch cluster?** Use the shared serverless project to get started immediately.
+
+The shared project provides:
+- ✅ Pre-loaded demo datasets (Open Food Facts, Icecat, recipes, etc.)
+- ✅ Pre-configured Agent Builder agents
+- ✅ Read-only access (safe for experimentation)
+- ✅ No setup required - just add the API key
+
+### Using the Shared Project
+
+1. Get the API key from `.env.example` or request from project maintainer
+2. Add to your `backend/.env`:
+   ```bash
+   ELASTICSEARCH_URL="https://[PROJECT_ID].es.us-central1.gcp.elastic-cloud.com"
+   ELASTIC_API_KEY="[READ_ONLY_API_KEY]"
+   ```
+3. Run `./dev verify` to confirm connectivity
+
+See [SHARED_SERVERLESS_PROJECT.md](./SHARED_SERVERLESS_PROJECT.md) for full details including:
+- Available datasets and indices
+- Pre-configured agents
+- Limitations and when to use your own cluster
+
+### When to Use Your Own Cluster
+
+Use the shared project for:
+- Quick demos and prototypes
+- Learning and experimentation
+- Testing features
+
+Use your own cluster when:
+- You need custom datasets
+- You need to create/modify agents
+- You need write access
+- You need production reliability
+
+---
+
 ## 🔒 SECURITY: Always Use IAP Authentication
 
 **Demos must NEVER be deployed with public access.**

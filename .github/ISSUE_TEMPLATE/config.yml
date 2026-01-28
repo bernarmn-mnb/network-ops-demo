@@ -6,4 +6,7 @@ contact_links:
   - name: Hive Mind Patterns
     url: https://github.com/elastic/hive-mind
     about: Contribute patterns and troubleshooting guides to the shared knowledge base
+  - name: OOTB Data Documentation
+    url: docs/SHARED_SERVERLESS_PROJECT.md
+    about: View available datasets and agents in the shared serverless project
 

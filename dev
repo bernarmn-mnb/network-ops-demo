@@ -605,6 +605,101 @@ cmd_verify() {
     fi
 }
 
+cmd_use_ootb() {
+    echo -e "${BLUE}🔧 Configuring Shared OOTB Project...${NC}"
+    echo ""
+    
+    # Check if gh CLI is available
+    if ! command -v gh &> /dev/null; then
+        echo -e "${RED}❌ GitHub CLI (gh) is required${NC}"
+        echo ""
+        echo "Install with:"
+        echo "  macOS:   brew install gh"
+        echo "  Linux:   https://github.com/cli/cli/blob/trunk/docs/install_linux.md"
+        echo "  Windows: winget install GitHub.cli"
+        echo ""
+        echo "Then authenticate: gh auth login"
+        exit 1
+    fi
+    
+    # Check if authenticated
+    if ! gh auth status &> /dev/null; then
+        echo -e "${RED}❌ Not authenticated with GitHub${NC}"
+        echo ""
+        echo "Run: gh auth login"
+        exit 1
+    fi
+    
+    echo -e "Fetching OOTB credentials from GitHub..."
+    
+    # Fetch variables from GitHub
+    local es_url kibana_url api_key
+    es_url=$(gh variable get OOTB_ELASTICSEARCH_URL 2>/dev/null) || {
+        echo -e "${RED}❌ Could not fetch OOTB_ELASTICSEARCH_URL${NC}"
+        echo "   Make sure you have access to the elastic/elastic-demo-starter repository."
+        echo "   Repository variables are only visible to collaborators with read access."
+        echo ""
+        echo "   See: docs/SHARED_SERVERLESS_PROJECT.md for manual setup instructions."
+        exit 1
+    }
+    
+    kibana_url=$(gh variable get OOTB_KIBANA_URL 2>/dev/null) || {
+        echo -e "${RED}❌ Could not fetch OOTB_KIBANA_URL${NC}"
+        exit 1
+    }
+    
+    api_key=$(gh variable get OOTB_READONLY_API_KEY 2>/dev/null) || {
+        echo -e "${RED}❌ Could not fetch OOTB_READONLY_API_KEY${NC}"
+        exit 1
+    }
+    
+    echo -e "${GREEN}✅ Credentials fetched${NC}"
+    
+    # Create or update backend/.env
+    local env_file="backend/.env"
+    
+    if [ ! -f "$env_file" ]; then
+        # Create from example if it exists
+        if [ -f "backend/.env.example" ]; then
+            cp "backend/.env.example" "$env_file"
+            echo -e "Created $env_file from template"
+        else
+            touch "$env_file"
+            echo -e "Created $env_file"
+        fi
+    fi
+    
+    # Update the values
+    update_env_value "ELASTICSEARCH_URL" "$es_url"
+    update_env_value "ELASTIC_API_KEY" "$api_key"
+    update_env_value "KIBANA_URL" "$kibana_url"
+    
+    echo ""
+    echo -e "${GREEN}✅ Configured backend/.env with OOTB credentials${NC}"
+    echo ""
+    echo -e "   Elasticsearch: ${BLUE}$es_url${NC}"
+    echo -e "   Kibana:        ${BLUE}$kibana_url${NC}"
+    echo -e "   API Key:       ${DIM}(read-only, hidden)${NC}"
+    echo ""
+    echo -e "Available indices:"
+    echo -e "   • ootb-products  (200 products, ELSER + jina)"
+    echo -e "   • ootb-knowledge (150 docs, ELSER + jina)"
+    echo -e "   • ootb-support   (150 tickets, ELSER + jina)"
+    echo -e "   • ootb-stores    (100 stores, ELSER + jina + geo)"
+    echo ""
+    echo -e "Available agents:"
+    echo -e "   • ootb-product-search"
+    echo -e "   • ootb-knowledge-base"
+    echo -e "   • ootb-support-analyst"
+    echo -e "   • ootb-store-finder"
+    echo ""
+    echo -e "Next steps:"
+    echo -e "   1. Set AGENT_ID in backend/.env (e.g., ootb-product-search)"
+    echo -e "   2. Run ${BLUE}./dev start${NC}"
+    echo ""
+    echo -e "See ${BLUE}docs/SHARED_SERVERLESS_PROJECT.md${NC} for full documentation."
+}
+
 cmd_help() {
     read_env_ports
     
@@ -623,6 +718,7 @@ cmd_help() {
     echo "  logs-snapshot  Show recent logs and exit (default: 50 lines)"
     echo "                 Usage: ./dev logs-snapshot [num_lines]"
     echo "  open           Open browser to frontend"
+    echo "  use-ootb       Configure shared OOTB project (fetches from GitHub)"
     echo ""
     echo "Both servers auto-reload on code changes - no restart needed!"
     echo ""
@@ -653,6 +749,7 @@ case "${1:-help}" in
     logs)    cmd_logs ;;
     logs-snapshot) cmd_logs_snapshot "${2:-50}" ;;
     open)    cmd_open ;;
+    use-ootb) cmd_use_ootb ;;
     help|--help|-h) cmd_help ;;
     *)
         echo -e "${RED}Unknown command: $1${NC}"

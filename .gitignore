@@ -79,3 +79,6 @@ backend/data/
 
 .setup-complete
 project-context.yaml
+
+# Secrets (admin keys, credentials)
+.secrets/
