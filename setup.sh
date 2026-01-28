@@ -2,6 +2,9 @@
 
 # Elastic Demo Starter - Setup Launcher
 # Launches the interactive setup wizard
+#
+# Requires: uv (https://docs.astral.sh/uv/)
+# uv manages Python versions and dependencies automatically.
 
 set -e
 
@@ -9,62 +12,118 @@ set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
 NC='\033[0m'
-
-# Find Python
-if command -v python3 &> /dev/null; then
-    PYTHON=python3
-elif command -v python &> /dev/null; then
-    PYTHON=python
-else
-    echo -e "${RED}❌ Python is not installed.${NC}"
-    echo ""
-    echo "Please install Python 3.12 or newer:"
-    echo "  • macOS: brew install python3"
-    echo "  • Ubuntu: sudo apt install python3 python3-venv"
-    echo "  • Download: https://www.python.org/downloads/"
-    echo ""
-    echo "Then run ./setup.sh again."
-    exit 1
-fi
-
-# Check Python version (need 3.12+)
-PY_VERSION=$($PYTHON -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null)
-PY_MAJOR=$($PYTHON -c "import sys; print(sys.version_info.major)" 2>/dev/null)
-PY_MINOR=$($PYTHON -c "import sys; print(sys.version_info.minor)" 2>/dev/null)
-
-if [ "$PY_MAJOR" -lt 3 ] || ([ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 12 ]); then
-    echo -e "${RED}❌ Python $PY_VERSION is too old.${NC}"
-    echo ""
-    echo "This project requires Python 3.12 or newer."
-    echo "Your version: Python $PY_VERSION"
-    echo ""
-    echo "Please upgrade Python:"
-    echo "  • macOS: brew upgrade python3"
-    echo "  • Ubuntu: sudo apt install python3.12"
-    echo "  • Download: https://www.python.org/downloads/"
-    echo ""
-    exit 1
-fi
-
-echo -e "${GREEN}✓${NC} Python $PY_VERSION"
-
-# Check for uv (recommended)
-if command -v uv &> /dev/null; then
-    UV_AVAILABLE=true
-    echo -e "${GREEN}✓${NC} uv detected"
-else
-    UV_AVAILABLE=false
-    echo -e "${YELLOW}⚠️  uv not found. Falling back to system Python.${NC}"
-    echo "  Install uv for faster, reproducible installs: https://docs.astral.sh/uv/"
-fi
 
 # Get the directory where this script lives
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Run the interactive setup
-if [ "$UV_AVAILABLE" = true ]; then
-    exec uv run python "$SCRIPT_DIR/scripts/interactive_setup.py"
-else
-    exec $PYTHON "$SCRIPT_DIR/scripts/interactive_setup.py"
+# =============================================================================
+# Check for uv (required)
+# =============================================================================
+
+install_uv() {
+    echo ""
+    echo -e "${BLUE}Installing uv...${NC}"
+    
+    case "$(uname -s)" in
+        Darwin|Linux)
+            # macOS and Linux
+            if curl -LsSf https://astral.sh/uv/install.sh | sh; then
+                echo ""
+                echo -e "${GREEN}✓ uv installed successfully${NC}"
+                
+                # Source the shell config to get uv in PATH
+                # Try common locations
+                if [ -f "$HOME/.cargo/env" ]; then
+                    source "$HOME/.cargo/env"
+                elif [ -f "$HOME/.local/bin/uv" ]; then
+                    export PATH="$HOME/.local/bin:$PATH"
+                fi
+                
+                # Verify it worked
+                if command -v uv &> /dev/null; then
+                    return 0
+                else
+                    echo -e "${YELLOW}Note: You may need to restart your terminal or run:${NC}"
+                    echo '  source "$HOME/.cargo/env"'
+                    echo ""
+                    echo "Then run ./setup.sh again."
+                    exit 0
+                fi
+            else
+                echo -e "${RED}Failed to install uv${NC}"
+                return 1
+            fi
+            ;;
+        MINGW*|MSYS*|CYGWIN*)
+            # Windows (Git Bash, etc.)
+            echo "On Windows, please install uv manually:"
+            echo ""
+            echo "  PowerShell: irm https://astral.sh/uv/install.ps1 | iex"
+            echo "  Or with winget: winget install astral-sh.uv"
+            echo ""
+            return 1
+            ;;
+        *)
+            echo "Unknown OS. Please install uv manually:"
+            echo "  https://docs.astral.sh/uv/getting-started/installation/"
+            return 1
+            ;;
+    esac
+}
+
+if ! command -v uv &> /dev/null; then
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BOLD}uv is required but not installed${NC}"
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo "uv is a fast Python package manager that handles dependencies"
+    echo "and Python versions automatically."
+    echo ""
+    echo "Learn more: https://docs.astral.sh/uv/"
+    echo ""
+    
+    # Check if we can auto-install
+    if [ -t 0 ]; then
+        # Interactive terminal - ask user
+        read -p "Install uv now? [Y/n] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Nn]$ ]]; then
+            echo ""
+            echo "Manual installation options:"
+            echo "  • macOS/Linux: curl -LsSf https://astral.sh/uv/install.sh | sh"
+            echo "  • macOS:       brew install uv"
+            echo "  • Windows:     irm https://astral.sh/uv/install.ps1 | iex"
+            echo ""
+            exit 1
+        fi
+        
+        if ! install_uv; then
+            echo ""
+            echo "Please install uv manually and run ./setup.sh again."
+            exit 1
+        fi
+    else
+        # Non-interactive - show instructions and exit
+        echo "Install uv first:"
+        echo "  curl -LsSf https://astral.sh/uv/install.sh | sh"
+        echo ""
+        echo "Then run ./setup.sh again."
+        exit 1
+    fi
 fi
+
+UV_VERSION=$(uv --version 2>/dev/null | head -1)
+echo -e "${GREEN}✓${NC} $UV_VERSION"
+
+# =============================================================================
+# Run the interactive setup with uv
+# =============================================================================
+
+# uv run with a script path (not `uv run python script.py`) reads
+# PEP 723 inline script metadata to install dependencies automatically.
+# See: https://docs.astral.sh/uv/guides/scripts/
+
+exec uv run "$SCRIPT_DIR/scripts/interactive_setup.py"

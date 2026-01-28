@@ -51,11 +51,10 @@ Run `./preflight-check.sh` to verify all requirements, or check manually:
 
 | Requirement | Minimum | Purpose | Status |
 |-------------|---------|---------|--------|
-| **Python** | 3.12+ | Backend server (FastAPI) | **Required** - setup fails if missing/old |
+| **uv** | Latest | Python & dependency manager | **Required** - setup.sh will offer to install |
 | **Node.js** | 18+ | Frontend build (Vite) | **Required** - warns if older |
 | **Git** | Any | Clone repo, submodules | **Required** |
 | GitHub CLI (`gh`) | Any | Easier cloning/auth | Recommended |
-| **uv** | Latest | Backend dependency manager | **Required** for backend/dev (setup can fall back) |
 | Yarn | Any | Faster npm alternative | Recommended |
 | Firecrawl MCP | - | AI branding extraction | Optional (see [PREREQUISITES.md](./docs/PREREQUISITES.md)) |
 | Docker | Any | Container deployment | Optional |
@@ -629,6 +628,39 @@ Content-Type: application/json
 ```bash
 GET http://localhost:8001/api/agent/health
 ```
+
+## Telemetry
+
+This project collects **optional, anonymous usage telemetry** to help us understand adoption and improve the starter kit.
+
+**What's collected (with your consent):**
+- Features configured (search, chat, analytics, etc.)
+- Platform (macOS, Linux, Windows)
+- Setup success/failure
+- Optionally: your email and GitHub handle (for follow-up on issues)
+- Optionally: a brief description of your use case
+
+**What's NOT collected:**
+- Credentials, API keys, or URLs
+- Customer names or file paths
+- Any data without explicit consent
+
+You'll be asked at the end of `./setup.sh` whether to send telemetry. You can skip it entirely with no impact on functionality.
+
+---
+
+## Feedback
+
+We'd love to hear how you're using this starter kit!
+
+- **💡 Feature requests**: [Open a feature request](https://github.com/elastic/elastic-agent-starter/issues/new?template=feature_request.md)
+- **🐛 Bug reports**: [Report an issue](https://github.com/elastic/elastic-agent-starter/issues/new?template=bug_report.md)
+- **⭐ Show appreciation**: Star the repo if it's been helpful
+- **💬 Questions & discussion**: [Start a discussion](https://github.com/elastic/elastic-agent-starter/discussions)
+
+Your feedback helps prioritise improvements and identify pain points.
+
+---
 
 ## Contributing
 

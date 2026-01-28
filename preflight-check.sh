@@ -168,55 +168,42 @@ echo -e "${DIM}These are required - setup will fail without them${NC}"
 echo ""
 
 # -----------------------------------------------------------------------------
-# Python 3.12+
+# uv (Required - manages Python and dependencies)
 # -----------------------------------------------------------------------------
-PYTHON_OK=false
-if command -v python3 &> /dev/null; then
-    PY_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null)
-    PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
-    PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
-
-    if [ "$PY_MAJOR" -ge 3 ] && [ "$PY_MINOR" -ge 12 ]; then
-        echo -e "  ${GREEN}✅ Python $PY_VERSION${NC}"
-        PYTHON_OK=true
-    else
-        echo -e "  ${RED}❌ Python $PY_VERSION (need 3.12+)${NC}"
+UV_OK=false
+if command -v uv &> /dev/null; then
+    UV_VERSION=$(uv --version | head -1)
+    echo -e "  ${GREEN}✅ $UV_VERSION${NC}"
+    UV_OK=true
+    
+    # Show Python version managed by uv
+    if UV_PY_VERSION=$(uv run python --version 2>/dev/null); then
+        echo -e "     ${DIM}└─ $UV_PY_VERSION (managed by uv)${NC}"
     fi
-elif command -v python &> /dev/null; then
-    PY_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null)
-    PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
-
-    if [ "$PY_MAJOR" -ge 3 ]; then
-        PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
-        if [ "$PY_MINOR" -ge 12 ]; then
-            echo -e "  ${GREEN}✅ Python $PY_VERSION${NC}"
-            PYTHON_OK=true
-        else
-            echo -e "  ${RED}❌ Python $PY_VERSION (need 3.12+)${NC}"
-        fi
-    else
-        echo -e "  ${RED}❌ Python 2.x detected (need Python 3.12+)${NC}"
-    fi
-fi
-
-if [ "$PYTHON_OK" = false ]; then
-    if [ "$PKG_MANAGER" = "brew" ]; then
-        if prompt_yn "  Install Python 3 via Homebrew?"; then
-            if run_install "Python" "brew install python3"; then
-                PYTHON_OK=true
-            fi
-        fi
-    elif [ "$PKG_MANAGER" = "apt" ]; then
-        if prompt_yn "  Install Python 3 via apt?"; then
-            if run_install "Python" "sudo apt-get update && sudo apt-get install -y python3.12 python3.12-venv python3-pip"; then
-                PYTHON_OK=true
+else
+    echo -e "  ${RED}❌ uv not found${NC}"
+    echo -e "     ${DIM}uv manages Python versions and dependencies automatically${NC}"
+    
+    # Offer installation
+    if [ "$PLATFORM" = "macos" ] || [ "$PLATFORM" = "linux" ]; then
+        if prompt_yn "  Install uv now?"; then
+            if run_install "uv" "curl -LsSf https://astral.sh/uv/install.sh | sh"; then
+                # Try to source the install
+                if [ -f "$HOME/.cargo/env" ]; then
+                    source "$HOME/.cargo/env"
+                fi
+                if command -v uv &> /dev/null; then
+                    UV_OK=true
+                else
+                    echo -e "     ${YELLOW}Note: Restart your terminal or run: source ~/.cargo/env${NC}"
+                fi
             fi
         fi
     else
-        echo -e "     ${DIM}Install from: https://www.python.org/downloads/${NC}"
+        echo -e "     ${DIM}Install: https://docs.astral.sh/uv/getting-started/installation/${NC}"
     fi
-
-    if [ "$PYTHON_OK" = false ]; then
+    
+    if [ "$UV_OK" = false ]; then
         mandatory_errors=$((mandatory_errors + 1))
     fi
 fi
@@ -300,29 +287,6 @@ echo ""
 echo -e "${CYAN}${BOLD}Recommended Tools${NC}"
 echo -e "${DIM}Not required, but significantly improve the experience${NC}"
 echo ""
-
-# -----------------------------------------------------------------------------
-# uv (Python dependency manager)
-# -----------------------------------------------------------------------------
-if command -v uv &> /dev/null; then
-    UV_VERSION=$(uv --version | head -1)
-    echo -e "  ${GREEN}✅ uv $UV_VERSION${NC}"
-else
-    echo -e "  ${YELLOW}⚠️  uv not found${NC}"
-    echo -e "     ${DIM}Faster, reproducible backend installs (setup can fall back)${NC}"
-    echo -e "     ${DIM}Install: https://docs.astral.sh/uv/${NC}"
-
-    if [ "$PKG_MANAGER" = "brew" ]; then
-        if prompt_yn "  Install uv via Homebrew?"; then
-            run_install "uv" "brew install uv"
-        fi
-    elif [ "$PLATFORM" = "linux" ]; then
-        if prompt_yn "  Install uv via the install script?"; then
-            run_install "uv" "curl -Ls https://astral.sh/uv/install.sh | sh"
-        fi
-    fi
-    recommended_warnings=$((recommended_warnings + 1))
-fi
 
 # -----------------------------------------------------------------------------
 # GitHub CLI (gh)

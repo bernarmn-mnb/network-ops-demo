@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["pyyaml>=6.0"]
+# ///
 """
 Interactive Setup Script for Elastic Demo Starter
 
 Feature-driven setup that asks users what they want to configure.
 Supports both interactive (TTY) and piped/scripted input modes.
+
+Run via: uv run python scripts/interactive_setup.py
+The inline script dependencies above ensure PyYAML is installed automatically.
 """
 
 import os
@@ -16,9 +23,30 @@ import socket
 import urllib.request
 import urllib.error
 from typing import Optional, Dict, List, Tuple
-import base64
 from dataclasses import dataclass
 from enum import Enum
+
+# Telemetry module (optional, graceful failure if missing)
+try:
+    from telemetry import (
+        collect_and_send_telemetry,
+        detect_contact_info,
+    )
+    TELEMETRY_AVAILABLE = True
+except ImportError:
+    TELEMETRY_AVAILABLE = False
+
+# Project context module
+try:
+    from project_context import (
+        ProjectContext,
+        load_context,
+        save_context,
+        update_context,
+    )
+    PROJECT_CONTEXT_AVAILABLE = True
+except ImportError:
+    PROJECT_CONTEXT_AVAILABLE = False
 
 
 # =============================================================================
@@ -854,7 +882,7 @@ def configure_otel() -> Dict[str, str]:
 # =============================================================================
 
 def configure_branding(frontend_port: int) -> Optional[str]:
-    """Configure branding options. Returns path to branding prompt file if created."""
+    """Configure branding options. Returns the branding URL if AI extraction was chosen."""
     print(f"\n{Colors.BOLD}Branding Options:{Colors.ENDC}")
     print(f"   {Colors.CYAN}1.{Colors.ENDC} Brand Editor - Manual color/logo picker at /brands")
     print(f"   {Colors.CYAN}2.{Colors.ENDC} AI Extraction - Extract from a website URL")
@@ -872,7 +900,7 @@ def configure_branding(frontend_port: int) -> Optional[str]:
         prompt_path = create_branding_prompt(url)
         print_success(f"Created: {prompt_path}")
         print_info("Your AI assistant will extract colors, fonts, and logos automatically")
-        return prompt_path
+        return url  # Return the URL for telemetry context
     else:
         print_info("Skipping - Brand Editor available at /brands anytime")
         return None
@@ -880,7 +908,7 @@ def configure_branding(frontend_port: int) -> Optional[str]:
 
 def create_branding_prompt(url: str) -> str:
     """Creates a customized prompt file for branding extraction."""
-    brand_name = extract_brand_name_from_url(url)
+    brand_name = extract_brand_name_from_url(url) or "custom"
     prompt_path = "NEXT_STEPS_BRANDING.md"
     
     content = f"""# 🎨 Branding Customization for {url}
@@ -924,10 +952,21 @@ Reference `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md` for the 
     return prompt_path
 
 
-def extract_brand_name_from_url(url: str) -> str:
+def extract_brand_name_from_url(url: str) -> Optional[str]:
+    """
+    Extract a brand name from a URL.
+    
+    Returns None if the URL is empty or can't be parsed into a valid brand name.
+    """
+    if not url:
+        return None
+    
     clean = url.replace('https://', '').replace('http://', '').replace('www.', '')
-    domain_part = clean.split('.')[0]
-    return ''.join(c for c in domain_part if c.isalnum())
+    # Handle URLs without a domain extension (e.g., 'localhost')
+    domain_part = clean.split('.')[0] if '.' in clean else clean.split('/')[0]
+    brand_name = ''.join(c for c in domain_part if c.isalnum())
+    
+    return brand_name if brand_name else None
 
 
 # =============================================================================
@@ -1062,6 +1101,209 @@ def clean_existing_setup(existing: Dict[str, bool]) -> None:
 
 
 # =============================================================================
+# Project Context Collection
+# =============================================================================
+
+def collect_project_context(existing_context: Optional["ProjectContext"] = None) -> Optional["ProjectContext"]:
+    """
+    Collect project context (name, goal, customer) from the user.
+    
+    This information is used for:
+    - Telemetry (understanding use cases)
+    - AI assistant context
+    - Project documentation
+    
+    Returns updated ProjectContext or None if user skips.
+    """
+    if not PROJECT_CONTEXT_AVAILABLE:
+        return None
+    
+    handler = get_input_handler()
+    
+    print(f"\n{Colors.BOLD}Project Context{Colors.ENDC}")
+    print(f"{Colors.DIM}This helps us understand how the starter is being used and improves AI assistance.{Colors.ENDC}\n")
+    
+    # Check for existing context
+    if existing_context and existing_context.name:
+        print(f"Existing project: {Colors.GREEN}{existing_context.name}{Colors.ENDC}")
+        if existing_context.goal:
+            print(f"Goal: {existing_context.goal}")
+        print()
+        if not ask_yes_no("Update project details?", default="no"):
+            return existing_context
+    
+    # Collect project details
+    ctx = existing_context or ProjectContext()
+    
+    name = handler.get_input(
+        f"{Colors.BOLD}Project name (e.g., 'Acme Product Search'): {Colors.ENDC}"
+    ).strip()
+    if name:
+        ctx.name = name
+    
+    goal = handler.get_input(
+        f"{Colors.BOLD}What are you building? (e.g., 'E-commerce search for shoe retailer'): {Colors.ENDC}"
+    ).strip()
+    if goal:
+        ctx.goal = goal
+    
+    customer = handler.get_input(
+        f"{Colors.BOLD}Customer/brand name (optional, press Enter to skip): {Colors.ENDC}"
+    ).strip()
+    if customer:
+        ctx.customer = customer
+    
+    return ctx
+
+
+def map_features_to_capabilities(features: List[str]) -> List[str]:
+    """Map feature IDs to capability names for project context."""
+    mapping = {
+        "agent_builder": "agent_chat",
+        "elasticsearch": "search",
+        "otel": "analytics",
+        "llm_proxy": "multi_agent",
+    }
+    return [mapping.get(f, f) for f in features]
+
+
+# =============================================================================
+# Telemetry Consent Flow
+# =============================================================================
+
+def infer_use_case(env_vars: Dict[str, str], features_configured: List[str], branding_url: Optional[str]) -> Optional[str]:
+    """
+    Auto-generate a use case description from setup context.
+    
+    Returns None if we can't infer anything meaningful.
+    """
+    parts = []
+    
+    # Infer from search index name
+    search_index = env_vars.get("SEARCH_INDEX", "")
+    if search_index and search_index not in ("products", "search"):  # Skip generic defaults
+        parts.append(f"{search_index} search")
+    
+    # Infer from features
+    if "agent_builder" in features_configured and "llm_proxy" in features_configured:
+        parts.append("multi-agent orchestration")
+    elif "agent_builder" in features_configured:
+        parts.append("AI chat")
+    
+    if "otel" in features_configured:
+        parts.append("with analytics")
+    
+    # Add branding context
+    if branding_url:
+        # Extract domain for context
+        domain = branding_url.replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0]
+        parts.append(f"for {domain}")
+    
+    if parts:
+        return " ".join(parts).strip()
+    return None
+
+
+def ask_telemetry_consent(features_configured: List[str], setup_mode: str, env_vars: Dict[str, str], branding_url: Optional[str] = None, project_ctx: Optional["ProjectContext"] = None) -> None:
+    """
+    Ask user for telemetry consent and send if approved.
+    
+    This is completely optional - setup works fine without telemetry.
+    Uses project context if available to avoid re-asking for use case.
+    """
+    if not TELEMETRY_AVAILABLE:
+        return
+    
+    handler = get_input_handler()
+    
+    print(f"\n{Colors.HEADER}╔════════════════════════════════════════════╗{Colors.ENDC}")
+    print(f"{Colors.HEADER}║           📊 Usage Telemetry               ║{Colors.ENDC}")
+    print(f"{Colors.HEADER}╚════════════════════════════════════════════╝{Colors.ENDC}")
+    print()
+    print("Help us improve this starter kit by sharing anonymous usage data.")
+    print()
+    
+    # Auto-detect contact info
+    contact = detect_contact_info()
+    if contact.email or contact.github_handle:
+        print(f"{Colors.BOLD}Auto-detected:{Colors.ENDC}")
+        if contact.email:
+            print(f"  • Email:  {contact.email}")
+        if contact.github_handle:
+            print(f"  • GitHub: {contact.github_handle}")
+        print()
+    
+    # Get use case from project context if available
+    use_case_from_context = None
+    if project_ctx:
+        use_case_from_context = project_ctx.get_use_case_summary()
+    
+    print(f"{Colors.BOLD}Data we'd send:{Colors.ENDC}")
+    print(f"  ✓ Features configured: {', '.join(features_configured) if features_configured else 'none'}")
+    if use_case_from_context:
+        print(f"  ✓ Project: {use_case_from_context}")
+    print(f"  ✓ Platform: {platform.system()}/{platform.machine()}")
+    print(f"  ✓ Setup success/failure")
+    print(f"  ✓ Your email & GitHub {Colors.DIM}(optional - for follow-up){Colors.ENDC}")
+    print()
+    print(f"{Colors.DIM}NOT collected: credentials, API keys, customer names, file paths{Colors.ENDC}")
+    print()
+    
+    print(f"{Colors.BOLD}Options:{Colors.ENDC}")
+    print(f"   {Colors.CYAN}1.{Colors.ENDC} Send with contact info (email + GitHub)")
+    print(f"   {Colors.CYAN}2.{Colors.ENDC} Send anonymous (no contact info)")
+    print(f"   {Colors.CYAN}3.{Colors.ENDC} Skip telemetry entirely")
+    print()
+    
+    choice = handler.get_input(f"{Colors.BOLD}Select [1-3, default=1]: {Colors.ENDC}").strip()
+    
+    if choice == "3":
+        print_info("Telemetry skipped. No data sent.")
+        return
+    
+    include_contact = choice != "2"
+    
+    # Use project context for use case, or fall back to inference
+    if use_case_from_context:
+        use_case = use_case_from_context
+    else:
+        # Try to infer use case from setup context
+        inferred_use_case = infer_use_case(env_vars, features_configured, branding_url)
+        
+        # Show inferred use case and offer to edit
+        print()
+        if inferred_use_case:
+            print(f"{Colors.DIM}Auto-detected: {inferred_use_case}{Colors.ENDC}")
+            use_case_input = handler.get_input(
+                f"{Colors.BOLD}Use case (press Enter to accept, or type to replace): {Colors.ENDC}"
+            ).strip()
+            use_case = use_case_input if use_case_input else inferred_use_case
+        else:
+            use_case = handler.get_input(
+                f"{Colors.BOLD}What are you building? (optional, helps us prioritise features): {Colors.ENDC}"
+            ).strip()
+            if not use_case:
+                use_case = None
+    
+    # Send telemetry
+    print()
+    print("   Sending telemetry...", end="", flush=True)
+    
+    success = collect_and_send_telemetry(
+        features=features_configured,
+        setup_success=True,
+        setup_mode=setup_mode,
+        use_case=use_case,
+        include_contact=include_contact,
+    )
+    
+    if success:
+        print(f"\r   {Colors.GREEN}✓{Colors.ENDC} Telemetry sent. Thank you!          ")
+    else:
+        print(f"\r   {Colors.WARNING}⚠{Colors.ENDC} Telemetry failed (network issue). No worries!")
+
+
+# =============================================================================
 # Main Setup Flow
 # =============================================================================
 
@@ -1140,6 +1382,18 @@ def main():
         # Check network connectivity
         if not check_network_connectivity():
             sys.exit(1)
+    
+    # ==========================================================================
+    # Step 1b: Project Context (optional but recommended)
+    # ==========================================================================
+    project_ctx = None
+    if PROJECT_CONTEXT_AVAILABLE:
+        existing_ctx = load_context()
+        if setup_mode == "fresh" or not existing_ctx:
+            print_step("1b", "Project Context")
+            project_ctx = collect_project_context(existing_ctx)
+        else:
+            project_ctx = existing_ctx
     
     # ==========================================================================
     # Step 2: Feature Selection
@@ -1269,9 +1523,46 @@ def main():
     # ==========================================================================
     # Step 5: Branding (Optional)
     # ==========================================================================
+    branding_url = None
     if setup_mode != "reconfigure":
         print_step(5, "Branding (Optional)")
-        configure_branding(frontend_port)
+        branding_url = configure_branding(frontend_port)
+    
+    # ==========================================================================
+    # Save Project Context
+    # ==========================================================================
+    # Build list of configured features
+    features_configured = []
+    if env_vars.get("KIBANA_URL"):
+        features_configured.append("agent_builder")
+    if env_vars.get("ELASTIC_CLOUD_ID") or env_vars.get("ELASTICSEARCH_URL"):
+        features_configured.append("elasticsearch")
+    if env_vars.get("OTEL_EXPORTER_OTLP_ENDPOINT"):
+        features_configured.append("otel")
+    if env_vars.get("LLM_PROXY_URL"):
+        features_configured.append("llm_proxy")
+    
+    # Update and save project context with all gathered info
+    if PROJECT_CONTEXT_AVAILABLE:
+        if project_ctx is None:
+            project_ctx = load_context() or ProjectContext()
+        
+        # Update with setup results
+        project_ctx.capabilities = map_features_to_capabilities(features_configured)
+        project_ctx.data_index = env_vars.get("SEARCH_INDEX")
+        if branding_url:
+            project_ctx.branding_url = branding_url
+            brand_name = extract_brand_name_from_url(branding_url)
+            if brand_name:
+                project_ctx.branding_name = brand_name
+        
+        save_context(project_ctx)
+        print_success("Saved project context to project-context.yaml")
+    
+    # ==========================================================================
+    # Telemetry (Optional)
+    # ==========================================================================
+    ask_telemetry_consent(features_configured, setup_mode, env_vars, branding_url, project_ctx)
     
     # ==========================================================================
     # Complete!

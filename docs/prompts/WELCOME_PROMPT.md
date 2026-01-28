@@ -40,13 +40,32 @@ ______________________________________________________________________
 
 Now let's get specific about the project. Do not move to the next phase until you have a clear picture.
 
-1. **Goal**: What is the specific purpose of this new project? (e.g., "E-commerce search for shoes", "Internal HR chatbot", "Log analysis agent")
-2. **Data**: What data will we be using? Do I have an existing Elasticsearch index, or do we need to ingest something?
-3. **Environment**: Do I have my Elastic Cloud details (Cloud ID, API Key) ready?
+1. **Project Name**: What should we call this project? (e.g., "Acme Product Search", "HR Assistant")
+2. **Goal**: What is the specific purpose? (e.g., "E-commerce search for shoes", "Internal HR chatbot", "Log analysis agent")
+3. **Customer/Brand**: Who is this for? (optional - company name or brand)
+4. **Data**: What data will we be using? Do I have an existing Elasticsearch index, or do we need to ingest something?
+5. **Environment**: Do I have my Elastic Cloud details (Cloud ID, API Key) ready?
    - *If yes*: Ask me to provide them (securely).
    - *If no*: Guide me on how to create a trial or API key.
 
-> **Output**: Summarize my project goals and technical requirements in a short "Project Brief", including which features from Phase 0 are in scope.
+> **Output**: 
+> 1. Summarize my project goals in a short "Project Brief"
+> 2. **Save the project context** by creating/updating `project-context.yaml`:
+>
+> ```yaml
+> # project-context.yaml
+> name: "Project Name Here"
+> goal: "One sentence description of what we're building"
+> customer: "Customer/brand name (if applicable)"
+> delivery_type: "standalone"  # or: overlay, widget
+> capabilities:
+>   - "search"      # if search features selected
+>   - "agent_chat"  # if AI chat selected
+>   - "analytics"   # if OTel/APM selected
+>   - "multi_agent" # if A2A selected
+> ```
+>
+> This file is used for telemetry and AI context throughout the project.
 
 ______________________________________________________________________
 
@@ -75,6 +94,11 @@ Now, let's make it look like *my* project, not a template.
    - Ask for a brand name and a website URL.
    - Use the **AI Branding Extraction** workflow (refer to `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md`) to generate a theme.
    - Apply this theme as the default.
+   - **Update `project-context.yaml`** with branding info:
+     ```yaml
+     branding_url: "https://example.com"
+     branding_name: "example"
+     ```
 4. **Cleanup**:
    - Ask which demo pages (Chat, Search, A2A, etc.) are relevant to my goal.
    - Update `frontend/src/components/layout/navigationConfig.ts` to hide irrelevant pages.

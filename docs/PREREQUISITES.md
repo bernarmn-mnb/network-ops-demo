@@ -20,23 +20,56 @@ ______________________________________________________________________
 
 These are **required** - the setup wizard will fail without them.
 
-| Tool        | Minimum Version | Purpose                       | Install                                                                   |
-| ----------- | --------------- | ----------------------------- | ------------------------------------------------------------------------- |
-| **Python**  | 3.12+           | Backend server (FastAPI)      | [python.org](https://www.python.org/downloads/) or `brew install python3` |
-| **Node.js** | 18+             | Frontend build (Vite/React)   | [nodejs.org](https://nodejs.org/) or `brew install node`                  |
-| **Git**     | Any             | Clone repo, manage submodules | `xcode-select --install` (macOS) or [git-scm.com](https://git-scm.com/)   |
+| Tool        | Minimum Version | Purpose                           | Install                                                                   |
+| ----------- | --------------- | --------------------------------- | ------------------------------------------------------------------------- |
+| **uv**      | Latest          | Python package & version manager  | See below - setup.sh can auto-install                                     |
+| **Python**  | 3.12+           | Backend server (FastAPI)          | Managed by uv automatically                                               |
+| **Node.js** | 18+             | Frontend build (Vite/React)       | [nodejs.org](https://nodejs.org/) or `brew install node`                  |
+| **Git**     | Any             | Clone repo, manage submodules     | `xcode-select --install` (macOS) or [git-scm.com](https://git-scm.com/)   |
+
+### uv (Required)
+
+**uv** is a fast Python package manager that handles dependencies and Python versions automatically. The setup script requires it.
+
+**Install options:**
+
+```bash
+# macOS/Linux (recommended - setup.sh will offer this automatically)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# macOS with Homebrew
+brew install uv
+
+# Windows (PowerShell)
+irm https://astral.sh/uv/install.ps1 | iex
+
+# Windows with winget
+winget install astral-sh.uv
+```
+
+**Why uv?**
+
+- Manages Python versions automatically (no need to install Python separately)
+- 10-100x faster than pip for dependency installation
+- Reproducible builds with lockfiles
+- Handles virtual environments transparently
+
+After installing, you may need to restart your terminal or run `source ~/.cargo/env`.
 
 ### Verification Commands
 
 ```bash
-# Python (need 3.12+)
-python3 --version
+# uv (required)
+uv --version
 
 # Node.js (need 18+)
 node --version
 
 # Git
 git --version
+
+# Python version is managed by uv, but you can check:
+uv run python --version
 ```
 
 ______________________________________________________________________
@@ -44,24 +77,6 @@ ______________________________________________________________________
 ## Recommended Tools
 
 These are **not required**, but significantly improve the experience.
-
-### uv
-
-**Why**: Optimises backend installs with faster, reproducible dependency management. The setup wizard can fall back to system Python if uv is missing.
-
-**Install**:
-
-- macOS: `brew install uv`
-- Linux: `curl -Ls https://astral.sh/uv/install.sh | sh`
-- Windows: `irm https://astral.sh/uv/install.ps1 | iex`
-
-**Verify**:
-
-```bash
-uv --version
-```
-
-______________________________________________________________________
 
 ### GitHub CLI (`gh`)
 
@@ -205,15 +220,19 @@ ______________________________________________________________________
 
 ### macOS
 
-Most tools can be installed via Homebrew:
-
 ```bash
 # Install Homebrew first if needed
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install everything
-brew install python3 node git gh yarn jq
+# Install uv (required) and other tools
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# Or: brew install uv
+
+# Install Node.js and other helpful tools
+brew install node git gh yarn jq
 ```
+
+Note: Python is managed by uv automatically - no need to install it separately.
 
 ### Windows
 
@@ -223,42 +242,68 @@ Use Windows Subsystem for Linux (WSL2) for the best experience:
 # In PowerShell (admin)
 wsl --install
 
-# Then in WSL
-sudo apt update
-sudo apt install python3.12 python3.12-venv nodejs npm git
+# Then in WSL, install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install Node.js
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install nodejs git
 ```
 
-Alternatively, use native Windows with:
+Alternatively, use native Windows:
 
-- Python from [python.org](https://www.python.org/downloads/)
+```powershell
+# Install uv (PowerShell)
+irm https://astral.sh/uv/install.ps1 | iex
+
+# Or with winget
+winget install astral-sh.uv
+```
+
 - Node.js from [nodejs.org](https://nodejs.org/)
 - Git from [git-scm.com](https://git-scm.com/)
 
 ### Linux (Ubuntu/Debian)
 
 ```bash
-sudo apt update
-sudo apt install python3.12 python3.12-venv nodejs npm git
+# Install uv (required)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# For newer Node.js
+# Install Node.js 20
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install nodejs
+sudo apt install nodejs git
 ```
+
+Note: Python is managed by uv automatically - no need to install it separately.
 
 ______________________________________________________________________
 
 ## Troubleshooting
 
-### "Python not found" but Python is installed
+### "uv: command not found" after installation
 
-Your system might have `python` instead of `python3`:
+You may need to add uv to your PATH. Try:
 
 ```bash
-# Check what you have
-which python python3
+# Source the cargo env (default install location)
+source "$HOME/.cargo/env"
 
-# Create an alias if needed
-alias python3=python
+# Or add to your shell config (~/.bashrc, ~/.zshrc)
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+
+Then restart your terminal or run `source ~/.zshrc` (or `.bashrc`).
+
+### uv can't find the right Python version
+
+uv manages Python automatically, but if you have issues:
+
+```bash
+# Let uv install the required Python version
+uv python install 3.12
+
+# Check available versions
+uv python list
 ```
 
 ### Node.js version too old
