@@ -10,6 +10,16 @@ A production-ready starter kit for building demos with Elastic. Covers **Search*
 
 This repository serves as a "Golden Master" for building custom Elastic demos. It comes pre-wired with correct architectural patterns for streaming chat, search experiences, analytics dashboards, and brand theming — avoiding common pitfalls and accelerating development.
 
+## 📖 Project Vision
+
+> **Build compelling customer demos in hours, not weeks.**
+>
+> This starter provides verified architectural patterns, secure deployment models, and AI-assisted workflows that eliminate common pitfalls. What you demo reflects how we'd recommend customers build for real.
+>
+> **[Read the full Project Vision →](./docs/PROJECT_VISION.md)**
+
+---
+
 ## 🎯 What Can You Build?
 
 | Demo Type | Features | Key Technologies |
@@ -553,7 +563,8 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 
 | Document | Purpose |
 |----------|---------|
-| [FEATURE_CATALOG.md](./docs/FEATURE_CATALOG.md) | **Start here** — Pick the building blocks you need |
+| [PROJECT_VISION.md](./docs/PROJECT_VISION.md) | **Project goals, roadmap & success metrics** |
+| [FEATURE_CATALOG.md](./docs/FEATURE_CATALOG.md) | Pick the building blocks you need |
 | [ONBOARDING.md](./docs/ONBOARDING.md) | First-time setup guide for AI assistants |
 | [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md) | Chat interface customization options |
 | [BRANDING.md](./docs/BRANDING.md) | Brand theming system documentation |
@@ -659,6 +670,14 @@ We'd love to hear how you're using this starter kit!
 - **💬 Questions & discussion**: [Start a discussion](https://github.com/elastic/elastic-agent-starter/discussions)
 
 Your feedback helps prioritise improvements and identify pain points.
+
+---
+
+## Maintainer
+
+Created and maintained by **Matt Adams** ([matthew.adams@elastic.co](mailto:matthew.adams@elastic.co)) — Search AI Solutions, Elastic.
+
+Questions or ideas? Reach out on Slack: **#demo-starter**
 
 ---
 
