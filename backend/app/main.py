@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .otel import init_otel
+from .agno.routes import router as agno_v2_router
 from .routes.a2a import router as a2a_router
 from .routes.agno_demo import router as agno_router
 from .routes.agent import router as agent_router
@@ -51,7 +52,8 @@ app.include_router(audit_router)
 app.include_router(branding_router)
 app.include_router(mcp_router)
 app.include_router(a2a_router)
-app.include_router(agno_router, prefix="/api/agno", tags=["Agno"])
+app.include_router(agno_router, prefix="/api/agno", tags=["Agno (Legacy)"])
+app.include_router(agno_v2_router, prefix="/api/agno/v2", tags=["Agno V2 (Framework)"])
 
 # Search & Analytics routes (requires Elasticsearch connection)
 app.include_router(search_simple_router)

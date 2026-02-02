@@ -24,6 +24,7 @@ import {
   EuiLoadingSpinner,
 } from '@elastic/eui'
 import { useA2AChat, A2AMessage } from '../../hooks/useA2AChat'
+import { ClientFunctionDef } from '../../services/llmProxyApi'
 import { A2AMessageBubble } from './A2AMessageBubble'
 import { ChatInput } from '../chat/ChatInput'
 import { AgentSelector } from './AgentSelector'
@@ -41,6 +42,10 @@ export interface A2AChatContainerProps {
   endpoint?: string
   /** Skip health check (for demo modes like Agno) */
   skipHealthCheck?: boolean
+  /** Client-side functions (executed in browser) */
+  clientFunctions?: ClientFunctionDef[]
+  /** Handler for client-side function calls */
+  onClientFunctionCall?: (functionName: string, args: Record<string, unknown>) => unknown
 }
 
 export function A2AChatContainer({
@@ -49,6 +54,8 @@ export function A2AChatContainer({
   placeholder = 'Ask me anything...',
   endpoint,
   skipHealthCheck = false,
+  clientFunctions,
+  onClientFunctionCall,
 }: A2AChatContainerProps) {
   const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([])
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = useState(false) // Collapsed by default
@@ -70,6 +77,8 @@ export function A2AChatContainer({
     selectedAgents: selectedAgentIds,
     systemPrompt: systemInstructions || undefined,
     endpoint,
+    clientFunctions,
+    onClientFunctionCall,
   })
 
   const messagesEndRef = useRef<HTMLDivElement>(null)

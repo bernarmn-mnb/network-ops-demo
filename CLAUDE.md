@@ -46,9 +46,10 @@ This project uses a shared knowledge base at `./hive-mind` (git submodule).
 
 | Pattern | Location | Use When |
 |---------|----------|----------|
+| **Agno + Agent Builder** | `hive-mind/patterns/agent-frameworks/AGNO_AGENT_BUILDER_INTEGRATION.md` | **Using Agno framework with Agent Builder (recommended)** |
 | **Agent Builder API Management** | `hive-mind/patterns/elastic/AGENT_BUILDER_API_MANAGEMENT.md` | **Investigating, updating, or creating agents via API** |
 | Agent Builder Integration | `hive-mind/patterns/elastic/AGENT_BUILDER_INTEGRATION.md` | Connecting frontend to Agent Builder with SSE streaming |
-| **A2A Coordinator Pattern** | `hive-mind/patterns/elastic/A2A_COORDINATOR_PATTERN.md` | **Multi-agent orchestration with coordinator LLM** |
+| A2A Coordinator Pattern | `hive-mind/patterns/elastic/A2A_COORDINATOR_PATTERN.md` | Multi-agent orchestration (legacy custom implementation) |
 | MCP Server Integration | `hive-mind/patterns/elastic/MCP_SERVER_INTEGRATION.md` | Connecting to Kibana MCP server from IDEs |
 | Conversation History Audit | `hive-mind/patterns/elastic/CONVERSATION_HISTORY_AUDIT.md` | Viewing agent reasoning and tool calls |
 | Streaming Chat UI | `hive-mind/patterns/elastic/STREAMING_CHAT_UI_PATTERNS.md` | Building chat interfaces with SSE |
@@ -97,6 +98,13 @@ This project supports multiple brand themes with two approaches:
 - `frontend/src/branding/BrandContext.tsx` - React context for theming
 - `backend/app/routes/branding.py` - REST API for brand CRUD
 - **Template**: Use `exampleTheme.ts` as the template for AI-extracted brands
+
+### Testing Themes (Local Development)
+For themes you don't want committed to the repo:
+- Prefix the filename with `testing`: `testingGovukTheme.ts`, `testingAcmeTheme.ts`
+- These files are gitignored but auto-loaded for local development
+- The "testing" prefix is stripped from the brand ID (`testingGovuk` → `govuk`)
+- Use `?brand=govuk` or localStorage to activate
 
 ---
 

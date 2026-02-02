@@ -6,6 +6,7 @@ Agent cards provide metadata about available agents and their capabilities.
 LLM Documentation:
 - fetch_agent_card: Get a single agent's A2A card by ID
 - fetch_all_agent_cards: Get all available agent cards
+- patch_agent_card_for_a2a_v1: Patch v0.3 cards to be v1.0 compliant
 - GET /api/a2a/agents: Returns agents with their function definitions
 - GET /api/a2a/agents/{agent_id}: Get specific agent and function def
 """
@@ -21,11 +22,49 @@ from .functions import build_function_from_agent_card
 router = APIRouter()
 
 
-def fetch_agent_card(agent_id: str) -> dict[str, Any] | None:
+def patch_agent_card_for_a2a_v1(card: dict[str, Any]) -> dict[str, Any]:
+    """Patch Agent Builder's v0.3 agent card to be A2A v1.0 compliant.
+    
+    Agent Builder returns cards missing `supportedInterfaces` with `protocolBinding`,
+    which causes A2A clients (like Agno) to assume REST binding and fail.
+    
+    This patch adds the required fields so standard A2A clients can connect.
+    
+    See: https://a2a-protocol.org/latest/specification/#446-agentinterface
+    """
+    # Don't patch if already has supportedInterfaces
+    if "supportedInterfaces" in card:
+        return card
+    
+    # Create a copy to avoid mutating the original
+    patched = {**card}
+    
+    # Add supportedInterfaces with JSONRPC binding
+    if "url" in card:
+        patched["supportedInterfaces"] = [{
+            "url": card["url"],
+            "protocolBinding": "JSONRPC",
+            "protocolVersion": card.get("protocolVersion", "0.3").replace(".0", "")
+        }]
+    
+    # Fix capabilities - Agent Builder DOES support streaming via /converse/async
+    if "capabilities" in patched:
+        # Note: A2A endpoint doesn't stream, but the agent itself can stream
+        # Keep as-is for now since A2A clients would expect streaming at A2A endpoint
+        pass
+    
+    return patched
+
+
+def fetch_agent_card(agent_id: str, patch_for_v1: bool = True) -> dict[str, Any] | None:
     """Fetch A2A agent card for a specific agent.
 
     Agent cards are served at /api/agent_builder/a2a/{agent_id}.json
     and contain standardized metadata about the agent's capabilities.
+    
+    Args:
+        agent_id: The agent's ID
+        patch_for_v1: If True, patch the card to be A2A v1.0 compliant
     """
     if not settings.KIBANA_URL or not settings.ELASTIC_API_KEY:
         return None
@@ -39,7 +78,10 @@ def fetch_agent_card(agent_id: str) -> dict[str, Any] | None:
     try:
         response = requests.get(url, headers=headers, timeout=10)
         if response.status_code == 200:
-            return response.json()
+            card = response.json()
+            if patch_for_v1:
+                card = patch_agent_card_for_a2a_v1(card)
+            return card
         return None
     except requests.exceptions.RequestException:
         return None

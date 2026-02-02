@@ -57,7 +57,7 @@ export interface A2AConfig {
   
   /**
    * API endpoint for the A2A chat.
-   * Default: '/api/agno/chat' (Agno framework)
+   * Default: '/api/agno/v2/chat' (Agno framework)
    */
   endpoint: string
   
@@ -88,7 +88,7 @@ What would you like help with today?`,
   
   placeholder: 'Ask {brandName} Coordinator anything...',
   
-  endpoint: '/api/agno/chat',
+  endpoint: '/api/agno/v2/chat',
   
   // ============================================================
   // SYSTEM PROMPT - Customize for your agents
@@ -127,7 +127,7 @@ export const exampleConfigs = {
 
 What are you looking for today?`,
     placeholder: 'Search products, ask for recommendations...',
-    endpoint: '/api/agno/chat',
+    endpoint: '/api/agno/v2/chat',
     systemPrompt: `You are a helpful retail shopping assistant.
     
 Route requests to specialized agents:
@@ -147,7 +147,7 @@ Be conversational and helpful. Suggest related products when appropriate.`,
 
 How can I assist you today?`,
     placeholder: 'Describe your question or issue...',
-    endpoint: '/api/agno/chat',
+    endpoint: '/api/agno/v2/chat',
     systemPrompt: `You are a helpful customer support coordinator.
 
 Route requests appropriately:
@@ -167,7 +167,7 @@ Be empathetic and solution-focused.`,
 
 What would you like to explore?`,
     placeholder: "Ask a question or describe what you're researching...",
-    endpoint: '/api/agno/chat',
+    endpoint: '/api/agno/v2/chat',
     systemPrompt: `You are a helpful research assistant.
 
 Route requests to specialized agents:

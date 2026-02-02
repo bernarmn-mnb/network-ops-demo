@@ -9,6 +9,11 @@
  * 2. Export a [brandName]Branding object with the required structure
  * 3. The brand will be automatically discovered and registered!
  * 
+ * For testing/demo themes that shouldn't be committed:
+ * - Prefix the filename with "testing": testingGovukTheme.ts, testingAcmeTheme.ts
+ * - These are gitignored but still auto-loaded for local development
+ * - The "testing" prefix is stripped from the brand ID (e.g., testingGovuk -> govuk)
+ * 
  * Theme files are auto-imported from this directory using Vite's import.meta.glob.
  * Files matching *Theme.ts pattern are automatically loaded (except exampleTheme.ts).
  */
@@ -280,10 +285,15 @@ for (const [path, module] of Object.entries(themeModules)) {
   }
   
   // Extract brand ID from filename: ./customTheme.ts -> custom
-  const filename = path.replace('./', '').replace('Theme.ts', '')
+  // Strip "testing" prefix if present: ./testingGovukTheme.ts -> govuk
+  let filename = path.replace('./', '').replace('Theme.ts', '')
+  if (filename.toLowerCase().startsWith('testing')) {
+    filename = filename.slice(7) // Remove "testing" prefix
+  }
   const brandId = filename.toLowerCase()
   
   // Find the branding export (could be customBranding, myBrandBranding, etc.)
+  // For testing files, the export is still named after the brand (e.g., govukBranding)
   const moduleExports = module as { [key: string]: any }
   const brandingKey = Object.keys(moduleExports).find(key => 
     key.toLowerCase().includes('branding') || 

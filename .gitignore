@@ -82,3 +82,7 @@ project-context.yaml
 
 # Secrets (admin keys, credentials)
 .secrets/
+
+# Testing brand themes (prefix with "testing" to keep template clean)
+# e.g., testingGovukTheme.ts, testingAcmeTheme.ts
+frontend/src/branding/testing*Theme.ts

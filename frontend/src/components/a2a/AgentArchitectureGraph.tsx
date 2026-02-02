@@ -4,12 +4,11 @@ import {
   EuiTitle,
   EuiText,
   EuiSkeletonText,
-  EuiFlexGroup,
-  EuiFlexItem,
   EuiCard,
   EuiIcon,
   EuiBadge,
   EuiSpacer,
+  EuiToolTip,
 } from '@elastic/eui';
 
 interface AgentNode {
@@ -24,6 +23,29 @@ interface AgentGraph {
   nodes: AgentNode[];
 }
 
+// Helper to determine toolkit category from node ID
+function getToolkitCategory(nodeId: string): 'local' | 'client' | 'agent_builder' | 'other' {
+  if (nodeId.startsWith('local_') || nodeId === 'local_demo_toolkit') return 'local';
+  if (nodeId.startsWith('client_') || nodeId === 'client_toolkit') return 'client';
+  if (nodeId === 'agent_builder_toolkit') return 'agent_builder';
+  return 'other';
+}
+
+// Get icon and color for toolkit category
+function getToolkitStyle(nodeId: string): { icon: string; badgeColor: string; label: string } {
+  const category = getToolkitCategory(nodeId);
+  switch (category) {
+    case 'local':
+      return { icon: 'compute', badgeColor: 'success', label: 'Server' };
+    case 'client':
+      return { icon: 'desktop', badgeColor: 'warning', label: 'Browser' };
+    case 'agent_builder':
+      return { icon: 'logoElastic', badgeColor: 'accent', label: 'Kibana' };
+    default:
+      return { icon: 'user', badgeColor: 'default', label: 'Agent' };
+  }
+}
+
 export const AgentArchitectureGraph = () => {
   const [graph, setGraph] = useState<AgentGraph | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +54,7 @@ export const AgentArchitectureGraph = () => {
   useEffect(() => {
     const fetchStructure = async () => {
       try {
-        const response = await fetch('/api/agno/structure');
+        const response = await fetch('/api/agno/v2/structure');
         if (!response.ok) {
           throw new Error('Failed to fetch agent structure');
         }
@@ -60,78 +82,103 @@ export const AgentArchitectureGraph = () => {
 
   if (!coordinator) return <EuiText>No coordinator found</EuiText>;
 
-  const renderNode = (nodeId: string) => {
-    const node = getNode(nodeId);
-    if (!node) return null;
-
-    return (
-      <EuiFlexItem key={node.id} grow={false} style={{ minWidth: 250 }}>
-        <EuiCard
-          icon={<EuiIcon type={node.type === 'tool' ? 'wrench' : 'user'} size="l" />}
-          title={node.name}
-          description={node.description}
-          layout="horizontal"
-          display="subdued"
-        >
-          {node.type !== 'tool' && (
-            <EuiBadge color={node.type === 'coordinator' ? 'primary' : 'accent'}>
-              {node.type.toUpperCase()}
-            </EuiBadge>
-          )}
-        </EuiCard>
-      </EuiFlexItem>
-    );
-  };
-
   return (
-    <EuiPanel color="subdued">
+    <EuiPanel color="subdued" paddingSize="m">
       <EuiTitle size="s">
         <h3>Agent Team Architecture</h3>
       </EuiTitle>
-      <EuiSpacer size="s" />
+      <EuiSpacer size="m" />
       
       {/* Coordinator Level */}
-      <EuiFlexGroup gutterSize="l" justifyContent="center">
-        {renderNode(coordinator.id)}
-      </EuiFlexGroup>
+      <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+        <EuiCard
+          icon={<EuiIcon type="node" size="l" />}
+          title={coordinator.name}
+          description={coordinator.description}
+          layout="horizontal"
+          display="subdued"
+          paddingSize="s"
+          style={{ display: 'inline-block', maxWidth: '380px' }}
+        >
+          <EuiBadge color="primary">COORDINATOR</EuiBadge>
+        </EuiCard>
+      </div>
 
-      <EuiSpacer size="l" />
-      <div style={{ textAlign: 'center', borderLeft: '2px dashed #ccc', height: '20px', width: '0', margin: '0 auto' }}></div>
-      <EuiSpacer size="l" />
+      {/* Connection line */}
+      <div style={{ textAlign: 'center', margin: '4px 0 8px 0' }}>
+        <div style={{ width: '2px', height: '16px', background: 'var(--euiColorMediumShade)', margin: '0 auto' }}></div>
+      </div>
 
-      {/* Sub-agents Level */}
-      <EuiFlexGroup gutterSize="l" justifyContent="center" wrap>
+      {/* Toolkits - horizontal layout, no wrap */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', overflowX: 'auto', padding: '4px' }}>
         {coordinator.children.map((childId) => {
-            const childNode = getNode(childId);
-            if (!childNode) return null;
-            
-            return (
-                <EuiFlexItem key={childId} grow={false}>
-                    <EuiFlexGroup direction="column" alignItems="center">
-                        {renderNode(childId)}
-                        
-                        {/* Tools Level */}
-                        {childNode.children.length > 0 && (
-                            <>
-                                <EuiSpacer size="m" />
-                                <div style={{ borderLeft: '1px solid #ddd', height: '15px' }}></div>
-                                <EuiSpacer size="m" />
-                                <EuiFlexGroup direction="column" gutterSize="s">
-                                    {childNode.children.map(toolId => (
-                                        <EuiFlexItem key={toolId}>
-                                            <EuiBadge color="hollow" iconType="wrench">
-                                                {toolId}
-                                            </EuiBadge>
-                                        </EuiFlexItem>
-                                    ))}
-                                </EuiFlexGroup>
-                            </>
-                        )}
-                    </EuiFlexGroup>
-                </EuiFlexItem>
-            );
+          const childNode = getNode(childId);
+          if (!childNode) return null;
+          
+          const toolkitStyle = getToolkitStyle(childNode.id);
+          const isAgentBuilder = childNode.id === 'agent_builder_toolkit';
+          
+          return (
+            <div key={childId} style={{ textAlign: 'center', minWidth: '140px', flex: '1 1 140px', maxWidth: '200px' }}>
+              {/* Toolkit header */}
+              <div style={{ 
+                padding: '8px', 
+                background: 'var(--euiColorLightestShade)', 
+                borderRadius: '6px',
+                border: '1px solid var(--euiColorLightShade)'
+              }}>
+                <EuiIcon type={toolkitStyle.icon} size="m" style={{ marginBottom: '4px' }} />
+                <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>
+                  {childNode.name.replace(' Tools', '').replace(' Agents', '')}
+                </div>
+                <EuiBadge color={toolkitStyle.badgeColor}>{toolkitStyle.label}</EuiBadge>
+              </div>
+              
+              {/* Tools/Agents list */}
+              {childNode.children.length > 0 && (
+                <div style={{ marginTop: '6px' }}>
+                  <div style={{ width: '1px', height: '8px', background: 'var(--euiColorMediumShade)', margin: '0 auto' }}></div>
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '3px', 
+                    alignItems: 'center',
+                    marginTop: '6px',
+                    maxHeight: '140px',
+                    overflowY: 'auto'
+                  }}>
+                    {childNode.children.slice(0, 5).map(itemId => {
+                      const itemNode = getNode(itemId);
+                      return (
+                        <EuiToolTip 
+                          key={itemId}
+                          content={itemNode?.description || itemId}
+                          position="right"
+                        >
+                          <EuiBadge 
+                            color={isAgentBuilder ? 'accent' : 
+                                   toolkitStyle.badgeColor === 'success' ? 'success' : 
+                                   toolkitStyle.badgeColor === 'warning' ? 'warning' : 'hollow'} 
+                            iconType={isAgentBuilder ? 'user' : 'wrench'}
+                            style={{ fontSize: '11px' }}
+                          >
+                            {itemId.length > 16 ? itemId.slice(0, 14) + '…' : itemId}
+                          </EuiBadge>
+                        </EuiToolTip>
+                      );
+                    })}
+                    {childNode.children.length > 5 && (
+                      <EuiText size="xs" color="subdued">
+                        +{childNode.children.length - 5} more
+                      </EuiText>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
         })}
-      </EuiFlexGroup>
+      </div>
     </EuiPanel>
   );
 };

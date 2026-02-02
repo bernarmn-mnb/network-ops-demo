@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import {
   EuiPageTemplate,
   EuiSpacer,
@@ -18,6 +18,58 @@ import { AgentArchitectureGraph } from '../components/a2a/AgentArchitectureGraph
 import { PageInfoButton, PAGE_INFO } from '../components/layout/PageInfoButton'
 import { useBrand } from '../components/providers/BrandedThemeProvider'
 import { a2aConfig } from '../config/a2aConfig'
+import { ClientFunctionDef } from '../services/llmProxyApi'
+
+/**
+ * Play a beep sound using the Web Audio API.
+ * Creates a short sine wave tone.
+ */
+function playBeep(frequency: number = 800, duration: number = 200): void {
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+    
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.destination)
+    
+    oscillator.frequency.value = frequency
+    oscillator.type = 'sine'
+    
+    // Fade out to avoid click
+    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000)
+    
+    oscillator.start(audioContext.currentTime)
+    oscillator.stop(audioContext.currentTime + duration / 1000)
+  } catch (error) {
+    console.warn('Could not play beep:', error)
+  }
+}
+
+/**
+ * Client-side functions available in the browser.
+ * These are executed locally when the LLM calls them.
+ */
+const CLIENT_FUNCTIONS: ClientFunctionDef[] = [
+  {
+    name: 'browser_beep',
+    description: 'Play a beep sound through the computer speakers. Use this when asked to beep, make a sound, or alert the user audibly.',
+    parameters: {
+      type: 'object',
+      properties: {
+        frequency: {
+          type: 'number',
+          description: 'Frequency in Hz (default: 800). Higher = higher pitch.',
+        },
+        duration: {
+          type: 'number',
+          description: 'Duration in milliseconds (default: 200).',
+        },
+      },
+    },
+  },
+]
 
 /**
  * A2A Chat Page
@@ -44,6 +96,26 @@ export function A2AChatPage() {
   const title = a2aConfig.title.replace('{brandName}', brand.name)
   const greeting = a2aConfig.greeting.replace('{brandName}', brand.name)
   const placeholder = a2aConfig.placeholder.replace('{brandName}', brand.name)
+
+  // Handler for client-side function calls
+  const handleClientFunctionCall = useCallback((functionName: string, args: Record<string, unknown>) => {
+    console.log('Client function called:', functionName, args)
+    
+    // Unwrap kwargs if present (Agno wraps **kwargs parameters)
+    const unwrappedArgs = (args.kwargs as Record<string, unknown>) || args
+    
+    if (functionName === 'browser_beep') {
+      const frequency = (unwrappedArgs.frequency as number) || 800
+      const duration = (unwrappedArgs.duration as number) || 200
+      playBeep(frequency, duration)
+      return { success: true, message: `Played beep at ${frequency}Hz for ${duration}ms` }
+    }
+    
+    return { success: false, message: `Unknown function: ${functionName}` }
+  }, [])
+
+  // Memoize client functions to avoid re-renders
+  const clientFunctions = useMemo(() => CLIENT_FUNCTIONS, [])
 
   return (
     <>
@@ -83,6 +155,8 @@ export function A2AChatPage() {
             placeholder={placeholder}
             endpoint={a2aConfig.endpoint}
             skipHealthCheck={true}
+            clientFunctions={clientFunctions}
+            onClientFunctionCall={handleClientFunctionCall}
           />
           
         </EuiPageTemplate.Section>
