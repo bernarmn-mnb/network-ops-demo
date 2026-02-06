@@ -47,7 +47,7 @@ ______________________________________________________________________
 | Feature | Description | Requires | Details |
 |---------|-------------|----------|---------|
 | **Full-Text Search** | Search UI with results, pagination | ES URL + API Key + Index | [Search Page](./PAGES.md#search-page) |
-| **Faceted Filtering** | Category, brand, price filters | ES index with keyword fields | [searchConfig.ts](./ONBOARDING.md#5b-configure-search-if-elasticsearch-enabled) |
+| **Faceted Filtering** | Category, brand, price filters | ES index with keyword fields | `frontend/src/config/searchConfig.ts` |
 | **Hybrid/Semantic Search** | Combine BM25 + vector search | ES + embeddings model | [Retriever Builder Pattern][retriever-pattern] |
 | **Query Rules** | Curated results, synonyms, promotions | ES query rules configured | [Query Rules + Retrievers][query-rules] |
 
@@ -115,10 +115,9 @@ ______________________________________________________________________
 
 ## Next Steps
 
-1. **Quick setup**: Run `./setup.sh` — it asks which features you want
-2. **Detailed onboarding**: [ONBOARDING.md](./ONBOARDING.md)
-3. **Page reference**: [PAGES.md](./PAGES.md)
-4. **Customisation**: [CUSTOMIZATION.md](./CUSTOMIZATION.md)
+1. **Quick setup**: Run `./setup.sh` then start a new AI session
+2. **Page reference**: [PAGES.md](./PAGES.md)
+3. **Customisation**: [CUSTOMIZATION.md](./CUSTOMIZATION.md)
 
 ______________________________________________________________________
 

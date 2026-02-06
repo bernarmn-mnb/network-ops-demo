@@ -206,23 +206,19 @@ make help    # Show all available targets
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8001/docs
 
-### After Setup: Onboarding Your AI Assistant
+### After Setup: Start a New AI Session
 
 > **Note**: If you used the "Vibe Coding" Quick Start above, you can skip this section.
 
-Once the servers are running, **open the project in Cursor or VS Code** and tell your AI:
+Once setup is complete, **open the project in Cursor or VS Code** and tell your AI:
 
 ```
-Read and follow docs/ONBOARDING.md
+Read and follow docs/prompts/WELCOME_PROMPT.md
 ```
 
-This will:
-1. ✅ Verify your environment is correctly set up
-2. 🧠 Load the hive-mind patterns into context
-3. 🎨 Set up branding (if you provided a URL during setup)
-4. 📋 Configure beads issue tracking (if installed)
+> **Claude Code users**: CLAUDE.md detects `.setup-complete` and triggers the welcome prompt automatically — just start a new session.
 
-After onboarding, you're ready to **vibe code** - ask your AI to add features, fix bugs, or customize the UI!
+The AI will interview you about your demo goals, propose a strategy, and create a customized execution plan. No more checklists — it's a collaborative brainstorm.
 
 ### Manual Dependency Setup (Advanced)
 
@@ -551,13 +547,14 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 │   └── (see above)
 │
 ├── scripts/
-│   └── interactive_setup.py  # Setup wizard
+│   └── interactive_setup.py  # Advanced manual setup (not used by default)
 │
 ├── preflight-check.sh        # Pre-clone environment check
 ├── setup.sh                  # Setup launcher
 ├── dev                       # Server management script
+├── docs/prompts/
+│   └── WELCOME_PROMPT.md     # AI brainstorm prompt (new session entry point)
 ├── docs/PREREQUISITES.md     # Detailed prerequisites guide
-├── docs/ONBOARDING.md        # AI assistant onboarding prompt
 └── docs/BRANDING.md          # Branding documentation
 ```
 
@@ -567,7 +564,7 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 |----------|---------|
 | [PROJECT_VISION.md](./docs/PROJECT_VISION.md) | **Project goals, roadmap & success metrics** |
 | [FEATURE_CATALOG.md](./docs/FEATURE_CATALOG.md) | Pick the building blocks you need |
-| [ONBOARDING.md](./docs/ONBOARDING.md) | First-time setup guide for AI assistants |
+| [WELCOME_PROMPT.md](./docs/prompts/WELCOME_PROMPT.md) | Consultative brainstorm prompt for new demo sessions |
 | [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md) | Chat interface customization options |
 | [BRANDING.md](./docs/BRANDING.md) | Brand theming system documentation |
 | [docs/PAGES.md](./docs/PAGES.md) | Page reference for demo builders |

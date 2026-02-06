@@ -322,10 +322,10 @@ echo ""
 if [ -n "$IDE_NAME" ]; then
     echo -e "  Open this project in ${GREEN}${BOLD}${IDE_NAME}${NC} and tell your AI assistant:"
     echo ""
-    echo -e "    ${BLUE}\"Read and follow docs/ONBOARDING.md\"${NC}"
+    echo -e "    ${BLUE}\"Read and follow docs/prompts/WELCOME_PROMPT.md\"${NC}"
     echo ""
     if [ "$IDE_CMD" = "claude" ]; then
-        echo -e "  Or run: ${DIM}${IDE_CMD}${NC}"
+        echo -e "  Or run: ${DIM}${IDE_CMD}${NC}  (it will pick up the prompt automatically)"
     else
         echo -e "  Or run: ${DIM}${IDE_CMD}${NC}"
     fi
@@ -333,7 +333,7 @@ else
     echo -e "  Open this project in ${GREEN}${BOLD}Cursor${NC}, ${GREEN}${BOLD}Claude Code${NC}, or ${GREEN}${BOLD}VS Code${NC}"
     echo -e "  and tell your AI assistant:"
     echo ""
-    echo -e "    ${BLUE}\"Read and follow docs/ONBOARDING.md\"${NC}"
+    echo -e "    ${BLUE}\"Read and follow docs/prompts/WELCOME_PROMPT.md\"${NC}"
 fi
 
 echo ""

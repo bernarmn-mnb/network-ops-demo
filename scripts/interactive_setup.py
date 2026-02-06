@@ -8,7 +8,7 @@ Interactive Setup Script for Elastic Demo Starter (ADVANCED USE ONLY)
 
 This script is NOT called by setup.sh. The default onboarding flow is:
   1. Run ./setup.sh (silent, no prompts)
-  2. Open in your AI-powered IDE and follow docs/ONBOARDING.md
+  2. Open in your AI-powered IDE — the AI reads docs/prompts/WELCOME_PROMPT.md automatically
 
 Use this script only if you need manual, interactive configuration of
 features, credentials, and branding outside of the AI-driven flow.
@@ -1633,7 +1633,7 @@ def main():
     print()
     print(f"Open in {Colors.BOLD}Cursor{Colors.ENDC} or {Colors.BOLD}VS Code + Claude{Colors.ENDC} and tell your AI:")
     print()
-    print(f'   {Colors.CYAN}"Read and follow docs/ONBOARDING.md"{Colors.ENDC}')
+    print(f'   {Colors.CYAN}"Read and follow docs/prompts/WELCOME_PROMPT.md"{Colors.ENDC}')
     print()
     
     # ==========================================================================

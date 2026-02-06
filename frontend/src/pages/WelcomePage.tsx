@@ -443,11 +443,11 @@ export function WelcomePage() {
             <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" responsive={false} gutterSize="s">
               <EuiFlexItem grow={false}>
                 <EuiText size="s">
-                  <strong style={{ fontFamily: 'monospace' }}>"Read and follow docs/ONBOARDING.md"</strong>
+                  <strong style={{ fontFamily: 'monospace' }}>"Read and follow docs/prompts/WELCOME_PROMPT.md"</strong>
                 </EuiText>
               </EuiFlexItem>
               <EuiFlexItem grow={false}>
-                <EuiCopy textToCopy="Read and follow docs/ONBOARDING.md">
+                <EuiCopy textToCopy="Read and follow docs/prompts/WELCOME_PROMPT.md">
                   {(copy) => (
                     <EuiButtonIcon
                       onClick={copy}
