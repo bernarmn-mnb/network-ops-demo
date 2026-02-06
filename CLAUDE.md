@@ -20,6 +20,18 @@ This project uses a shared knowledge base at `./hive-mind` (git submodule).
    - Always `bd show <id>` to read acceptance criteria before starting an issue
    - See the **Issue Tracking with Beads** section below for full workflow
 
+### AFTER SETUP (New Demo Session)
+
+When `.setup-complete` exists AND `DEMO_PLAN.md` does NOT exist:
+- This is a new demo session — read and follow `docs/prompts/WELCOME_PROMPT.md`
+
+When `.setup-complete` exists AND `DEMO_PLAN.md` DOES exist:
+- This is a returning session — read `DEMO_PLAN.md` for context
+- Run `bd ready` to pick up where the last session left off
+
+When `.setup-complete` does NOT exist:
+- Tell the user to run `./setup.sh` first
+
 ### ALWAYS Index These Directories
 - `./hive-mind/patterns/` - Reusable architecture patterns
 - `./hive-mind/troubleshooting/` - Bug fixes and solutions

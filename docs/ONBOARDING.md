@@ -1,3 +1,7 @@
+> **DEPRECATED**: Superseded by the consultative brainstorm flow.
+> New sessions use `docs/prompts/WELCOME_PROMPT.md` (loaded automatically).
+> Full cleanup tracked in bead 1lp.
+
 # Onboarding Prompt
 
 > **For the user**: Copy this entire file content and paste it into your AI coding assistant (Cursor/Claude Code) as your first prompt after running `./setup.sh`.
