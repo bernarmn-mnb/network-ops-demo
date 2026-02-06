@@ -6,19 +6,21 @@
 
 [![CI](https://github.com/elastic/elastic-demo-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/elastic/elastic-demo-starter/actions/workflows/ci.yml)
 
-A production-ready starter kit for building demos with Elastic. Covers **Search**, **AI Chat**, **Analytics**, and more — with modern UI components and best practices built in.
+A **template library** for building customer demos with Elastic. Clone it, customise it for your customer, and contribute reusable pieces back.
 
 > Created by **[Matt Adams](mailto:matthew.adams@elastic.co)** · Search AI Solutions, Elastic
 
-This repository serves as a "Golden Master" for building custom Elastic demos. It comes pre-wired with correct architectural patterns for streaming chat, search experiences, analytics dashboards, and brand theming — avoiding common pitfalls and accelerating development.
+This repository is the **golden master** — a verified, CI-tested foundation of architectural patterns for search, AI chat, analytics, branding, and deployment. Demo builders clone it, wire it up to their Elastic environment, and use AI-assisted development to build a compelling demo in hours. When you solve something generic (a new component, a better pattern, a bug fix), you contribute it back so the next person starts from an even better baseline.
 
-## 📖 Project Vision
+**The workflow:** Clone &rarr; Setup &rarr; Build your demo &rarr; Contribute reusable work back &rarr; Template gets better for everyone.
+
+## Project Vision
 
 > **Build compelling customer demos in hours, not weeks.**
 >
-> This starter provides verified architectural patterns, secure deployment models, and AI-assisted workflows that eliminate common pitfalls. What you demo reflects how we'd recommend customers build for real.
+> This template provides verified architectural patterns, secure deployment models, and AI-assisted workflows that eliminate common pitfalls. What you demo reflects how we'd recommend customers build for real.
 >
-> **[Read the full Project Vision →](./docs/PROJECT_VISION.md)**
+> **[Read the full Project Vision &rarr;](./docs/PROJECT_VISION.md)**
 
 ---
 
@@ -178,33 +180,19 @@ The wizard will:
 After setup, use the `./dev` script to manage servers:
 
 ```bash
-./dev start       # Start servers in background
-./dev stop        # Stop servers
-./dev status      # Check if running
-./dev verify      # Quick health check (setup, config, servers)
-./dev test-agent  # Test Agent Builder connectivity
-./dev logs        # View server logs (follows)
-./dev logs-snapshot  # View recent logs and exit
-./dev open        # Open browser
+./dev start            # Start servers in background
+./dev stop             # Stop servers
+./dev status           # Check if running (shows actual ports)
+./dev verify           # Quick health check (setup, config, servers)
+./dev verify-template  # Run template integrity checks (routes, contracts, registry)
+./dev test-agent       # Test Agent Builder connectivity
+./dev logs-snapshot    # View recent logs and exit
+./dev open             # Open browser
 ```
 
 Both servers **auto-reload** on code changes - no restart needed!
 
-### Makefile Shortcuts (Optional)
-
-If you prefer Make targets, the Makefile quick reference maps to the most common tasks:
-
-```bash
-make start   # Start development servers
-make stop    # Stop servers
-make status  # Check server status
-make test    # Run all tests
-make check   # Run lint and test
-make help    # Show all available targets
-```
-
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8001/docs
+> **Note:** Ports are dynamic — multiple demos can run simultaneously on different ports. Use `./dev status` to see the actual URLs, or check `.dev-pids/backend.port` and `.dev-pids/frontend.port`.
 
 ### After Setup: Start a New AI Session
 
@@ -251,9 +239,7 @@ This project includes a production-ready `docker-compose` setup.
 docker-compose up --build
 ```
 
-The app will be available at:
-- Frontend: http://localhost:3000
-- Backend: http://localhost:8000
+The app will be available at the ports shown by `./dev status`.
 
 ### Architecture in Docker
 - **Frontend**: Nginx container serving static React assets. Proxies `/api` requests to the backend.
@@ -362,7 +348,7 @@ There are two approaches to branding:
 
 **Option 1: Brand Editor (Quick & Manual)**
 
-Visit http://localhost:3000/brands to:
+Visit `/brands` in the running app to:
 - Create new brands with color pickers
 - Upload logos for light/dark modes
 - Preview and switch between brands
@@ -512,9 +498,11 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 │   │   ├── main.py           # FastAPI app entry
 │   │   ├── config.py         # Environment config
 │   │   ├── elasticsearch/    # ES client, search, queries
-│   │   └── routes/
+│   │   └── routes/           # 14 route modules (~50 endpoints)
 │   │       ├── agent.py      # Agent Builder proxy
-│   │       ├── search.py     # Search endpoints
+│   │       ├── search_simple.py  # Core search (POST, config, health)
+│   │       ├── search.py     # Advanced search (suggest, capabilities, fields)
+│   │       ├── audit.py      # Conversation & agent audit
 │   │       ├── analytics.py  # ES|QL analytics
 │   │       ├── tracking.py   # Click/event tracking
 │   │       ├── a2a/          # Multi-agent orchestration
@@ -525,51 +513,51 @@ See [hive-mind/README.md](./hive-mind/README.md) for full contribution guide.
 │
 ├── frontend/                  # Vite + React + EUI
 │   ├── src/
-│   │   ├── App.tsx           # Router setup
+│   │   ├── App.tsx           # Router setup (11 pages)
 │   │   ├── pages/            # Page components
-│   │   │   ├── ChatPage.tsx      # AI chat interface
-│   │   │   ├── SearchPageSimple.tsx  # Search UI
-│   │   │   ├── A2AChatPage.tsx   # Multi-agent chat
-│   │   │   └── AuditPage.tsx     # Conversation audit
-│   │   ├── components/
-│   │   │   ├── chat/         # Chat UI components
-│   │   │   ├── search/       # Search components
-│   │   │   ├── layout/       # Headers, theme toggle
-│   │   │   └── branding/     # Brand switcher
+│   │   ├── components/       # 29 reusable components
 │   │   ├── branding/         # Theme definitions
-│   │   ├── hooks/
-│   │   │   └── useAgentChat.ts
-│   │   └── services/
-│   │       └── agentApi.ts   # SSE client
+│   │   ├── hooks/            # React hooks
+│   │   └── services/         # API clients
 │   └── vite.config.ts
 │
-├── hive-mind/                 # 🧠 Shared knowledge base (submodule)
-│   └── (see above)
+├── hive-mind/                 # Shared knowledge base (git submodule)
+│   ├── patterns/             # 55+ reusable architecture patterns
+│   ├── troubleshooting/      # Known issues & fixes
+│   └── meta/                 # AI workflows & prompts
 │
 ├── scripts/
-│   └── interactive_setup.py  # Advanced manual setup (not used by default)
+│   ├── verify-template.py    # Template integrity suite (8 checks)
+│   ├── check-localhost-urls.sh  # Hardcoded URL detection
+│   └── interactive_setup.py  # Advanced manual setup
 │
+├── .github/workflows/ci.yml  # CI: build, lint, test, template integrity
 ├── preflight-check.sh        # Pre-clone environment check
 ├── setup.sh                  # Setup launcher
 ├── dev                       # Server management script
-├── docs/prompts/
-│   └── WELCOME_PROMPT.md     # AI brainstorm prompt (new session entry point)
-├── docs/PREREQUISITES.md     # Detailed prerequisites guide
-└── docs/BRANDING.md          # Branding documentation
+│
+├── docs/
+│   ├── prompts/WELCOME_PROMPT.md  # AI brainstorm (new session entry point)
+│   ├── COMPONENT_REGISTRY.md     # What exists and its maturity
+│   ├── USE_CASE_REGISTRY.md      # Demo use case coverage
+│   └── FEATURE_CATALOG.md        # Building block selector
+│
+└── CONTRIBUTING.md            # How to contribute back to the template
 ```
 
 ## Documentation
 
 | Document | Purpose |
 |----------|---------|
-| [PROJECT_VISION.md](./docs/PROJECT_VISION.md) | **Project goals, roadmap & success metrics** |
+| [PROJECT_VISION.md](./docs/PROJECT_VISION.md) | Project goals, roadmap, and success metrics |
 | [FEATURE_CATALOG.md](./docs/FEATURE_CATALOG.md) | Pick the building blocks you need |
-| [WELCOME_PROMPT.md](./docs/prompts/WELCOME_PROMPT.md) | Consultative brainstorm prompt for new demo sessions |
-| [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md) | Chat interface customization options |
+| [COMPONENT_REGISTRY.md](./docs/COMPONENT_REGISTRY.md) | What exists, file paths, and maturity status |
+| [USE_CASE_REGISTRY.md](./docs/USE_CASE_REGISTRY.md) | Demo use case coverage and gaps |
+| [WELCOME_PROMPT.md](./docs/prompts/WELCOME_PROMPT.md) | AI brainstorm prompt (new session entry point) |
 | [BRANDING.md](./docs/BRANDING.md) | Brand theming system documentation |
-| [docs/PAGES.md](./docs/PAGES.md) | Page reference for demo builders |
-| [DEMO_GUIDE_TEMPLATE.md](./docs/DEMO_GUIDE_TEMPLATE.md) | Template for documenting your demo |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | How to contribute to the template |
+| [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Cloud Run sidecar deployment guide |
+| [PAGES.md](./docs/PAGES.md) | Page reference for demo builders |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | How to contribute reusable work back to the template |
 
 ### Creating a Demo Guide
 
@@ -580,6 +568,44 @@ cp docs/DEMO_GUIDE_TEMPLATE.md docs/DEMO_GUIDE.md
 ```
 
 Then fill in the sections to document your demo's configuration, flow, and customizations.
+
+## Contributing Back
+
+The template improves because demo builders contribute their reusable work back. If you built something generic — a component, a pattern, a bug fix — it should go back into the template so the next person benefits.
+
+See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the full guide, but the key steps are:
+
+### Before Submitting a PR
+
+```bash
+./dev verify-template    # Must pass — catches route conflicts, contract drift, missing pages
+```
+
+This runs 8 structural checks that also run in CI. Your PR will fail if they don't pass.
+
+### What Goes Where
+
+| Contribution | Destination | Example |
+|-------------|-------------|---------|
+| Bug fixes, new components, features | **This repo** (PR) | New search component, fix broken route |
+| Architecture patterns, troubleshooting | **Hive Mind** (submodule PR) | New integration pattern, error fix guide |
+| Customer-specific code | **Your demo only** | Brand-specific logic, hardcoded data |
+
+### Quick Workflow
+
+```bash
+# 1. Create a branch
+git checkout -b feature/reusable-thing
+
+# 2. Make changes, then verify
+./dev verify-template
+
+# 3. Push and open a PR
+git push -u origin feature/reusable-thing
+gh pr create
+```
+
+---
 
 ## Key Technical Notes
 
@@ -608,7 +634,7 @@ for chunk in upstream_response.iter_content(chunk_size=None):
 ### Chat Endpoint
 
 ```bash
-POST http://localhost:8001/api/agent/chat
+POST /api/agent/chat
 Content-Type: application/json
 
 {
@@ -622,7 +648,7 @@ Returns: SSE stream
 ### Search Endpoint
 
 ```bash
-POST http://localhost:8001/api/search
+POST /api/search
 Content-Type: application/json
 
 {
@@ -636,8 +662,10 @@ Content-Type: application/json
 ### Health Check
 
 ```bash
-GET http://localhost:8001/api/agent/health
+GET /api/agent/health
 ```
+
+> Full OpenAPI docs available at `/docs` on the running backend (use `./dev status` for the URL).
 
 ## Telemetry
 
@@ -680,66 +708,6 @@ Questions or ideas? Reach out on Slack: **#demo-starter**
 
 ---
 
-## Contributing
-
-There are **two ways to contribute**, depending on what you're improving:
-
-### 1. Contribute to Hive Mind (Patterns & Knowledge)
-
-Found a solution to a tricky problem? Add it to **hive-mind** so everyone benefits:
-
-```bash
-cd hive-mind
-# Add your pattern to the appropriate directory
-# e.g., hive-mind/patterns/elastic/MY_NEW_PATTERN.md
-git add .
-git commit -m "Add pattern for handling XYZ"
-git push  # (requires write access, or fork hive-mind repo)
-```
-
-**What to contribute to hive-mind:**
-- 🔧 Troubleshooting guides for common errors
-- 🏗️ Reusable architecture patterns
-- 📝 AI context and prompts
-
-### 2. Contribute to the Starter (Code & Features)
-
-For code changes, use the **fork workflow**:
-
-1. **Fork this repository** on GitHub
-
-2. **Clone your fork:**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/elastic-demo-starter.git
-   cd elastic-demo-starter
-   git submodule update --init --recursive
-   ```
-
-3. **Add upstream remote:**
-   ```bash
-   git remote add upstream https://github.com/elastic/elastic-demo-starter.git
-   ```
-
-4. **Run setup:** `./setup.sh`
-
-5. **Create a branch, make changes, push, and open a PR**
-
-**What to contribute to the starter:**
-- 🐛 Bug fixes
-- ✨ New features
-- 🎨 Brand themes (add to `frontend/src/branding/`)
-- 📝 Documentation
-
-### Syncing Updates
-
-```bash
-git fetch upstream
-git merge upstream/main
-git submodule update --init --recursive  # Also update hive-mind
-```
-
----
-
 ## Re-running Setup
 
 You can re-run `./setup.sh` anytime to:
@@ -756,11 +724,12 @@ The wizard remembers what's already configured and lets you choose what to updat
 ### Quick Diagnostics
 
 ```bash
-./preflight-check.sh  # Check prerequisites
-./dev verify          # Check setup completeness
-./dev status          # Check if servers running
-./dev logs-snapshot   # View recent logs
-./dev test-agent      # Test Agent Builder connection
+./preflight-check.sh     # Check prerequisites
+./dev verify             # Check setup completeness
+./dev verify-template    # Check template structural integrity
+./dev status             # Check if servers running (shows ports)
+./dev logs-snapshot      # View recent logs
+./dev test-agent         # Test Agent Builder connection
 ```
 
 ### Common Issues

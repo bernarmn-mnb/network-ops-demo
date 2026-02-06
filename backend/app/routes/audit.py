@@ -1,9 +1,11 @@
-"""Audit API Routes - Conversation History
+"""Audit API Routes - Conversation History & Agents
 
-Provides endpoints to retrieve conversation history from Elastic Agent Builder
-for audit and review purposes. Proxies requests to Kibana's conversation API.
+Provides endpoints to retrieve conversation history and agent information
+from Elastic Agent Builder for audit and review purposes.
+Proxies requests to Kibana's Agent Builder API.
 
 Endpoints:
+- GET /api/audit/agents - List available agents
 - GET /api/audit/conversations - List all conversations
 - GET /api/audit/conversations/{conversation_id} - Get full conversation detail
 """
@@ -29,6 +31,36 @@ def get_auth_headers() -> dict:
 def get_conversations_url() -> str:
     """Get the Kibana conversations API URL."""
     return f"{settings.KIBANA_URL}/api/agent_builder/conversations"
+
+
+@router.get("/agents")
+async def list_agents():
+    """List available agents from Agent Builder.
+
+    Returns agent summaries (id, name, description) for use in
+    filter dropdowns and agent selection UI.
+    """
+    try:
+        url = f"{settings.KIBANA_URL}/api/agent_builder/agents"
+
+        response = requests.get(
+            url,
+            headers=get_auth_headers(),
+            timeout=30,
+        )
+
+        if not response.ok:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"Failed to fetch agents: {response.text}",
+            )
+
+        return response.json()
+
+    except requests.RequestException as e:
+        raise HTTPException(
+            status_code=502, detail=f"Failed to connect to Agent Builder: {e!s}"
+        )
 
 
 @router.get("/conversations")
