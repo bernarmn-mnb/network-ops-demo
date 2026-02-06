@@ -42,21 +42,26 @@ This project uses a shared knowledge base at `./hive-mind` (git submodule).
 
 ---
 
-## Key Patterns Available
+## Pattern & Component Discovery
 
-| Pattern | Location | Use When |
-|---------|----------|----------|
-| **Agno + Agent Builder** | `hive-mind/patterns/agent-frameworks/AGNO_AGENT_BUILDER_INTEGRATION.md` | **Using Agno framework with Agent Builder (recommended)** |
-| **Agent Builder API Management** | `hive-mind/patterns/elastic/AGENT_BUILDER_API_MANAGEMENT.md` | **Investigating, updating, or creating agents via API** |
-| Agent Builder Integration | `hive-mind/patterns/elastic/AGENT_BUILDER_INTEGRATION.md` | Connecting frontend to Agent Builder with SSE streaming |
-| A2A Coordinator Pattern | `hive-mind/patterns/elastic/A2A_COORDINATOR_PATTERN.md` | Multi-agent orchestration (legacy custom implementation) |
-| MCP Server Integration | `hive-mind/patterns/elastic/MCP_SERVER_INTEGRATION.md` | Connecting to Kibana MCP server from IDEs |
-| Conversation History Audit | `hive-mind/patterns/elastic/CONVERSATION_HISTORY_AUDIT.md` | Viewing agent reasoning and tool calls |
-| Streaming Chat UI | `hive-mind/patterns/elastic/STREAMING_CHAT_UI_PATTERNS.md` | Building chat interfaces with SSE |
-| EUI + Vite Setup | `hive-mind/patterns/eui/EUI_VITE_INTEGRATION.md` | Setting up EUI with Vite, icon cache issues |
-| Branding Extraction | `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md` | Extracting brand colors/fonts from websites |
-| **Dynamic Port Config** | `hive-mind/patterns/deployment/DYNAMIC_PORT_CONFIGURATION.md` | **Port conflicts, discovering actual running ports** |
-| **Cloud Run Sidecar** | `hive-mind/patterns/deployment/CLOUDRUN_SIDECAR_DEPLOYMENT.md` | **Deploying to GCP Cloud Run with IAP** |
+### BEFORE WRITING ANY NEW CODE
+1. **Read `docs/COMPONENT_REGISTRY.md`** — know what frontend/backend components exist and their maturity
+2. **Read the relevant `hive-mind/patterns/{category}/README.md`** — know what patterns apply
+3. Only THEN propose new code. Reuse existing components and patterns.
+
+### Pattern Categories (55+ patterns in hive-mind)
+
+| Category | Directory | Use When |
+|----------|-----------|----------|
+| **Elastic / Agent Builder** | `hive-mind/patterns/elastic/` | Agent Builder, A2A, MCP, ESQL, OTel, search retrievers, open crawler |
+| **Agent Frameworks** | `hive-mind/patterns/agent-frameworks/` | Agno coordinator setup, multi-agent with memory |
+| **Data Generation** | `hive-mind/patterns/data/` | Datasets, generators, LLM data creation, fidelity requirements |
+| **Branding** | `hive-mind/patterns/branding/` | Extracting brand themes from websites, component theming |
+| **EUI** | `hive-mind/patterns/eui/` | EUI + Vite or Next.js setup, SSR workarounds |
+| **E-Commerce** | `hive-mind/patterns/ecommerce/` | Cart tracking, demo datasets, OTel attribution |
+| **Deployment** | `hive-mind/patterns/deployment/` | Cloud Run, Docker, dynamic ports, dev scripts |
+
+> **Full index**: `hive-mind/patterns/README.md` lists all 55+ patterns with descriptions.
 
 ---
 
@@ -189,7 +194,7 @@ deploy/                          # Deployment configurations
 ├── Dockerfile.nginx             # Frontend container
 ├── Dockerfile.fastapi           # Backend container
 ├── Dockerfile.otel-collector    # OTel Collector
-├── nginx-sidecar.conf           # Nginx routing config
+├── nginx.conf                   # Nginx routing config
 ├── service.yaml                 # Cloud Run service definition
 └── deploy-cloudrun.sh           # Main deployment script
 Dockerfile.cloudrun              # All-in-one image

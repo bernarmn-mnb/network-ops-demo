@@ -90,9 +90,8 @@ export function SearchPageSimple() {
   // Fetch field configuration on mount
   useEffect(() => {
     const fetchFieldsConfig = async () => {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
       try {
-        const response = await fetch(`${apiUrl}/api/search/fields`);
+        const response = await fetch(`/api/search/fields`);
         if (response.ok) {
           const data = await response.json();
           setFieldsConfig(data);

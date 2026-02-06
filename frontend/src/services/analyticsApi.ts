@@ -5,8 +5,6 @@
  * Provides metrics derived from OpenTelemetry trace data.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8001';
-
 // =============================================================================
 // Types
 // =============================================================================
@@ -118,7 +116,7 @@ export interface AnalyticsHealth {
  * Check analytics data availability.
  */
 export async function checkAnalyticsHealth(): Promise<AnalyticsHealth> {
-  const response = await fetch(`${API_BASE}/api/analytics/health`);
+  const response = await fetch(`/api/analytics/health`);
   if (!response.ok) {
     throw new Error(`Health check failed: ${response.status}`);
   }
@@ -133,7 +131,7 @@ export async function checkAnalyticsHealth(): Promise<AnalyticsHealth> {
 export async function getAnalyticsOverview(
   range: TimeRange = '24h'
 ): Promise<AnalyticsOverview> {
-  const response = await fetch(`${API_BASE}/api/analytics/overview?range=${range}`);
+  const response = await fetch(`/api/analytics/overview?range=${range}`);
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to fetch overview' }));
     throw new Error(error.detail || `Overview failed: ${response.status}`);
@@ -147,7 +145,7 @@ export async function getAnalyticsOverview(
  * @param range - Time range (default: 24h)
  */
 export async function getCTR(range: TimeRange = '24h'): Promise<CTRMetrics> {
-  const response = await fetch(`${API_BASE}/api/analytics/ctr?range=${range}`);
+  const response = await fetch(`/api/analytics/ctr?range=${range}`);
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to fetch CTR' }));
     throw new Error(error.detail || `CTR failed: ${response.status}`);
@@ -161,7 +159,7 @@ export async function getCTR(range: TimeRange = '24h'): Promise<CTRMetrics> {
  * @param range - Time range (default: 24h)
  */
 export async function getMRR(range: TimeRange = '24h'): Promise<MRRMetrics> {
-  const response = await fetch(`${API_BASE}/api/analytics/mrr?range=${range}`);
+  const response = await fetch(`/api/analytics/mrr?range=${range}`);
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to fetch MRR' }));
     throw new Error(error.detail || `MRR failed: ${response.status}`);
@@ -177,7 +175,7 @@ export async function getMRR(range: TimeRange = '24h'): Promise<MRRMetrics> {
 export async function getZeroResultsRate(
   range: TimeRange = '24h'
 ): Promise<ZeroResultsMetrics> {
-  const response = await fetch(`${API_BASE}/api/analytics/zero-results?range=${range}`);
+  const response = await fetch(`/api/analytics/zero-results?range=${range}`);
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to fetch zero results' }));
     throw new Error(error.detail || `Zero results failed: ${response.status}`);
@@ -200,7 +198,7 @@ export async function getTopQueries(
     limit: String(limit),
   });
   
-  const response = await fetch(`${API_BASE}/api/analytics/top-queries?${params}`);
+  const response = await fetch(`/api/analytics/top-queries?${params}`);
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to fetch top queries' }));
     throw new Error(error.detail || `Top queries failed: ${response.status}`);
@@ -223,7 +221,7 @@ export async function getClickDistribution(
     limit: String(limit),
   });
   
-  const response = await fetch(`${API_BASE}/api/analytics/click-distribution?${params}`);
+  const response = await fetch(`/api/analytics/click-distribution?${params}`);
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to fetch click distribution' }));
     throw new Error(error.detail || `Click distribution failed: ${response.status}`);
@@ -246,7 +244,7 @@ export async function getZeroResultQueries(
     limit: String(limit),
   });
   
-  const response = await fetch(`${API_BASE}/api/analytics/zero-result-queries?${params}`);
+  const response = await fetch(`/api/analytics/zero-result-queries?${params}`);
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to fetch zero result queries' }));
     throw new Error(error.detail || `Zero result queries failed: ${response.status}`);
@@ -369,7 +367,7 @@ export async function getQueriesWithClicks(
     limit: String(limit),
   });
   
-  const url = `${API_BASE}/api/analytics/queries-with-clicks?${params}`;
+  const url = `/api/analytics/queries-with-clicks?${params}`;
   console.log('[analyticsApi] Fetching queries with clicks:', url);
   
   const response = await fetch(url);
@@ -398,7 +396,7 @@ export async function getQueryJudgments(
     enrich: String(enrich),
   });
   
-  const url = `${API_BASE}/api/analytics/query-judgments?${params}`;
+  const url = `/api/analytics/query-judgments?${params}`;
   console.log('[analyticsApi] Fetching query judgments:', url);
   
   const response = await fetch(url);

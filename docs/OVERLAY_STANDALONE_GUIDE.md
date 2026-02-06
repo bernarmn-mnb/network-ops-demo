@@ -167,6 +167,4 @@ Open browser console (F12) to see logs:
 
 ## Related Files
 
-- `frontend/src/scripts/overlay-chat.user.js` - Backend version
-- `frontend/src/scripts/overlay-chat-standalone.user.js` - This standalone version
-- `docs/OVERLAY_ARCHITECTURE_PROPOSAL.md` - Architecture decisions
+- `frontend/src/scripts/overlay-chat.user.js` - Overlay chat userscript

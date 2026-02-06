@@ -45,7 +45,7 @@ export interface UseSearchOptions {
   pageSize?: number;
   /** Auto-search when filters change (default: false) */
   autoSearch?: boolean;
-  /** API base URL (default: from env or localhost:8001) */
+  /** API base URL (default: '' for relative paths via Vite proxy) */
   apiUrl?: string;
 }
 
@@ -81,7 +81,7 @@ export function useSearchSimple(options: UseSearchOptions = {}): UseSearchResult
     initialQuery = '', 
     pageSize = 12,
     autoSearch = false,
-    apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001',
+    apiUrl = '',
   } = options;
 
   // Core state
