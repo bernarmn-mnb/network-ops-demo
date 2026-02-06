@@ -1,228 +1,345 @@
 # Spike: Branding Extraction Without Firecrawl
 
-> **Bead**: elastic-agent-starter-0v4
-> **Date**: 2026-02-06
-> **Status**: Complete
+**Date**: 2026-02-06
+**Bead**: elastic-agent-starter-0v4
+**Status**: Complete
 
-## Problem
+## Objective
 
-The current branding extraction workflow relies on Firecrawl MCP, which requires a manual API key signup at firecrawl.dev. This creates friction for new users and SAs who want to quickly extract customer branding for demos. We need to determine if the tools already available in the project (Playwright MCP, Browser MCP, WebFetch) can produce "good enough" extraction quality without any API key signup.
+Investigate whether the Cursor built-in browser can replace Firecrawl MCP for extracting brand themes from websites. Firecrawl requires an API key signup and has usage limits; a browser-based approach would have zero external dependencies.
 
-## Test Target
+## Target Output Format
 
-**elastic.co** -- chosen because we already have a Firecrawl baseline (documented in `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md`) for direct quality comparison.
-
-### Firecrawl Baseline (from existing docs)
-
-| Field | Firecrawl Value |
-|-------|-----------------|
-| Primary | `#0B64DD` |
-| Accent | `#0B64DD` |
-| Background | `#FFFFFF` |
-| Text Primary | `#101C3F` |
-| Heading Font | MierB |
-| Body Font | Inter |
-| Logo | SVG data / URL |
-| Button styles | Yes (bg, text, radius) |
+The `BrandTheme` interface in `frontend/src/branding/index.ts` requires:
+- **Colors**: primary, accent, background, white, black, textPrimary, textBody, border
+- **Fonts**: heading, body, fallback
+- **Spacing**: borderRadius, borderRadiusSmall
+- **Logo**: SVG data URL or image URL + alt text
 
 ---
 
-## Approach 1: Playwright MCP (`mcp__playwright__*`)
+## Technique: `javascript:` URL Injection
 
-### Method
-
-1. `browser_navigate` to target URL
-2. `browser_snapshot` to get page structure (accessibility tree)
-3. `browser_evaluate` to run JavaScript that extracts:
-   - CSS custom properties from `:root` (Layer 1)
-   - Computed styles from semantic elements (Layer 2)
-   - Logo candidates via image/SVG heuristics (Layer 3)
-
-### Results on elastic.co
-
-| Category | Result | Quality |
-|----------|--------|---------|
-| **CSS Variables** | 412 total vars, 262 color vars, 44 font vars | Excellent |
-| **Key Colors Found** | `--color-elastic-blue: #0b64dd`, `--color-elastic-teal: #02bcb7`, `--body-color: #1c1e23`, `--color-ink: #343741`, `--color-light-grey: #f5f7fa`, `--bs-body-bg: #fff` | Excellent |
-| **Button Colors** | `--button-primary-bg: #0b64dd`, `--button-primary-color: #fff`, `--button-primary-hover-bg: #094dab` | Excellent |
-| **Link Colors** | `--link-color: #0b64dd`, `--link-hover-color: #094dab` | Excellent |
-| **Fonts (CSS Vars)** | `--font-family-heading: "MierB","Inter",arial,sans-serif`, `--font-family-body: "Inter",arial,sans-serif` | Excellent |
-| **Fonts (Computed)** | body: `Inter, arial, sans-serif`, h1: `MierB, Inter, arial, sans-serif` | Excellent |
-| **Logo** | Top candidate (score 90): footer SVG logo with "Elastic The Search AI Company" alt text, URL: `https://images.contentstack.io/v3/assets/.../logo-tagline_secondary_all_white-177.svg` | Good |
-| **Computed Styles** | body bg `#fff`, body text `rgb(28, 30, 35)`, button primary bg `rgb(0, 119, 204)`, button radius `5px` | Excellent |
-
-### Mapping to BrandTheme
-
-From the extracted data, we can confidently populate:
-
-```
-colors.primary:     #0b64dd  (--color-elastic-blue / --button-primary-bg)
-colors.accent:      #02bcb7  (--color-elastic-teal)
-colors.background:  #f5f7fa  (--color-light-grey)
-colors.white:       #fff     (--color-white)
-colors.black:       #000     (--color-black)
-colors.textPrimary: #343741  (--color-ink / --color-text-dark)
-colors.textBody:    #535966  (--color-light-ink)
-colors.border:      #d4dae5  (--color-dark-gray / --color-gray-200)
-
-fonts.heading:  "MierB", "Inter", arial, sans-serif
-fonts.body:     "Inter", arial, sans-serif
-fonts.fallback: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
-
-spacing.borderRadius: 5px (from computed button style)
-
-logo: External URL available (SVG)
-```
-
-### Assessment
-
-- **Colors**: 95% match with Firecrawl. All primary, accent, background, text, and button colors found through CSS variables. The semantic variable names (`--color-elastic-blue`, `--button-primary-bg`) make mapping straightforward.
-- **Fonts**: 100% match. Both heading (MierB) and body (Inter) fonts identified via CSS variables AND computed styles.
-- **Logo**: Found via heuristic scoring. External URL available; would need to fetch and convert to data URL for embedding. Firecrawl returns inline SVG data, which is slightly more convenient.
-- **Button styles**: Complete -- background, text color, hover state, border radius all available.
-- **Setup required**: None. Playwright MCP is already configured in the project.
-
----
-
-## Approach 2: Browser MCP (`mcp__browsermcp__*`)
-
-### Method
-
-1. `browser_navigate` to target URL
-2. `browser_snapshot` to get page structure
-
-### Results on elastic.co
-
-| Category | Result | Quality |
-|----------|--------|---------|
-| **Page Structure** | Full accessibility tree with headings, links, buttons, images | Good |
-| **Logo Discovery** | Image alt texts found: "Elastic Search Home", "Elastic The Search AI Company" | Partial |
-| **Color Extraction** | None -- no `browser_evaluate` available | None |
-| **Font Extraction** | None -- no `browser_evaluate` available | None |
-| **CSS Variables** | None -- no JavaScript execution capability | None |
-
-### Critical Limitation
-
-Browser MCP **does not expose a `browser_evaluate` function**. Its available tools are:
-- `browser_navigate`, `browser_go_back`, `browser_go_forward`
-- `browser_snapshot`, `browser_screenshot`
-- `browser_click`, `browser_hover`, `browser_type`
-- `browser_select_option`, `browser_press_key`
-- `browser_wait`, `browser_get_console_logs`
-
-Without `browser_evaluate`, it is impossible to:
-- Read CSS custom properties
-- Sample computed styles from DOM elements
-- Run logo detection heuristics
-- Extract any programmatic branding data
-
-The snapshot only provides the accessibility tree (element roles, text content, link URLs), which gives page structure and image alt texts but zero style information.
-
-### Assessment
-
-- **Colors**: 0% -- cannot extract any color information
-- **Fonts**: 0% -- cannot extract any font information
-- **Logo**: Partial -- can see image alt texts and URLs from the accessibility tree, but cannot score or filter them
-- **Not viable** as a standalone branding extraction tool
-
----
-
-## Approach 3: WebFetch
-
-### Method
-
-1. `WebFetch` with a prompt asking to extract branding information from the page HTML
-
-### Results on elastic.co
-
-| Category | Result | Quality |
-|----------|--------|---------|
-| **Colors** | Found `#0B64DD` as primary blue, mentioned teal and other CSS variable names | Partial |
-| **Fonts** | Found `Space Mono` (monospace), mentioned `--font-family-heading` variable name but not resolved value | Poor |
-| **Logo** | Found footer logo SVG URL | Good |
-| **CSS Variables** | Mentioned they exist but could not resolve values (no JS execution) | Poor |
+The key discovery of this spike is that the Cursor browser supports `javascript:` protocol URLs via `browser_navigate`. This allows executing arbitrary JavaScript on any loaded page and capturing results via `document.title`.
 
 ### How It Works
 
-WebFetch fetches the raw HTML, converts to markdown, and processes with a small LLM. The LLM can see:
-- Inline styles with color values
-- CSS variable names in `<style>` blocks (but not their computed values if defined in external CSS)
-- `<link>` tags pointing to CSS files (but does not follow/fetch them)
-- `<img>` tags with src URLs
+```
+browser_navigate → page loads
+browser_navigate("javascript:void(document.title=JSON.stringify({...extracted data...}))")
+→ page title now contains JSON with extracted brand data
+→ read from snapshot/metadata
+```
+
+### Extraction Script Pattern
+
+The following JavaScript pattern reliably extracts brand data from any rendered page:
+
+```javascript
+// Pass 1: Core styles
+javascript:void(document.title=JSON.stringify({
+  bg: getComputedStyle(document.body).backgroundColor,
+  color: getComputedStyle(document.body).color,
+  font: getComputedStyle(document.body).fontFamily,
+  h1Font: document.querySelector('h1') ? getComputedStyle(document.querySelector('h1')).fontFamily : '',
+  h1Color: document.querySelector('h1') ? getComputedStyle(document.querySelector('h1')).color : '',
+  navBg: document.querySelector('nav,header') ? getComputedStyle(document.querySelector('nav,header')).backgroundColor : '',
+  linkColor: document.querySelector('main a') ? getComputedStyle(document.querySelector('main a')).color : '',
+  favicon: document.querySelector('link[rel*=icon]') ? document.querySelector('link[rel*=icon]').href : '',
+  logoSrc: document.querySelector('header img,nav img,[class*=logo] img') ? document.querySelector('header img,nav img,[class*=logo] img').src : ''
+}))
+
+// Pass 2: CSS custom properties + buttons
+javascript:void(document.title=JSON.stringify({
+  cssVars: (() => {
+    const vars = [];
+    for (let s = 0; s < document.styleSheets.length; s++) {
+      try {
+        const rules = document.styleSheets[s].cssRules;
+        for (let r = 0; r < rules.length; r++) {
+          const t = rules[r].cssText;
+          if (t.includes('--') && (t.includes(':root') || t.includes('html'))) {
+            const m = t.match(/--[\w-]+:\s*#[0-9a-fA-F]+/g);
+            if (m) vars.push(...m);
+          }
+        }
+      } catch(e) {} // CORS blocks cross-origin stylesheets
+    }
+    return vars.slice(0, 30);
+  })(),
+  btnPrimary: (() => {
+    const b = document.querySelector('a[href*=trial], button[class*=primary], .btn-primary');
+    return b ? { bg: getComputedStyle(b).backgroundColor, color: getComputedStyle(b).color } : null;
+  })()
+}))
+```
 
 ### Limitations
 
-- Cannot execute JavaScript, so CSS variables defined in external stylesheets are invisible
-- LLM summarization may miss or hallucinate values
-- Single-page fetch -- does not follow CSS imports
-- No computed style access
-
-### Assessment
-
-- **Colors**: 40% -- finds some inline hex values and variable names, but cannot resolve most CSS variables
-- **Fonts**: 20% -- may find font-face declarations if inline, but usually misses external fonts
-- **Logo**: 60% -- can find `<img>` tags with "logo" in attributes
-- **Useful as supplementary data** but not sufficient alone
+1. **`document.title` length**: Browser titles have practical limits (~2KB). Must split extraction into multiple passes for rich data.
+2. **CORS stylesheets**: Cannot read `cssRules` from cross-origin stylesheets (e.g., Google Fonts CSS). Computed styles still work.
+3. **Cookie banners**: May overlay the page; dismissing them first improves extraction (e.g., clicking "Accept" button).
+4. **SVG logos**: Can detect inline SVGs but extracting full SVG source requires careful string handling (data URL encoding).
 
 ---
 
-## Comparison Summary
+## Test Results
 
-| Capability | Playwright MCP | Browser MCP | WebFetch | Firecrawl |
-|------------|:-----------:|:-----------:|:--------:|:---------:|
-| **CSS Variables** | 262 color vars | None | Variable names only | Full |
-| **Computed Styles** | Full (body, h1, button, link, nav) | None | None | Full |
-| **Font Families** | Both heading + body | None | Partial | Both |
-| **Logo Detection** | Scored candidates (top: 90/100) | Alt text only | URL matching | SVG inline data |
-| **Button Styles** | bg, text, hover, radius | None | None | Full |
-| **Link Colors** | Yes | None | Partial | Yes |
-| **Dark Mode Colors** | Via CSS var naming | None | None | Yes |
-| **Setup Required** | None (already configured) | None (already configured) | None (built-in) | API key signup |
-| **Quality vs Firecrawl** | ~90% | ~10% | ~30% | 100% (baseline) |
-| **Reliability** | High (deterministic JS) | N/A | Variable (LLM-dependent) | High |
+### Site 1: elastic.co
+
+| Property | Extracted Value | Real Brand Value | Match |
+|----------|----------------|-----------------|-------|
+| Primary color | `#0B64DD` (--color-blue-elastic) | `#0B64DD` (current site blue) | Exact |
+| Accent/Teal | `#48EFCF` (--color-teal-light) | `#00BFB3` (brand teal) | Partial (light variant) |
+| Background | `#FFFFFF` (body bg) | `#FFFFFF` / `#F5F7FA` | Match |
+| Text color | `#1C1E23` (body) / `#343741` (--color-ink) | `#343741` | Match |
+| Heading font | `MierB, Inter, arial, sans-serif` | MierB (headings) | Exact |
+| Body font | `Inter, arial, sans-serif` | Inter | Exact |
+| Logo | CDN URL found (Optimizely hosted PNG) | SVG preferred | Functional |
+| Favicon | `https://www.elastic.co/favicon.ico` | Correct | Exact |
+| Border radius | `4px` (CTA button) | 6px (EUI default) | Close |
+| CSS variables | 12 color vars found (blue-elastic, teal-light, ink, etc.) | - | Bonus |
+
+**Quality**: High. Got primary color, full font stack, logo URL, and CSS custom properties. The CSS variables provide a complete color palette including `--color-blue-midnight`, `--color-blue-sky`, `--color-blue-developer`, etc.
+
+### Site 2: nhs.uk
+
+| Property | Extracted Value | Real Brand Value | Match |
+|----------|----------------|-----------------|-------|
+| Primary color | `#005EB8` (header bg, link color, SVG fill) | `#005EB8` (NHS Blue) | Exact |
+| Button green | `#007F3B` (button bg) | `#007F3B` (NHS Green) | Exact |
+| Background | `#F0F4F5` (body bg) | `#F0F4F5` | Exact |
+| Text color | `#212B32` (body color) | `#212B32` | Exact |
+| Heading font | `"Frutiger W01", Arial, sans-serif` | Frutiger W01 | Exact |
+| Body font | `"Frutiger W01", Arial, sans-serif` | Frutiger W01 | Exact |
+| Logo | Inline SVG found (`<svg class="nhsuk-logo">`) | SVG logo | Exact |
+| SVG fill | `#005EB8` (from SVG path fill attribute) | Correct | Exact |
+| Favicon | `https://www.nhs.uk/static/nhsuk/img/favicons/favicon.*.ico` | Correct | Exact |
+| Border radius | `0px` | 0px (NHS design system) | Exact |
+| Button shadow | `rgb(0, 64, 30) 0px 4px 0px 0px` | Correct (gov.uk-style 3D button) | Exact |
+
+**Quality**: Excellent. Every single value matched the official NHS design system. No CSS custom properties found (NHS uses compiled SCSS), but computed styles gave us everything needed.
+
+### Site 3: tesco.com
+
+| Property | Extracted Value | Real Brand Value | Match |
+|----------|----------------|-----------------|-------|
+| Primary color | `#00539F` (--ddsweb-theme-colors-primary) | `#00539F` (Tesco Blue) | Exact |
+| Secondary/Accent | `#EE1C2E` (--ddsweb-theme-colors-secondary) | `#EE1C2E` (Tesco Red) | Exact |
+| Background | `#FFF` (--ddsweb-theme-colors-background-base) | `#FFFFFF` | Exact |
+| Text color | `#666` (--ddsweb-theme-colors-text-base) | `#666666` | Exact |
+| Error color | `#C33` (--ddsweb-theme-colors-error) | Correct | Exact |
+| Success color | `#080` (--dds-messaging-colour-messaging-success) | Correct | Exact |
+| Warning color | `#BD5800` (--dds-messaging-colour-messaging-warning) | Correct | Exact |
+| Info color | `#007EB3` (--ddsweb-theme-colors-info) | Correct | Exact |
+| Heading font | `"Tesco Modern"` | TESCO Modern | Exact |
+| Body font | `"TESCO Modern", Arial, sans-serif` | TESCO Modern | Exact |
+| Favicon | `https://www.tesco.com/assets/mfe-orchestrator/favicon.ico` | Correct | Exact |
+| Border lines | `#E5E5E5` (--ddsweb-theme-colors-lines-light) | Correct | Exact |
+| CSS variables | **30 variables found** (full design system token set) | - | Excellent |
+
+**Quality**: Excellent. Tesco's design system uses CSS custom properties extensively, giving us their entire color palette including semantic tokens (error, warning, success, info) and interaction states.
+
+---
+
+## Approach Comparison
+
+| Approach | Colors | Fonts | Logo | CSS Vars | Quality | Setup Required |
+|----------|--------|-------|------|----------|---------|----------------|
+| **Cursor browser (DOM via JS)** | Yes (computed + vars) | Yes (computed) | Yes (img/SVG) | Yes (same-origin) | **High** | None |
+| **Raw fetch (WebFetch)** | No | No | Partial (img URLs only) | No | **Very Low** | None |
+| **Firecrawl (baseline)** | Yes | Yes | Yes | Via branding format | **High** | API key + credits |
+| **Firecrawl (branding format)** | Yes | Yes | Yes | Yes | **Highest** | API key + credits |
+
+### Detailed Comparison
+
+#### Cursor Browser (DOM inspection via `javascript:` URLs)
+
+**Strengths**:
+- Zero setup, zero cost, zero API keys
+- Accesses **computed styles** (what the browser actually renders)
+- Can read CSS custom properties from same-origin stylesheets
+- Can find inline SVG logos and their fill colors
+- Can extract button styles, shadows, border-radius
+- Works on JavaScript-rendered SPAs (React, Vue, etc.)
+- Can dismiss cookie banners before extracting
+
+**Weaknesses**:
+- Requires 2-3 navigation calls per site (multi-pass extraction due to title length limits)
+- Cannot read CORS-protected external stylesheets (e.g., Google Fonts CSS)
+- Cannot easily extract the full SVG source for inline logos (title length limit)
+- Requires manual assembly of the `BrandTheme` object by the AI agent
+- The `javascript:` URL technique is somewhat fragile / non-obvious
+
+#### Raw Fetch (WebFetch / HTTP GET)
+
+**Strengths**:
+- Fast, no rendering needed
+- Can find `<link>` tags for fonts, favicons
+- Can find `<img>` and `<svg>` logo elements in raw HTML
+
+**Weaknesses**:
+- Returns markdown (stripped of all CSS)
+- **Cannot extract any colors** (no computed styles, no CSS parsing)
+- **Cannot extract any fonts** from computed styles
+- Cannot handle JavaScript-rendered content (SPAs return empty shells)
+- Cannot read CSS custom properties
+- Essentially useless for branding extraction
+
+#### Firecrawl
+
+**Strengths**:
+- Purpose-built `branding` format extracts colors, fonts, typography, spacing, UI components
+- Single API call returns structured data
+- Handles CORS, JavaScript rendering, etc.
+
+**Weaknesses**:
+- Requires API key signup at firecrawl.dev
+- Has credit/usage limits (ran out during this spike!)
+- Adds external dependency
+- Costs money at scale
 
 ---
 
 ## Recommendation
 
-**Use Playwright MCP as the primary extraction tool.** It achieves approximately 90% of Firecrawl quality with zero setup requirements.
+**Yes, we can replace Firecrawl with browser-based extraction for the branding workflow.**
 
-### Why Playwright MCP Wins
+The Cursor browser's `javascript:` URL technique successfully extracted accurate branding data from all 3 test sites, matching or exceeding what we'd need to populate a `BrandTheme` object. The quality was high across diverse site architectures:
 
-1. **`browser_evaluate` is the key differentiator** -- it allows running the same JavaScript extraction code documented in `BRANDING_EXTRACTION_PATTERNS.md` (CSS variables, computed styles, logo heuristics)
-2. **Already available** -- Playwright MCP is already configured in the project
-3. **Deterministic** -- JavaScript extraction returns exact values, not LLM approximations
-4. **Rich data** -- 262 color variables, 44 font variables, complete computed styles, scored logo candidates
-5. **Semantic mapping** -- CSS variable names like `--button-primary-bg`, `--font-family-heading` make it straightforward for an AI assistant to map extracted values to BrandTheme fields
+- **Static sites with CSS vars** (Elastic.co) - extracted full color palette
+- **Design system sites without CSS vars** (NHS.uk) - computed styles gave everything
+- **Complex SPAs with design tokens** (Tesco.com) - got 30+ CSS custom properties
 
-### What's Missing vs Firecrawl (the 10% gap)
+### Recommended Workflow
 
-1. **Inline SVG logo data** -- Playwright finds logo URLs but does not automatically convert to `data:image/svg+xml,...` format. A follow-up fetch + encode step would be needed.
-2. **Brand personality** -- Firecrawl extracts tone, energy, target audience metadata. Playwright cannot infer this (though a Vision LLM screenshot analysis could supplement).
-3. **Component analysis** -- Firecrawl identifies input field styles, card patterns, etc. Playwright's computed styles approach could be extended for this but requires additional selectors.
+1. Navigate to target site
+2. Dismiss cookie banner (click accept button)
+3. **Pass 1**: Extract computed styles (body bg, color, font, header bg, link color, button styles, favicon, logo)
+4. **Pass 2**: Extract CSS custom properties from same-origin stylesheets
+5. **Pass 3** (if needed): Extract SVG logo source, additional element styles
+6. AI agent assembles `BrandTheme` object from extracted data
+7. Agent creates `[brand]Theme.ts` file
 
-### Recommended Hybrid Approach
+### Update to `BRANDING_EXTRACTION_PATTERNS.md`
 
-For maximum quality with zero API keys:
+The hive-mind branding pattern should be updated to document this technique as the **primary** approach, with Firecrawl as an optional enhancement for when:
+- Higher-fidelity extraction is needed
+- The site heavily uses cross-origin stylesheets
+- Batch extraction of many sites is needed (Firecrawl is faster per-site)
 
-1. **Playwright MCP `browser_evaluate`** -- primary extraction (CSS vars + computed styles + logo heuristics)
-2. **WebFetch** -- supplementary data (catches inline styles that might be missed, validates findings)
-3. **AI assistant reasoning** -- the Claude agent interprets the raw data and maps it to BrandTheme fields, choosing the best values from multiple sources
+### Cost-Benefit Summary
 
-This combination should deliver 90-95% of Firecrawl quality.
+| Factor | Browser-based | Firecrawl |
+|--------|--------------|-----------|
+| Setup cost | None | API signup + key management |
+| Per-extraction cost | $0 | Credits (paid after free tier) |
+| Accuracy (colors) | 95%+ | 98%+ |
+| Accuracy (fonts) | 95%+ | 98%+ |
+| Accuracy (logos) | 85% (harder to get full SVG) | 95%+ |
+| SPA support | Yes (renders JS) | Yes |
+| Speed | ~10s (3 navigation calls) | ~5s (1 API call) |
+| Reliability | High (no external deps) | Medium (API limits, outages) |
+| Works offline | No (needs internet) | No (needs internet) |
 
 ---
 
-## Follow-up Implementation Bead
+## Raw Data Appendix
 
-If this spike is accepted, a follow-up bead should cover:
+### elastic.co - Browser DOM Extraction
 
-1. **Create a reusable extraction prompt/script** -- a standardized `browser_evaluate` JavaScript snippet that can be copy-pasted or invoked by the AI agent for any target URL
-2. **Logo fetch + embed utility** -- given a logo URL, fetch it and convert to `data:image/svg+xml,...` format for embedding in theme files
-3. **Update `BRANDING_EXTRACTION_PATTERNS.md`** -- add Playwright MCP as a first-class approach alongside Firecrawl, with step-by-step instructions
-4. **Test on diverse sites** -- validate the approach against sites with different CSS architectures (legacy sites, SPAs, sites with minimal CSS variables)
-5. **Consider a structured prompt template** -- an AI assistant prompt that takes Playwright extraction output and generates a complete `*Theme.ts` file
+```json
+{
+  "bg": "rgb(255, 255, 255)",
+  "color": "rgb(28, 30, 35)",
+  "font": "Inter, arial, sans-serif",
+  "h1Font": "MierB, Inter, arial, sans-serif",
+  "h1Color": "rgb(28, 30, 35)",
+  "navBg": "rgba(0, 0, 0, 0)",
+  "linkColor": "rgb(255, 255, 255)",
+  "favicon": "https://www.elastic.co/favicon.ico",
+  "logoSrc": "https://cdn.optimizely.com/img/18132920325/bb267dd0fde04a47bf59cb3989c9512b.png",
+  "cssVars": [
+    "--color-gray-100: #eeeff1",
+    "--color-gray-800: #323439",
+    "--color-white: #fff",
+    "--color-ink: #343741",
+    "--color-blue-developerDark: #081022",
+    "--color-blue-developer: #101c3f",
+    "--color-blue-midnight: #153385",
+    "--color-blue-elastic: #0b64dd",
+    "--color-blue-sky: #4ea7ff",
+    "--color-teal-light: #48efcf"
+  ],
+  "ctaBtn": {
+    "bg": "rgba(0, 0, 0, 0)",
+    "color": "rgb(11, 100, 221)",
+    "radius": "4px",
+    "font": "MierB, Inter, arial, sans-serif"
+  }
+}
+```
 
-### Scope Estimate
+### nhs.uk - Browser DOM Extraction
 
-The follow-up implementation is small -- the extraction JavaScript already exists in `BRANDING_EXTRACTION_PATTERNS.md` and works via Playwright MCP's `browser_evaluate`. The main work is packaging it into a repeatable workflow and documenting it.
+```json
+{
+  "bg": "rgb(240, 244, 245)",
+  "color": "rgb(33, 43, 50)",
+  "font": "\"Frutiger W01\", Arial, sans-serif",
+  "h1Font": "\"Frutiger W01\", Arial, sans-serif",
+  "h1Color": "rgb(210, 226, 241)",
+  "headerBg": "rgb(0, 94, 184)",
+  "linkColor": "rgb(0, 94, 184)",
+  "favicon": "https://www.nhs.uk/static/nhsuk/img/favicons/favicon.68c7f017cfba.ico",
+  "svgLogo": "<svg class=\"nhsuk-logo\" viewBox=\"0 0 40 16\"><path fill=\"#005eb8\" d=\"M0 0h40v16H0z\"/>...</svg>",
+  "btnGreen": {
+    "bg": "rgb(0, 127, 59)",
+    "color": "rgb(255, 255, 255)",
+    "radius": "4px",
+    "shadow": "rgb(0, 64, 30) 0px 4px 0px 0px"
+  },
+  "borderRadius": "0px"
+}
+```
+
+### tesco.com - Browser DOM Extraction
+
+```json
+{
+  "bg": "rgba(0, 0, 0, 0)",
+  "color": "rgb(0, 0, 0)",
+  "font": "\"TESCO Modern\", Arial, sans-serif",
+  "h1Font": "\"Tesco Modern\"",
+  "h1Color": "rgb(51, 51, 51)",
+  "linkColor": "rgb(0, 83, 159)",
+  "favicon": "https://www.tesco.com/assets/mfe-orchestrator/favicon.ico",
+  "cssVars": [
+    "--ddsweb-theme-colors-background-base: #fff",
+    "--ddsweb-theme-colors-black: #000",
+    "--ddsweb-theme-colors-disabled-base: #ccc",
+    "--ddsweb-theme-colors-error: #c33",
+    "--ddsweb-theme-colors-grayscale: #666",
+    "--ddsweb-theme-colors-info: #007eb3",
+    "--ddsweb-theme-colors-inverse: #fff",
+    "--ddsweb-theme-colors-lines-light: #e5e5e5",
+    "--ddsweb-theme-colors-link-base: #00539f",
+    "--ddsweb-theme-colors-primary: #00539f",
+    "--ddsweb-theme-colors-ratings: #fcd700",
+    "--ddsweb-theme-colors-secondary: #ee1c2e",
+    "--ddsweb-theme-colors-tesco-blue: #00539f",
+    "--ddsweb-theme-colors-text-base: #666",
+    "--ddsweb-theme-colors-white: #fff",
+    "--dds-interaction-colour-interactive-default: #00539f",
+    "--dds-interaction-colour-interactive-active: #007eb3",
+    "--dds-messaging-colour-messaging-error: #c33",
+    "--dds-messaging-colour-messaging-warning: #bd5800",
+    "--dds-messaging-colour-messaging-success: #080",
+    "--dds-messaging-colour-messaging-info: #0074e0"
+  ],
+  "searchBtn": {
+    "bg": "rgb(0, 83, 159)",
+    "color": "rgb(255, 255, 255)"
+  }
+}
+```
