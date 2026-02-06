@@ -366,7 +366,9 @@ bd comment <id> "Progress: implemented X, working on Y"
 bd create "Bug: null check missing" --type bug --deps "discovered-from:<id>"
 
 # Hit a blocker? Record it:
-bd dep add <blocker-id> blocks:<id>
+# Syntax: bd dep add <blocked-issue> <blocker-issue>
+# Reads as: "<blocked> depends on <blocker>"
+bd dep add <id> <blocker-id>
 ```
 
 ### Completing Work
@@ -415,5 +417,25 @@ bd close <id> -r "reason"        # Done (always use -r, not --comment)
 bd list --status open            # All open
 bd list --type bug --priority 0  # Critical bugs
 bd search "keyword"              # Search issues
+```
+
+### Dependencies — Getting It Right
+
+```bash
+# ⚠️ bd dep add uses POSITIONAL args, NOT the blocks: prefix syntax
+# The blocks: prefix ONLY works with --deps during bd create
+
+# Syntax: bd dep add <blocked-issue> <blocker-issue>
+# Meaning: first arg DEPENDS ON second arg (second blocks first)
+
+# Example: "auth" must be done before "dashboard" can start
+bd dep add dashboard-id auth-id  # dashboard depends on auth
+
+# Example: creating with deps inline (blocks: prefix works HERE)
+bd create "Build dashboard" --deps "blocks:auth-id"
+
+# Verify the relationship
+bd dep tree <id>                 # Shows what blocks this issue
+bd blocked                       # Shows all blocked issues and why
 ```
 
