@@ -54,7 +54,20 @@ class Settings:
     HOST: str = _config("HOST", default="0.0.0.0")
     PORT: int = _config("PORT", default=8001, cast=int)
     FRONTEND_PORT: int = _config("FRONTEND_PORT", default=3000, cast=int)
-    BACKEND_URL: str = _config("BACKEND_URL", default="http://localhost:8001")
+    # Agno Configuration
+    AGNO_LEARNING_ENABLED: bool = _config(
+        "AGNO_LEARNING_ENABLED", default="true", cast=lambda v: v.lower() == "true"
+    )
+    AGNO_MEMORY_DB_PATH: str = _config("AGNO_MEMORY_DB_PATH", default="data/agno_memory.db")
+
+    @property
+    def BACKEND_URL(self) -> str:
+        """Backend URL, dynamically constructed from HOST and PORT when not explicitly set."""
+        explicit = self._config("BACKEND_URL", default="")
+        if explicit:
+            return explicit
+        host = "localhost" if self.HOST == "0.0.0.0" else self.HOST
+        return f"http://{host}:{self.PORT}"
 
     # CORS Origins - dynamically include frontend port
     @property

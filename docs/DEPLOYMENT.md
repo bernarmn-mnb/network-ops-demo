@@ -468,7 +468,7 @@ See `hive-mind/patterns/deployment/CLOUDRUN_SIDECAR_DEPLOYMENT.md` for details.
 
 Change the URL path where your app is served:
 
-1. **Update `deploy/nginx-sidecar.conf`**: Replace `/demo/` with your path
+1. **Update `deploy/nginx.conf`**: Replace `/demo/` with your path
 2. **Build with correct arg**: `--build-arg VITE_BASE_PATH=/your-path/`
 3. **Update Load Balancer URL map** if using path-based routing
 
@@ -532,7 +532,7 @@ curl http://localhost:8080/health
 | Issue | Cause | Solution |
 |-------|-------|----------|
 | **404 on assets** | VITE_BASE_PATH mismatch | Ensure build arg matches nginx config |
-| **API calls fail** | Wrong proxy config | Check nginx-sidecar.conf proxy_pass |
+| **API calls fail** | Wrong proxy config | Check nginx.conf proxy_pass |
 | **502 Bad Gateway** | Container crash | Check logs, increase memory |
 | **Slow cold starts** | Python imports | Consider `--min-instances=1` |
 | **"You don't have access"** | IAP misconfigured | Grant `iap.httpsResourceAccessor` role |

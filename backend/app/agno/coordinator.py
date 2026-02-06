@@ -17,7 +17,6 @@ Usage:
 """
 
 import logging
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -37,9 +36,9 @@ logger = logging.getLogger(__name__)
 # Configuration
 # ============================================================================
 
-# Memory/Learning configuration from environment
-AGNO_LEARNING_ENABLED = os.getenv("AGNO_LEARNING_ENABLED", "true").lower() == "true"
-AGNO_MEMORY_DB_PATH = os.getenv("AGNO_MEMORY_DB_PATH", "data/agno_memory.db")
+# Memory/Learning configuration from central settings
+AGNO_LEARNING_ENABLED = settings.AGNO_LEARNING_ENABLED
+AGNO_MEMORY_DB_PATH = settings.AGNO_MEMORY_DB_PATH
 
 
 def get_llm_model() -> OpenAIChat:

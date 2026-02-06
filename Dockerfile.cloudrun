@@ -95,6 +95,10 @@ COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 
 # Configure Nginx
 # We replace the default config to serve React and proxy /api to FastAPI
+# NOTE: This Dockerfile is DEPRECATED - use sidecar deployment instead.
+# The files below (nginx-cloudrun.conf, supervisord.conf, start-fastapi.sh)
+# were removed when the project moved to the sidecar approach.
+# See deploy/deploy-cloudrun.sh for the recommended deployment method.
 COPY deploy/nginx-cloudrun.conf /etc/nginx/sites-available/default
 RUN rm -f /etc/nginx/sites-enabled/default && \
     ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default

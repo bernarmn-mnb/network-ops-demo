@@ -26,18 +26,15 @@ Note:
     `pip install mcp`
 """
 
-import os
 import json
 import httpx
 from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api/mcp", tags=["mcp"])
+from ..config import settings
 
-# Configuration
-KIBANA_URL = os.getenv("KIBANA_URL", "")
-ELASTIC_API_KEY = os.getenv("ELASTIC_API_KEY", "")
+router = APIRouter(prefix="/api/mcp", tags=["mcp"])
 
 
 class MCPRequest(BaseModel):
@@ -54,13 +51,13 @@ class ToolCallRequest(BaseModel):
 
 def get_mcp_url() -> str:
     """Get the MCP server URL."""
-    return f"{KIBANA_URL}/api/agent_builder/mcp"
+    return f"{settings.KIBANA_URL}/api/agent_builder/mcp"
 
 
 def get_headers() -> Dict[str, str]:
     """Get headers for MCP requests."""
     return {
-        "Authorization": f"ApiKey {ELASTIC_API_KEY}",
+        "Authorization": f"ApiKey {settings.ELASTIC_API_KEY}",
         "kbn-xsrf": "true",
         "Content-Type": "application/json",
         "Accept": "application/json",
@@ -79,7 +76,7 @@ async def mcp_request(method: str, params: Dict[str, Any] = None, request_id: in
     Returns:
         The JSON-RPC response
     """
-    if not KIBANA_URL or not ELASTIC_API_KEY:
+    if not settings.KIBANA_URL or not settings.ELASTIC_API_KEY:
         raise HTTPException(
             status_code=500,
             detail="KIBANA_URL or ELASTIC_API_KEY not configured"
@@ -123,7 +120,7 @@ async def get_mcp_info():
     mcp_url = get_mcp_url()
     
     # Check if MCP is configured
-    if not KIBANA_URL:
+    if not settings.KIBANA_URL:
         server_info = {}
         protocol_version = "unknown"
         capabilities = {}
@@ -157,7 +154,7 @@ async def get_mcp_info():
         "connected": connected,
         "error": error,
         "mcp_url": mcp_url,
-        "kibana_url": KIBANA_URL,
+        "kibana_url": settings.KIBANA_URL,
         "server_info": server_info,
         "protocol_version": protocol_version,
         "capabilities": capabilities,
@@ -211,7 +208,7 @@ async def list_tools():
     Returns both built-in and custom tools with their schemas.
     """
     # Check if MCP is configured
-    if not KIBANA_URL:
+    if not settings.KIBANA_URL:
         return {
             "total": 0,
             "builtin_count": 0,

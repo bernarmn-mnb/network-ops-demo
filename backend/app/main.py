@@ -7,6 +7,8 @@ Architecture:
 Frontend (Vite/React) <-> Backend (FastAPI) <-> Elastic Agent Builder (Kibana)
 """
 
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -25,12 +27,20 @@ from .routes.search_fields import router as search_fields_router
 from .routes.search_simple import router as search_simple_router
 from .routes.tracking import router as tracking_router
 
+logger = logging.getLogger(__name__)
+
 # Create FastAPI application
 app = FastAPI(
     title="Elastic Agent API",
     description="Backend proxy for Elastic Agent Builder",
     version="1.0.0",
 )
+
+# Validate configuration on startup
+try:
+    settings.validate()
+except ValueError as e:
+    logger.warning(f"Configuration warning: {e}")
 
 # Initialize OpenTelemetry FIRST (before other middleware)
 # This ensures proper traceparent header extraction for distributed tracing
