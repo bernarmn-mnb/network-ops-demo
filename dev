@@ -700,25 +700,42 @@ cmd_use_ootb() {
     echo -e "See ${BLUE}docs/SHARED_SERVERLESS_PROJECT.md${NC} for full documentation."
 }
 
+cmd_verify_template() {
+    echo -e "${BLUE}🔍 Verifying template integrity...${NC}"
+    echo ""
+
+    local python_cmd="python3"
+    if [ -f "backend/.venv/bin/python" ]; then
+        python_cmd="backend/.venv/bin/python"
+    elif [ -f "backend/venv/bin/python" ]; then
+        python_cmd="backend/venv/bin/python"
+    elif command -v uv &> /dev/null; then
+        python_cmd="uv run --directory backend python"
+    fi
+
+    $python_cmd scripts/verify-template.py "$@"
+}
+
 cmd_help() {
     read_env_ports
-    
+
     echo "Elastic Demo Starter - Dev Server Manager"
     echo ""
     echo "Usage: ./dev <command>"
     echo ""
     echo "Commands:"
-    echo "  start          Start servers in background (auto-finds available ports)"
-    echo "  stop           Stop all servers"
-    echo "  restart        Restart (only needed after .env or dependency changes)"
-    echo "  status         Show if running, ports, PIDs"
-    echo "  verify         Quick setup verification (checks .env, venv, etc.)"
-    echo "  test-agent     Test Agent Builder connection (sends test message)"
-    echo "  logs           Tail server logs (follows, use Ctrl+C to exit)"
-    echo "  logs-snapshot  Show recent logs and exit (default: 50 lines)"
-    echo "                 Usage: ./dev logs-snapshot [num_lines]"
-    echo "  open           Open browser to frontend"
-    echo "  use-ootb       Configure shared OOTB project (fetches from GitHub)"
+    echo "  start            Start servers in background (auto-finds available ports)"
+    echo "  stop             Stop all servers"
+    echo "  restart          Restart (only needed after .env or dependency changes)"
+    echo "  status           Show if running, ports, PIDs"
+    echo "  verify           Quick setup verification (checks .env, venv, etc.)"
+    echo "  verify-template  Structural integrity checks (routes, contracts, builds)"
+    echo "  test-agent       Test Agent Builder connection (sends test message)"
+    echo "  logs             Tail server logs (follows, use Ctrl+C to exit)"
+    echo "  logs-snapshot    Show recent logs and exit (default: 50 lines)"
+    echo "                   Usage: ./dev logs-snapshot [num_lines]"
+    echo "  open             Open browser to frontend"
+    echo "  use-ootb         Configure shared OOTB project (fetches from GitHub)"
     echo ""
     echo "Both servers auto-reload on code changes - no restart needed!"
     echo ""
@@ -745,6 +762,7 @@ case "${1:-help}" in
     restart) cmd_restart ;;
     status)  cmd_status ;;
     verify)  cmd_verify ;;
+    verify-template) shift; cmd_verify_template "$@" ;;
     test-agent) cmd_test_agent ;;
     logs)    cmd_logs ;;
     logs-snapshot) cmd_logs_snapshot "${2:-50}" ;;

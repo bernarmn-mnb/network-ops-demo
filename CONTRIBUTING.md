@@ -111,7 +111,24 @@ Before contributing:
    - Update README if needed
    - Add to hive-mind patterns if it's a pattern
 
-### Step 3: Test in Isolation
+### Step 3: Verify Template Integrity
+
+Before submitting, run the verification suite to make sure your changes don't break the template:
+
+```bash
+# Run all structural checks (route conflicts, contract alignment, page completeness)
+./dev verify-template
+
+# These checks also run in CI — your PR will fail if they don't pass
+```
+
+The checks catch common issues:
+- **Route conflicts**: Two route files defining the same endpoint path
+- **Contract drift**: Frontend calling an API endpoint that doesn't exist in the backend
+- **Missing pages**: App.tsx referencing a component file that doesn't exist
+- **Localhost leaks**: Hardcoded `http://localhost` URLs that break Cloud Run
+
+### Step 4: Test in Isolation
 
 Create a test branch to verify the functionality works standalone:
 
@@ -127,7 +144,7 @@ git add .
 git commit -m "Extract reusable feature: [feature name]"
 ```
 
-### Step 4: Contribute Back
+### Step 5: Contribute Back
 
 #### Option A: Direct Push (if you have write access)
 

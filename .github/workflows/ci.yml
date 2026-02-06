@@ -76,6 +76,40 @@ jobs:
         working-directory: backend
         run: pytest -v
 
+  template-integrity:
+    name: Template Integrity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Route integrity (no duplicates or shadows)
+        run: python scripts/verify-template.py --check routes --ci
+
+      - name: Frontend↔Backend contract alignment
+        run: python scripts/verify-template.py --check contract --ci
+
+      - name: Page completeness (all routes resolve)
+        run: python scripts/verify-template.py --check pages --ci
+
+      - name: Component registry accuracy
+        run: python scripts/verify-template.py --check registry --ci
+
+      - name: No hardcoded localhost URLs
+        run: python scripts/verify-template.py --check localhost --ci
+
   code-quality:
     name: Code Quality Checks
     runs-on: ubuntu-latest

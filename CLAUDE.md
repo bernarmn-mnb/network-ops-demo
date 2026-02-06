@@ -42,6 +42,11 @@ When `.setup-complete` does NOT exist:
 2. **REUSE** patterns rather than inventing new approaches
 3. **FOLLOW** the established conventions in existing patterns
 
+### After Making Changes (Before PRs)
+1. **RUN** `./dev verify-template` — checks route integrity, frontend↔backend contract, page completeness
+2. **FIX** any new failures before committing (existing failures are tracked in beads)
+3. This runs automatically in CI — PRs with new failures will not pass
+
 ### When Analyzing Errors
 1. **CHECK** `./hive-mind/troubleshooting/` for known issues
 2. **MATCH** error messages against documented symptoms
@@ -149,15 +154,16 @@ For themes you don't want committed to the repo:
 ## Dev Commands
 
 ```bash
-./dev start          # Start both servers (background)
-./dev stop           # Stop servers
-./dev status         # Check if running
-./dev verify         # Quick setup verification (checks .env, venv, health)
-./dev test-agent     # Test Agent Builder connection (sends test message)
-./dev logs-snapshot  # View recent logs (NON-BLOCKING - use this!)
-./dev logs           # Follow logs (BLOCKS FOREVER - don't use in scripts)
-./dev open           # Open browser
-./setup.sh           # Reconfigure Elastic connection
+./dev start            # Start both servers (background)
+./dev stop             # Stop servers
+./dev status           # Check if running
+./dev verify           # Quick setup verification (checks .env, venv, health)
+./dev verify-template  # Structural integrity checks (routes, contracts, builds)
+./dev test-agent       # Test Agent Builder connection (sends test message)
+./dev logs-snapshot    # View recent logs (NON-BLOCKING - use this!)
+./dev logs             # Follow logs (BLOCKS FOREVER - don't use in scripts)
+./dev open             # Open browser
+./setup.sh             # Reconfigure Elastic connection
 ```
 
 > ⚠️ **AI Agents**: Always use `./dev logs-snapshot` instead of `./dev logs`.

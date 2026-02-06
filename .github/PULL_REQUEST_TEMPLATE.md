@@ -28,6 +28,7 @@ Fixes #
 - [ ] I have tested my changes locally
 - [ ] Frontend: `cd frontend && npm run build` succeeds
 - [ ] Backend: Server starts without errors
+- [ ] Template integrity: `./dev verify-template` passes (no new failures)
 
 ### Documentation
 - [ ] I have updated the README if needed
