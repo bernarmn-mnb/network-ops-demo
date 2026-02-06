@@ -86,3 +86,16 @@ project-context.yaml
 # Testing brand themes (prefix with "testing" to keep template clean)
 # e.g., testingGovukTheme.ts, testingAcmeTheme.ts
 frontend/src/branding/testing*Theme.ts
+
+# Downloaded dataset samples (auto-fetched by test/ingestion scripts)
+scripts/tests/icecat_samples/
+
+# Customer context (customer-specific materials, gitignored except structure)
+customer-context/**
+!customer-context/
+!customer-context/README.md
+!customer-context/*/
+!customer-context/*/.gitkeep
+
+# Spike/experiment files (not production code)
+backend/spike_*.py

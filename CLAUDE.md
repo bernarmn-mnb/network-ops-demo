@@ -207,6 +207,89 @@ See `docs/DEPLOYMENT.md` for full guide.
 
 ---
 
+## Environment Variables & Secrets
+
+This project uses a tiered approach to environment variables and secrets.
+
+### Tiers
+
+| Tier | Location | Purpose | Gitignored |
+|------|----------|---------|------------|
+| **App config** | `backend/.env` | Read-only API key, service URLs, ports, feature flags | Yes |
+| **Admin secrets** | `.secrets/ootb-admin.env` | Write/admin API keys for indexing, testing, data loading | Yes |
+| **Deployment** | Root `.env` | Cloud Run-specific overrides (GCP project, region, etc.) | Yes |
+
+### Key Principles
+
+1. **`backend/.env` is for the running app** — it should only contain a **read-only** API key with search permissions. This is what `setup.sh` / `interactive_setup.py` writes.
+2. **`.secrets/.env` is for development and testing** — admin API keys with write/index permissions, credentials for data ingestion scripts, and any other secrets that shouldn't be in the app `.env`.
+3. **Never commit secrets** — both `.env` and `.secrets/` are gitignored. The `.env.example` files document the expected variables without values.
+4. **Scripts should check both locations** — ingestion and data loading scripts should load from `.secrets/.env` first (admin key), falling back to `backend/.env` (read-only key).
+
+### `.secrets/` Directory Structure
+
+```
+.secrets/
+└── ootb-admin.env    # OOTB serverless cluster credentials (admin + readonly keys)
+```
+
+The secrets file uses these variable names:
+```bash
+ELASTICSEARCH_URL=...       # Cluster URL
+KIBANA_URL=...              # Kibana URL
+ADMIN_API_KEY=...           # Full-access key for indexing, data loading, testing
+READONLY_API_KEY=...        # Read-only key (same value as ELASTIC_API_KEY in backend/.env)
+```
+
+> **Current state**: `backend/.env` has `ELASTIC_API_KEY` set to the read-only key.
+> Ingestion scripts that need write access must load `ADMIN_API_KEY` from `.secrets/ootb-admin.env`.
+
+### How Credentials Are Loaded
+
+| Component | Library | Loads from | Notes |
+|-----------|---------|------------|-------|
+| **FastAPI app** | `python-decouple` | `backend/.env` | AutoConfig searches `backend/` directory only |
+| **Ingestion scripts** (`scripts/`) | `python-dotenv` | `load_dotenv(override=True)` | Loads nearest `.env` — set vars before running or use `--api-key` flag |
+| **Generators** (`backend/scripts/`) | `os.getenv()` | Environment only | Must `export` or use `dotenv` in calling script |
+| **Crawler scripts** | `os.getenv()` | Environment only | Accept `--api-key` CLI flag as override |
+
+### For AI Agents: Loading Credentials in Scripts
+
+When writing new scripts that need Elasticsearch **write** access:
+
+```python
+# Standard pattern for scripts that need admin/write access
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Find project root (adjust parents[N] for script depth)
+project_root = Path(__file__).resolve().parents[N]
+
+# Load app .env first (base config), then secrets (override with admin key)
+load_dotenv(project_root / 'backend' / '.env')
+secrets_env = project_root / '.secrets' / 'ootb-admin.env'
+if secrets_env.exists():
+    load_dotenv(secrets_env, override=True)
+
+es_url = os.getenv('ELASTICSEARCH_URL')
+api_key = os.getenv('ADMIN_API_KEY') or os.getenv('ELASTIC_API_KEY')
+```
+
+For **read-only** scripts (search, queries), just load `backend/.env` — no secrets needed.
+
+### Inference Endpoints
+
+Inference endpoint IDs (e.g. `.elser-2-elastic`, `.jina-embeddings-v3`) **change frequently** on Elastic Serverless. Never hardcode them in documentation or index mappings.
+
+- Use `<YOUR_INFERENCE_ENDPOINT>` as a placeholder in patterns and docs
+- Check the live cluster: `GET /_inference` to discover current endpoint IDs
+- The project defaults to Jina embeddings via Elastic Inference Service (EIS)
+- See `backend/scripts/load_serverless_ootb.py` for the canonical inference setup
+
+---
+
 ## Issue Tracking with Beads (if `.beads/` exists)
 
 This project uses `bd` (beads) for issue tracking with dependency support. Beads is the **persistent backlog** that survives across sessions — always check it before starting work.
