@@ -116,6 +116,27 @@ This project supports multiple brand themes with two approaches:
 - `backend/app/routes/branding.py` - REST API for brand CRUD
 - **Template**: Use `exampleTheme.ts` as the template for AI-extracted brands
 
+### Browser Tools (Playwright MCP Auto-Configuration)
+
+Branding extraction requires browser tools. `setup.sh` automatically configures Playwright MCP for Claude Code users:
+
+- **What it does**: During setup (step 6/6), detects if `@playwright/mcp` is available via npx and creates/updates `.mcp.json` with the Playwright MCP server configuration.
+- **`.mcp.json` is gitignored** — it's environment-specific and auto-generated per machine.
+- **If already configured**: Setup skips this step (checks for existing `"playwright"` entry).
+- **If npx is unavailable or the package can't be resolved**: Setup prints a warning with install instructions.
+- **Manual configuration**: Add this to `.mcp.json` in the project root:
+  ```json
+  {
+    "mcpServers": {
+      "playwright": {
+        "command": "npx",
+        "args": ["@playwright/mcp@latest"]
+      }
+    }
+  }
+  ```
+- **Cursor users**: No configuration needed — Cursor has a built-in browser.
+
 ### Testing Themes (Local Development)
 For themes you don't want committed to the repo:
 - Prefix the filename with `testing`: `testingGovukTheme.ts`, `testingAcmeTheme.ts`

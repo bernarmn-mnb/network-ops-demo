@@ -22,11 +22,12 @@ Do all of this silently before opening the conversation.
 1. Run `./dev verify` and `./dev status` — if something's broken, fix it or report it briefly. Don't turn this into a checklist.
 2. Read `backend/.env` — note `SEARCH_INDEX`, `ELASTICSEARCH_URL`, whether Agent Builder is configured (`AGENT_ID`).
 3. If servers are running, hit `GET /api/search/fields` to understand what data is available.
+4. Check if browser tools are available (try listing your MCP tools or check for `.mcp.json` with a `playwright` entry). If browser tools are missing and branding extraction may be needed, suggest the SA run `./setup.sh` again — it auto-configures Playwright MCP for Claude Code.
 
 **Context gathering:**
-4. Scan `customer-context/` for any files. If present, read them and extract: customer name, vertical, stakeholders, pain points, timeline, competitors, tech stack.
-5. Check if `DEMO_PLAN.md` exists in the project root. If yes — this is a returning session. Read the plan, run `bd ready`, and resume where things left off. Skip the rest of this prompt.
-6. Read `hive-mind/patterns/elastic/value-propositions/README.md` to know which verticals you can speak to.
+5. Scan `customer-context/` for any files. If present, read them and extract: customer name, vertical, stakeholders, pain points, timeline, competitors, tech stack.
+6. Check if `DEMO_PLAN.md` exists in the project root. If yes — this is a returning session. Read the plan, run `bd ready`, and resume where things left off. Skip the rest of this prompt.
+7. Read `hive-mind/patterns/elastic/value-propositions/README.md` to know which verticals you can speak to.
 
 ---
 

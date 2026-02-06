@@ -41,7 +41,7 @@ echo ""
 echo -e "${BOLD}Elastic Demo Starter - Setup${NC}"
 echo -e "${DIM}Silent foundation builder. No prompts, no questions.${NC}"
 echo ""
-echo -e "${BLUE}[1/5] Checking prerequisites${NC}"
+echo -e "${BLUE}[1/6] Checking prerequisites${NC}"
 
 # --- Python version ---
 if command -v python3 &> /dev/null; then
@@ -148,7 +148,7 @@ fi
 # =============================================================================
 
 echo ""
-echo -e "${BLUE}[2/5] Initializing project${NC}"
+echo -e "${BLUE}[2/6] Initializing project${NC}"
 
 if [ -d "hive-mind" ] && [ ! -d "hive-mind/patterns" ]; then
     log_info "Initializing hive-mind submodule..."
@@ -166,7 +166,7 @@ fi
 # =============================================================================
 
 echo ""
-echo -e "${BLUE}[3/5] Installing dependencies${NC}"
+echo -e "${BLUE}[3/6] Installing dependencies${NC}"
 
 # --- Backend (Python via uv) ---
 log_info "Backend dependencies (Python)..."
@@ -197,7 +197,7 @@ fi
 # =============================================================================
 
 echo ""
-echo -e "${BLUE}[4/5] Configuring Elastic connection${NC}"
+echo -e "${BLUE}[4/6] Configuring Elastic connection${NC}"
 
 if [ ! -f "backend/.env" ]; then
     # No .env at all - create from example
@@ -254,7 +254,7 @@ fi
 # =============================================================================
 
 echo ""
-echo -e "${BLUE}[5/5] Starting servers${NC}"
+echo -e "${BLUE}[5/6] Starting servers${NC}"
 
 log_info "Starting backend and frontend..."
 ./dev start 2>&1 | while IFS= read -r line; do
@@ -291,6 +291,71 @@ if [ "$FRONTEND_OK" = true ]; then
     log_ok "Frontend running on port $FRONTEND_PORT"
 else
     log_warn "Frontend starting (may take a moment) on port $FRONTEND_PORT"
+fi
+
+# =============================================================================
+# Configure Playwright MCP for Claude Code (browser tools for branding extraction)
+# =============================================================================
+
+echo ""
+echo -e "${BLUE}[6/6] Configuring browser tools${NC}"
+
+MCP_JSON="$SCRIPT_DIR/.mcp.json"
+PLAYWRIGHT_CONFIGURED=false
+
+# Check if .mcp.json already has playwright configured
+if [ -f "$MCP_JSON" ]; then
+    if grep -q '"playwright"' "$MCP_JSON" 2>/dev/null; then
+        log_ok "Playwright MCP already configured in .mcp.json"
+        PLAYWRIGHT_CONFIGURED=true
+    fi
+fi
+
+if [ "$PLAYWRIGHT_CONFIGURED" = false ]; then
+    # Check if npx is available (Node.js was already verified above)
+    if command -v npx &> /dev/null; then
+        # Verify @playwright/mcp package is resolvable
+        if npx --yes @playwright/mcp@latest --version > /dev/null 2>&1; then
+            # Create or update .mcp.json
+            if [ -f "$MCP_JSON" ]; then
+                # .mcp.json exists but without playwright — merge it in
+                # Use Node.js to safely merge JSON
+                node -e "
+                    const fs = require('fs');
+                    const existing = JSON.parse(fs.readFileSync('$MCP_JSON', 'utf8'));
+                    if (!existing.mcpServers) existing.mcpServers = {};
+                    existing.mcpServers.playwright = {
+                        command: 'npx',
+                        args: ['@playwright/mcp@latest']
+                    };
+                    fs.writeFileSync('$MCP_JSON', JSON.stringify(existing, null, 2) + '\n');
+                " 2>/dev/null && \
+                    log_ok "Added Playwright MCP to existing .mcp.json" || \
+                    log_warn "Could not update .mcp.json (add Playwright MCP manually)"
+            else
+                # Create new .mcp.json with playwright
+                cat > "$MCP_JSON" << 'MCPJSON'
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
+MCPJSON
+                log_ok "Created .mcp.json with Playwright MCP"
+            fi
+        else
+            log_warn "Playwright MCP package not available"
+            echo -e "       ${DIM}Browser tools enable AI-powered branding extraction.${NC}"
+            echo -e "       ${DIM}To install: npm install -g @playwright/mcp${NC}"
+            echo -e "       ${DIM}Then re-run ./setup.sh to auto-configure.${NC}"
+        fi
+    else
+        log_warn "npx not available — cannot configure Playwright MCP"
+        echo -e "       ${DIM}Install Node.js 18+ and re-run ./setup.sh${NC}"
+    fi
 fi
 
 # =============================================================================
