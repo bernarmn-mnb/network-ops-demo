@@ -72,7 +72,7 @@ Now propose a specific plan. Cover:
 - **Data**: Is the OOTB data sufficient, or do we need custom data? If custom, what kind and why?
 - **Experience**: Which features tell the story? (search, chat, multi-agent, analytics — don't use all of them)
 - **Agents**: What should the AI assistant know and do for this customer's domain?
-- **Branding**: Extract from the customer's website, or keep it generic?
+- **Branding**: Extract from the customer's website, or keep it generic? Before proposing extraction, check whether you have browser tools available (Playwright MCP, built-in browser, etc.) — if you do, offer to extract the brand directly using the technique in `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md`; if not, point the SA to the manual Brand Editor at `/brands`.
 - **Delivery**: Localhost or Cloud Run, based on what you discussed
 - **Timeline**: What's realistic given the deadline?
 
