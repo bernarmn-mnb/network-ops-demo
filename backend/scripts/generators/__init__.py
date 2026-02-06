@@ -32,6 +32,7 @@ from .document_generator import DocumentGenerator
 from .event_generator import EventGenerator
 from .support_generator import SupportGenerator
 from .store_generator import StoreGenerator
+from .banking_event_generator import BankingEventGenerator
 
 __all__ = [
     'BaseGenerator',
@@ -40,4 +41,5 @@ __all__ = [
     'EventGenerator',
     'SupportGenerator',
     'StoreGenerator',
+    'BankingEventGenerator',
 ]

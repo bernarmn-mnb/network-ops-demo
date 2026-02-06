@@ -82,7 +82,15 @@ class EventGenerator(BaseGenerator):
         Args:
             config: Generator configuration. Merged with DEFAULT_CONFIG.
         """
-        merged_config = {**DEFAULT_CONFIG, **(config or {})}
+        # Deep merge nested dicts (anomaly_config, event_types, etc.)
+        # so partial overrides don't lose sibling keys
+        user_config = config or {}
+        merged_config = {**DEFAULT_CONFIG}
+        for key, value in user_config.items():
+            if key in merged_config and isinstance(merged_config[key], dict) and isinstance(value, dict):
+                merged_config[key] = {**merged_config[key], **value}
+            else:
+                merged_config[key] = value
         super().__init__(merged_config)
         
         self.fake = Faker()
@@ -98,8 +106,8 @@ class EventGenerator(BaseGenerator):
         # Pre-generate users and their typical IPs
         self.users = self._generate_users()
         
-        # Calculate time boundaries
-        self.end_time = datetime.now()
+        # Calculate time boundaries (use config base_time for reproducibility)
+        self.end_time = self.config.get('base_time') or datetime.now()
         self.start_time = self.end_time - timedelta(hours=self.time_range_hours)
     
     def _generate_users(self) -> List[Dict[str, Any]]:
@@ -301,12 +309,14 @@ def main():
     
     config = {
         'time_range_hours': args.hours,
-        'anomaly_config': {'percentage': args.anomaly_pct}
     }
-    
+
     if args.config:
         with open(args.config, 'r') as f:
             config = {**config, **yaml.safe_load(f)}
+
+    # Deep merge anomaly_pct into anomaly_config to avoid overwriting 'types'
+    config.setdefault('anomaly_config', {})['percentage'] = args.anomaly_pct
     
     generator = EventGenerator(config)
     

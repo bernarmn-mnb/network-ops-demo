@@ -267,7 +267,7 @@ class SupportGenerator(BaseGenerator):
         else:
             num_messages = random.randint(1, self.avg_messages + 2)
         
-        base_time = datetime.now() - timedelta(days=random.randint(1, 30))
+        base_time = (self.config.get('base_time') or datetime.now()) - timedelta(days=random.randint(1, 30))
         
         # Pre-generate sorted time offsets to ensure chronological order
         time_offsets = sorted([random.randint(1, 8) * (i + 1) for i in range(num_messages)])
@@ -372,7 +372,7 @@ class SupportGenerator(BaseGenerator):
     def _generate_date(self) -> str:
         """Generate a creation date."""
         days_ago = random.randint(0, self.date_range_days)
-        date = datetime.now() - timedelta(days=days_ago)
+        date = (self.config.get('base_time') or datetime.now()) - timedelta(days=days_ago)
         return date.strftime('%Y-%m-%dT%H:%M:%SZ')
     
     def _generate_update_date(self, created_at: str, status: str) -> str:
