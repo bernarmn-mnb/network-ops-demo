@@ -292,10 +292,8 @@ export async function recordClickEvent(
   userId?: string,
   productMetadata?: ProductMetadata
 ) {
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001';
-  
   try {
-    const response = await fetch(`${apiUrl}/api/track/click`, {
+    const response = await fetch(`/api/track/click`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
