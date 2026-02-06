@@ -143,6 +143,16 @@ For themes you don't want committed to the repo:
 > The `logs` command uses `tail -f` which hangs indefinitely.
 > Use `./dev logs-snapshot 100` to see the last 100 lines.
 
+### Localhost URL Check
+
+Hardcoded `http://localhost` URLs in frontend source break Cloud Run deployments. A CI check and standalone script catch regressions:
+
+```bash
+./scripts/check-localhost-urls.sh   # Run locally (exit 0 = clean, exit 1 = violations)
+```
+
+Exceptions (overlay userscripts, OverlayGuidePage, vite.config.ts) are excluded. To add a new exception, edit the grep exclusions in the script.
+
 ### Port Discovery (for AI Agents)
 
 Ports are **dynamic** - don't assume defaults! Multiple demos may run on different ports.
