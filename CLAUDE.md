@@ -16,9 +16,9 @@ This project uses a shared knowledge base at `./hive-mind` (git submodule).
 
 2. Check if `./.beads` folder exists.
    If it exists, this project uses **beads (bd)** for issue tracking.
-   - Run `bd ready` to see available work before starting
-   - Reference issues in commits: `[bd-XX] description`
-   - See `hive-mind/meta/workflows/BEADS_ISSUE_TRACKER.md` for full guide
+   - Run `bd ready` and `bd blocked` to understand current work state
+   - Always `bd show <id>` to read acceptance criteria before starting an issue
+   - See the **Issue Tracking with Beads** section below for full workflow
 
 ### ALWAYS Index These Directories
 - `./hive-mind/patterns/` - Reusable architecture patterns
@@ -207,24 +207,87 @@ See `docs/DEPLOYMENT.md` for full guide.
 
 ---
 
-## Issue Tracking (if `.beads/` exists)
+## Issue Tracking with Beads (if `.beads/` exists)
 
-This project can use `bd` (beads) for lightweight issue tracking with dependency support.
+This project uses `bd` (beads) for issue tracking with dependency support. Beads is the **persistent backlog** that survives across sessions — always check it before starting work.
 
-**Check if enabled**: Look for `.beads/` folder in project root.
+> **Full reference**: `hive-mind/meta/workflows/BEADS_ISSUE_TRACKER.md`
 
-**If enabled**, use these commands:
+### Session Start (ALWAYS do this)
+
 ```bash
 bd ready                    # What can I work on? (no blockers)
-bd list --status open       # All open issues
-bd create "title" --type bug  # Create new issue
-bd close [id] -r "reason"   # Close with reason
+bd blocked                  # What's stuck and why
+bd stats                    # Overview of project state
 ```
 
-**Workflow integration**:
-- Before starting work: `bd ready`
-- Reference in commits: `[bd-XX] description`
-- After completing: `bd close bd-XX -r "Done"`
+### Before Working on an Issue
 
-See `hive-mind/meta/workflows/BEADS_ISSUE_TRACKER.md` for full guide.
+```bash
+bd show <id>                # Read description AND acceptance criteria
+bd update <id> --status in_progress
+bd comment <id> "Starting work on this"
+```
+
+**If the issue has no acceptance criteria, ask the user before starting.**
+
+### During Work
+
+```bash
+bd comment <id> "Progress: implemented X, working on Y"
+
+# Found a bug while working? Create it and link back:
+bd create "Bug: null check missing" --type bug --deps "discovered-from:<id>"
+
+# Hit a blocker? Record it:
+bd dep add <blocker-id> blocks:<id>
+```
+
+### Completing Work
+
+```bash
+bd comment <id> "Done — <brief summary of what was done>"
+bd close <id> -r "All acceptance criteria met"
+bd ready                    # Check what unblocked
+```
+
+### Git Commit Integration
+
+Always reference issues in commits:
+```bash
+git commit -m "[<id>] description of change"
+```
+
+### Creating Issues
+
+```bash
+bd create "title" \
+  --type [bug|feature|task|epic|chore] \
+  --priority [0-4] \           # 0=critical, 2=normal(default), 4=backlog
+  --acceptance "- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Tests pass"
+```
+
+### Agent Teams + Beads
+
+When using Claude Code agent teams, beads and internal tasks serve different roles:
+- **Beads** = persistent backlog (what needs doing across sessions)
+- **TaskCreate/TaskList** = ephemeral session plan (how agents divide work right now)
+
+Workflow: pick beads issues → create TaskCreate items for each agent → agents work in parallel → close beads issues when done.
+
+### Quick Reference
+
+```bash
+bd ready                         # Unblocked work
+bd blocked                       # Stuck items
+bd show <id>                     # Full details + acceptance criteria
+bd update <id> --status in_progress  # Claim it
+bd comment <id> "message"        # Progress note
+bd close <id> -r "reason"        # Done (always use -r, not --comment)
+bd list --status open            # All open
+bd list --type bug --priority 0  # Critical bugs
+bd search "keyword"              # Search issues
+```
 
