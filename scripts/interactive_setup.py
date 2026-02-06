@@ -4,12 +4,16 @@
 # dependencies = ["pyyaml>=6.0"]
 # ///
 """
-Interactive Setup Script for Elastic Demo Starter
+Interactive Setup Script for Elastic Demo Starter (ADVANCED USE ONLY)
 
-Feature-driven setup that asks users what they want to configure.
-Supports both interactive (TTY) and piped/scripted input modes.
+This script is NOT called by setup.sh. The default onboarding flow is:
+  1. Run ./setup.sh (silent, no prompts)
+  2. Open in your AI-powered IDE and follow docs/ONBOARDING.md
 
-Run via: uv run python scripts/interactive_setup.py
+Use this script only if you need manual, interactive configuration of
+features, credentials, and branding outside of the AI-driven flow.
+
+Run via: uv run scripts/interactive_setup.py
 The inline script dependencies above ensure PyYAML is installed automatically.
 """
 
