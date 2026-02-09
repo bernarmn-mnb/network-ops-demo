@@ -22,6 +22,10 @@ class Settings:
     ELASTIC_API_KEY: str = _config("ELASTIC_API_KEY", default="")
     AGENT_ID: str = _config("AGENT_ID", default="")
 
+    # Workflows API Key (needs workflowsManagement Kibana privilege)
+    # Falls back to ELASTIC_API_KEY if not set
+    WORKFLOWS_API_KEY: str = _config("WORKFLOWS_API_KEY", default="")
+
     # Monitoring Cluster Configuration
     MONITORING_ELASTICSEARCH_URL: str = _config(
         "MONITORING_ELASTICSEARCH_URL", default=""
