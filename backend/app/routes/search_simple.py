@@ -36,13 +36,13 @@ router = APIRouter(prefix="/api/search", tags=["search"])
 # Configuration
 # =============================================================================
 
-# Default search config - works with product-like indexes
-# Will be used if fields exist, otherwise falls back to wildcard search
+# Default search config — generic fallback for API calls without frontend facets.
+# The frontend searchConfig.ts is the source of truth for domain-specific facets.
 SEARCH_CONFIG = {
     "index": settings.SEARCH_INDEX,
     # Fields to search with boosts (if they exist)
     "searchFields": ["title^3", "description", "brand^2", "category^1.5", "name^3"],
-    # Facet fields to try (will skip if field doesn't exist)
+    # Default facet fields — used as fallback when the frontend doesn't send facets.
     "facets": [
         {"field": "category", "label": "Category", "size": 20},
         {"field": "brand", "label": "Brand", "size": 20},
@@ -56,6 +56,13 @@ SEARCH_CONFIG = {
 # =============================================================================
 
 
+class FacetRequest(BaseModel):
+    """A single facet requested by the frontend."""
+
+    field: str
+    size: int = Field(default=20, ge=1, le=100)
+
+
 class SearchRequest(BaseModel):
     """Search request parameters."""
 
@@ -65,6 +72,10 @@ class SearchRequest(BaseModel):
     filters: dict[str, Any] | None = Field(default=None, description="Field filters")
     sort_by: str | None = Field(default=None, description="Sort field")
     sort_dir: str = Field(default="desc", description="Sort direction: asc or desc")
+    facets: list[FacetRequest] | None = Field(
+        default=None,
+        description="Facet fields for aggregations. If provided, overrides server defaults.",
+    )
 
 
 class SearchHit(BaseModel):
@@ -154,9 +165,10 @@ async def search(request: SearchRequest) -> SearchResponse:
                 )
 
             # Build aggregations (only for fields that returned data)
+            facet_config = request.facets if request.facets else SEARCH_CONFIG["facets"]
             aggs = {}
-            for facet in SEARCH_CONFIG["facets"]:
-                field = facet["field"]
+            for facet in facet_config:
+                field = facet.field if hasattr(facet, "field") else facet["field"]
                 if field in response.get("aggregations", {}):
                     buckets = response["aggregations"][field].get("buckets", [])
                     if buckets:
@@ -356,16 +368,16 @@ def _build_robust_query(es, index: str, request: SearchRequest) -> dict:
         },
     }
 
-    # Aggregations for facets - only add if fields might exist
-    # We'll add them and let ES ignore non-existent fields
+    # Aggregations for facets — use frontend-provided facets if present, else server defaults
+    facet_config = request.facets if request.facets else SEARCH_CONFIG["facets"]
     query_body["aggs"] = {}
-    for facet in SEARCH_CONFIG["facets"]:
-        # Use keyword subfield if it exists, otherwise try the field directly
-        field_name = facet["field"]
+    for facet in facet_config:
+        field_name = facet.field if hasattr(facet, "field") else facet["field"]
+        size = facet.size if hasattr(facet, "size") else facet.get("size", 20)
         query_body["aggs"][field_name] = {
             "terms": {
                 "field": field_name,
-                "size": facet.get("size", 20),
+                "size": size,
                 "missing": "__missing__",  # Handle missing values gracefully
             }
         }

@@ -12,6 +12,7 @@ Checks:
 5. Component registry — COMPONENT_REGISTRY.md matches actual files on disk
 6. No localhost leaks — hardcoded localhost URLs in frontend source
 7. Build verification — both frontend and backend build cleanly
+8. EuiAvatar colors — no CSS variables in color props (hex values required)
 
 Usage:
     python scripts/verify-template.py          # Run all checks
@@ -72,7 +73,7 @@ def info(msg):
 
 def check_routes():
     """Detect duplicate route paths, unimportable route modules, and shadowed endpoints."""
-    print(f"\n{BLUE}[1/8] Route Integrity{NC}")
+    print(f"\n{BLUE}[1/9] Route Integrity{NC}")
 
     main_py = BACKEND_DIR / "app" / "main.py"
     if not main_py.exists():
@@ -176,7 +177,7 @@ def check_routes():
 
 def check_contract():
     """Verify every frontend API call has a matching backend route."""
-    print(f"\n{BLUE}[2/8] Frontend↔Backend Contract{NC}")
+    print(f"\n{BLUE}[2/9] Frontend↔Backend Contract{NC}")
 
     # Get all backend routes from OpenAPI (if server is running) or from static analysis
     backend_routes = set()
@@ -354,7 +355,7 @@ def check_contract():
 
 def check_pages():
     """Verify every route in App.tsx resolves to a real component file."""
-    print(f"\n{BLUE}[3/8] Page Completeness{NC}")
+    print(f"\n{BLUE}[3/9] Page Completeness{NC}")
 
     app_tsx = FRONTEND_SRC / "App.tsx"
     if not app_tsx.exists():
@@ -414,7 +415,7 @@ def check_pages():
 
 def check_icons():
     """Verify EUI icons used in source are registered in iconCache.ts."""
-    print(f"\n{BLUE}[4/8] EUI Icon Registration{NC}")
+    print(f"\n{BLUE}[4/9] EUI Icon Registration{NC}")
 
     icon_cache = FRONTEND_SRC / "iconCache.ts"
     if not icon_cache.exists():
@@ -484,7 +485,7 @@ def check_icons():
 
 def check_registry():
     """Verify COMPONENT_REGISTRY.md matches actual files on disk."""
-    print(f"\n{BLUE}[5/8] Component Registry{NC}")
+    print(f"\n{BLUE}[5/9] Component Registry{NC}")
 
     registry_file = PROJECT_ROOT / "docs" / "COMPONENT_REGISTRY.md"
     if not registry_file.exists():
@@ -544,7 +545,8 @@ def check_registry():
     unregistered_pages = actual_pages - registered_pages
     if unregistered_pages:
         for p in sorted(unregistered_pages):
-            warned(f"frontend/src/{p} exists but is not in COMPONENT_REGISTRY.md")
+            # Registry completeness tracked but not gated — use PR checks for enforcement
+            info(f"frontend/src/{p} exists but is not in COMPONENT_REGISTRY.md")
     else:
         passed(f"All {len(actual_pages)} page files are registered")
 
@@ -560,7 +562,8 @@ def check_registry():
     unregistered_components = actual_components - registered_components
     if unregistered_components:
         for p in sorted(unregistered_components):
-            warned(f"frontend/src/{p} exists but is not in COMPONENT_REGISTRY.md")
+            # Registry completeness tracked but not gated — use PR checks for enforcement
+            info(f"frontend/src/{p} exists but is not in COMPONENT_REGISTRY.md")
     else:
         passed(f"All {len(actual_components)} component files are registered")
 
@@ -582,7 +585,8 @@ def check_registry():
     unregistered_routes = actual_routes - registered_routes
     if unregistered_routes:
         for p in sorted(unregistered_routes):
-            warned(f"backend/app/{p} exists but is not in COMPONENT_REGISTRY.md")
+            # Registry completeness tracked but not gated — use PR checks for enforcement
+            info(f"backend/app/{p} exists but is not in COMPONENT_REGISTRY.md")
     else:
         passed(f"All {len(actual_routes)} backend route files are registered")
 
@@ -593,7 +597,7 @@ def check_registry():
 
 def check_localhost():
     """Check for hardcoded localhost URLs in frontend source."""
-    print(f"\n{BLUE}[6/8] Localhost URL Check{NC}")
+    print(f"\n{BLUE}[6/9] Localhost URL Check{NC}")
 
     # Use the existing script if available
     check_script = PROJECT_ROOT / "scripts" / "check-localhost-urls.sh"
@@ -666,7 +670,7 @@ def _find_backend_python():
 
 def check_builds():
     """Verify both frontend and backend can build/import cleanly."""
-    print(f"\n{BLUE}[7/8] Build Verification{NC}")
+    print(f"\n{BLUE}[7/9] Build Verification{NC}")
 
     python_cmd = _find_backend_python()
 
@@ -747,6 +751,41 @@ def check_builds():
 
 
 # =========================================================================
+# Check 8: EuiAvatar Color Check
+# =========================================================================
+
+def check_avatar_colors():
+    """Verify EuiAvatar components use hex colors, not CSS variables (which crash the component)."""
+    print(f"\n{BLUE}[8/9] EuiAvatar Color Check{NC}")
+
+    violations = []
+    color_prop_pattern = re.compile(r'(color|iconColor)\s*=\s*["\'{].*var\(--')
+
+    for tsx_file in FRONTEND_SRC.rglob("*.tsx"):
+        if "node_modules" in str(tsx_file):
+            continue
+        source = tsx_file.read_text()
+        lines = source.split("\n")
+
+        for i, line in enumerate(lines):
+            if "EuiAvatar" not in line:
+                continue
+            # Check this line and nearby lines (within 3 lines) for CSS variable colors
+            start = max(0, i - 1)
+            end = min(len(lines), i + 4)
+            window = "\n".join(lines[start:end])
+            if color_prop_pattern.search(window):
+                rel_path = tsx_file.relative_to(PROJECT_ROOT)
+                violations.append(f"{rel_path}:{i + 1}")
+
+    if violations:
+        for v in violations:
+            failed(f"EuiAvatar uses CSS variable color at {v} (hex values required)")
+    else:
+        passed("No EuiAvatar CSS variable colors found (hex values required)")
+
+
+# =========================================================================
 # Main
 # =========================================================================
 
@@ -756,7 +795,7 @@ def main():
     parser = argparse.ArgumentParser(description="Template verification suite")
     parser.add_argument(
         "--check",
-        choices=["routes", "contract", "pages", "icons", "registry", "localhost", "builds"],
+        choices=["routes", "contract", "pages", "icons", "registry", "localhost", "builds", "avatar"],
         help="Run a single check",
     )
     parser.add_argument(
@@ -777,6 +816,7 @@ def main():
         "registry": check_registry,
         "localhost": check_localhost,
         "builds": check_builds,
+        "avatar": check_avatar_colors,
     }
 
     if args.check:

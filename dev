@@ -11,6 +11,8 @@
 #   ./dev logs          - Show server logs (tail -f, follows indefinitely)
 #   ./dev logs-snapshot - Show recent logs and exit (non-blocking)
 #   ./dev open          - Open browser to frontend
+#   ./dev verify-search  - Verify search endpoint returns results and aggregations
+#   ./dev test-search    - Test semantic + keyword search quality
 # =============================================================================
 
 set -e
@@ -731,6 +733,8 @@ cmd_help() {
     echo "  verify           Quick setup verification (checks .env, venv, etc.)"
     echo "  verify-template  Structural integrity checks (routes, contracts, builds)"
     echo "  test-agent       Test Agent Builder connection (sends test message)"
+    echo "  verify-search    Verify search endpoint returns results and aggregations"
+    echo "  test-search      Test semantic + keyword search quality"
     echo "  logs             Tail server logs (follows, use Ctrl+C to exit)"
     echo "  logs-snapshot    Show recent logs and exit (default: 50 lines)"
     echo "                   Usage: ./dev logs-snapshot [num_lines]"
@@ -752,6 +756,126 @@ cmd_help() {
     echo "  ./dev stop         # Done for the day"
 }
 
+verify_search() {
+    echo -e "${BLUE}Verifying search endpoint...${NC}"
+
+    if [ ! -f "$PID_DIR/backend.port" ]; then
+        echo -e "${RED}Backend not running. Run ./dev start first.${NC}"
+        exit 1
+    fi
+
+    local port=$(cat "$PID_DIR/backend.port")
+    local response
+
+    # Test empty query (match_all)
+    response=$(curl -s -X POST "http://localhost:${port}/api/search" \
+        -H 'Content-Type: application/json' \
+        -d '{"query":""}' 2>&1)
+
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Search endpoint unreachable${NC}"
+        exit 1
+    fi
+
+    # Check total results
+    local total=$(echo "$response" | python3 -c "import sys,json; print(json.load(sys.stdin).get('total',0))" 2>/dev/null)
+    if [ -z "$total" ] || [ "$total" = "0" ]; then
+        echo -e "${RED}❌ No results returned (total=0). Is data indexed?${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✅ Search returns results (total=${total})${NC}"
+
+    # Check aggregations
+    local agg_count=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(1 for v in d.get('aggregations',{}).values() if v))" 2>/dev/null)
+    if [ -z "$agg_count" ] || [ "$agg_count" = "0" ]; then
+        echo -e "${YELLOW}⚠️  No aggregations returned. Check facet configuration.${NC}"
+    else
+        local agg_names=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(', '.join(d.get('aggregations',{}).keys()))" 2>/dev/null)
+        echo -e "${GREEN}✅ Aggregations populated (${agg_count} facets: ${agg_names})${NC}"
+    fi
+
+    echo -e "${GREEN}Search verification passed.${NC}"
+}
+
+test_search() {
+    echo -e "${BLUE}Testing search quality (semantic + keyword)...${NC}"
+
+    if [ ! -f "$PID_DIR/backend.port" ]; then
+        echo -e "${RED}Backend not running. Run ./dev start first.${NC}"
+        exit 1
+    fi
+
+    local port=$(cat "$PID_DIR/backend.port")
+    local passed=0
+    local failed=0
+
+    # Test 1: Semantic query
+    echo -e "\n${BLUE}Test 1: Semantic search${NC}"
+    echo -e "${DIM}  Query: \"vibration at high speed\"${NC}"
+    local sem_response=$(curl -s -X POST "http://localhost:${port}/api/search" \
+        -H 'Content-Type: application/json' \
+        -d '{"query":"vibration at high speed","page_size":3}')
+
+    local sem_total=$(echo "$sem_response" | python3 -c "import sys,json; print(json.load(sys.stdin).get('total',0))" 2>/dev/null)
+    local sem_top=$(echo "$sem_response" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+hits=d.get('hits',[])
+if hits:
+    h=hits[0]
+    src=h.get('source',{})
+    title=src.get('fault_id',src.get('title','(no title)'))
+    print(f'  Top: {title} (score={h.get(\"score\",0):.2f})')
+else:
+    print('  No hits')
+" 2>/dev/null)
+
+    if [ -n "$sem_total" ] && [ "$sem_total" != "0" ]; then
+        echo -e "${GREEN}  ✅ Semantic search returned ${sem_total} results${NC}"
+        echo -e "${DIM}${sem_top}${NC}"
+        passed=$((passed + 1))
+    else
+        echo -e "${RED}  ❌ Semantic search returned 0 results${NC}"
+        failed=$((failed + 1))
+    fi
+
+    # Test 2: Keyword query (part number fragment)
+    echo -e "\n${BLUE}Test 2: Keyword search${NC}"
+    echo -e "${DIM}  Query: \"ECS-OZONE\"${NC}"
+    local kw_response=$(curl -s -X POST "http://localhost:${port}/api/search" \
+        -H 'Content-Type: application/json' \
+        -d '{"query":"ECS-OZONE","page_size":3}')
+
+    local kw_total=$(echo "$kw_response" | python3 -c "import sys,json; print(json.load(sys.stdin).get('total',0))" 2>/dev/null)
+    local kw_top=$(echo "$kw_response" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+hits=d.get('hits',[])
+if hits:
+    h=hits[0]
+    src=h.get('source',{})
+    title=src.get('fault_id',src.get('title','(no title)'))
+    print(f'  Top: {title} (score={h.get(\"score\",0):.2f})')
+else:
+    print('  No hits')
+" 2>/dev/null)
+
+    if [ -n "$kw_total" ] && [ "$kw_total" != "0" ]; then
+        echo -e "${GREEN}  ✅ Keyword search returned ${kw_total} results${NC}"
+        echo -e "${DIM}${kw_top}${NC}"
+        passed=$((passed + 1))
+    else
+        echo -e "${RED}  ❌ Keyword search returned 0 results${NC}"
+        failed=$((failed + 1))
+    fi
+
+    # Summary
+    echo -e "\n${BLUE}Results: ${passed} passed, ${failed} failed${NC}"
+    if [ "$failed" -gt 0 ]; then
+        exit 1
+    fi
+}
+
 # =============================================================================
 # Main
 # =============================================================================
@@ -764,6 +888,8 @@ case "${1:-help}" in
     verify)  cmd_verify ;;
     verify-template) shift; cmd_verify_template "$@" ;;
     test-agent) cmd_test_agent ;;
+    verify-search) verify_search ;;
+    test-search) test_search ;;
     logs)    cmd_logs ;;
     logs-snapshot) cmd_logs_snapshot "${2:-50}" ;;
     open)    cmd_open ;;

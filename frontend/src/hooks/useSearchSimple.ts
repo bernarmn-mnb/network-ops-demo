@@ -19,7 +19,8 @@
  * For the full-featured version, see useSearch.ts
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { searchConfig } from '../config/searchConfig';
 
 // Types (inline to keep this file self-contained for starter template)
 export interface SearchHit {
@@ -47,6 +48,8 @@ export interface UseSearchOptions {
   autoSearch?: boolean;
   /** API base URL (default: '' for relative paths via Vite proxy) */
   apiUrl?: string;
+  /** Facet configs to request from backend. Defaults to searchConfig.facets */
+  facets?: Array<{ field: string; size?: number }>;
 }
 
 export interface UseSearchResult {
@@ -77,12 +80,19 @@ export interface UseSearchResult {
 }
 
 export function useSearchSimple(options: UseSearchOptions = {}): UseSearchResult {
-  const { 
-    initialQuery = '', 
+  const {
+    initialQuery = '',
     pageSize = 12,
     autoSearch = false,
     apiUrl = '',
+    facets: facetsProp,
   } = options;
+
+  // Resolve facets: explicit prop > searchConfig > empty
+  const resolvedFacets = useMemo(() => {
+    const raw = facetsProp ?? searchConfig.facets ?? [];
+    return raw.map(f => ({ field: f.field, size: f.size ?? 20 }));
+  }, [facetsProp]);
 
   // Core state
   const [query, setQuery] = useState(initialQuery);
@@ -116,6 +126,7 @@ export function useSearchSimple(options: UseSearchOptions = {}): UseSearchResult
           filters: Object.keys(filters).length > 0 ? filters : undefined,
           sort_by: sortBy || undefined,
           sort_dir: sortDir,
+          facets: resolvedFacets.length > 0 ? resolvedFacets : undefined,
         }),
       });
 
@@ -141,7 +152,7 @@ export function useSearchSimple(options: UseSearchOptions = {}): UseSearchResult
     } finally {
       setLoading(false);
     }
-  }, [query, page, pageSize, filters, sortBy, sortDir, apiUrl]);
+  }, [query, page, pageSize, filters, sortBy, sortDir, apiUrl, resolvedFacets]);
 
   // Page change triggers search
   const setPage = useCallback((newPage: number) => {
