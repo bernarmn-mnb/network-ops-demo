@@ -107,7 +107,7 @@ Examples of strong concepts by vertical:
 - **Healthcare**: Patient intake assistant with symptom triage, clinical search, and referral suggestions — the clinician gets structured recommendations instead of raw search results
 
 If workflows were identified in the Strategy phase, propose how they integrate into the custom pages:
-- **Escalation buttons** on result cards that trigger a workflow with one click (see FaultDiagnosisPage for the pattern)
+- **Escalation buttons** on result cards that trigger a workflow with one click (see `docs/CUSTOM_PAGE_PATTERNS.md`)
 - **Workflow management page** for deploying, running, and monitoring automation recipes
 - **Recipe library** with domain-specific YAML templates that non-technical users can deploy
 - The key UX principle: workflows should feel like a natural extension of the search/chat experience, not a separate tool
@@ -137,7 +137,7 @@ Create an epic and prioritised child tasks:
 5. **Workflows** (if applicable) — deploy escalation/triage/reporting workflows, create YAML recipes, wire into custom pages
 6. **Demo guide** — talking points and demo flow (include workflow track if applicable)
 7. **Testing** — dry run, edge cases, fallback plan
-7. If Cloud Run delivery was chosen, add deployment tasks (build, deploy, verify IAP access)
+8. If Cloud Run delivery was chosen, add deployment tasks (build, deploy, verify IAP access)
 
 Link child tasks to the epic. Set priorities based on the timeline.
 

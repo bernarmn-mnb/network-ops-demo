@@ -97,8 +97,9 @@ steps:
       body:
         size: 0
         query:
-          match:
-            _all: "{{ inputs.topic }}"
+          multi_match:
+            query: "{{ inputs.topic }}"
+            fields: ["*"]
         aggs:
           by_category:
             terms:

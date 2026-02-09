@@ -444,6 +444,7 @@ function ExecutionStatus({ execution }: { execution: WorkflowExecution }) {
     completed: 'success' as const,
     failed: 'danger' as const,
     cancelled: 'warning' as const,
+    skipped: 'hollow' as const,
   }
 
   return (
@@ -513,9 +514,7 @@ function RecipeCard({
     <>
       <EuiFlexGroup alignItems="center" gutterSize="m" responsive={false}>
         <EuiFlexItem grow={false}>
-          <EuiToolTip content={recipe.triggerType}>
-            <EuiIcon type={recipe.icon} size="l" color={recipe.color} />
-          </EuiToolTip>
+          <EuiIcon type="pipelineApp" size="l" color="primary" />
         </EuiFlexItem>
         <EuiFlexItem>
           <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>
@@ -523,7 +522,7 @@ function RecipeCard({
               <EuiText size="s"><strong>{recipe.name}</strong></EuiText>
             </EuiFlexItem>
             <EuiFlexItem grow={false}>
-              <EuiBadge color={recipe.color}>{recipe.triggerType}</EuiBadge>
+              <EuiBadge color="hollow">on_demand</EuiBadge>
             </EuiFlexItem>
           </EuiFlexGroup>
           <EuiSpacer size="xs" />

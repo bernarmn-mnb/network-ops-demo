@@ -230,7 +230,7 @@
 - [ ] Add `WORKFLOWS_API_KEY` and `WORKFLOWS_KIBANA_URL` to `backend/.env`
 - [ ] Write domain-specific YAML recipes in `frontend/src/config/workflowRecipes.ts`
 - [ ] Deploy recipes and verify execution via Workflows page
-- [ ] Wire escalation/action buttons into custom pages (see FaultDiagnosisPage pattern)
+- [ ] Wire escalation/action buttons into custom pages (see `docs/CUSTOM_PAGE_PATTERNS.md`)
 - [ ] Add workflow demo track to `demoTracks.ts`
 - [ ] See `hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md` for full pattern
 
