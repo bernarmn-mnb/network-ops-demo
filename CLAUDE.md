@@ -22,15 +22,19 @@ This project uses a shared knowledge base at `./hive-mind` (git submodule).
 
 ### AFTER SETUP (New Demo Session)
 
-When `.setup-complete` exists AND `DEMO_PLAN.md` does NOT exist:
-- This is a new demo session — read and follow `docs/prompts/WELCOME_PROMPT.md`
-
-When `.setup-complete` exists AND `DEMO_PLAN.md` DOES exist:
+When `DEMO_PLAN.md` exists:
 - This is a returning session — read `DEMO_PLAN.md` for context
 - Run `bd ready` to pick up where the last session left off
 
+When `DEMO_PLAN.md` does NOT exist:
+- This is a new demo session — read and follow `docs/prompts/WELCOME_PROMPT.md`
+
 When `.setup-complete` does NOT exist:
-- Tell the user to run `./setup.sh` first
+- **Do NOT hard-stop.** Check if the environment is actually functional:
+  run `./dev status` and check if `backend/.env` exists.
+- If servers are running or `.env` is configured, proceed normally with a brief note:
+  > "I notice `./setup.sh` hasn't been run yet, but the environment looks functional. If you hit issues, running `./setup.sh` can fix them."
+- If nothing is configured (no `backend/.env`, no servers), then suggest running `./setup.sh`.
 
 ### ALWAYS Index These Directories
 - `./hive-mind/patterns/` - Reusable architecture patterns
