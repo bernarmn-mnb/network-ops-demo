@@ -220,7 +220,7 @@
 - [ ] Add route in `App.tsx`
 - [ ] Register in `NAV_PAGES` in `demoConfig.ts`
 - [ ] Style with `var(--brand-*)` CSS variables and EUI components
-- [ ] See `docs/PAGES.md` and `docs/COMPONENT_REGISTRY.md` for patterns
+- [ ] See `docs/CUSTOM_PAGE_PATTERNS.md` for patterns
 
 #### Phase 4c: Demo Polish (Priority: Medium)
 

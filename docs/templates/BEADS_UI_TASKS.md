@@ -116,4 +116,4 @@ bd create "End-to-end demo walkthrough" \
 - Link all tasks to the demo epic with `bd dep add`
 - Tasks should be created in dependency order: searchConfig before custom pages, demoConfig before walkthrough
 - Always run `bd ready` after creating tasks to verify the dependency graph
-- Reference `docs/PAGES.md` and `docs/COMPONENT_REGISTRY.md` when working on custom page tasks
+- Reference `docs/CUSTOM_PAGE_PATTERNS.md` when working on custom page tasks

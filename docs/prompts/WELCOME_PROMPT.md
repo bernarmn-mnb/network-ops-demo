@@ -105,7 +105,7 @@ Examples of strong concepts by vertical:
 - **Insurance / Public Sector**: Guided policy navigator with step-by-step eligibility flow, document search, and plain-language chat — the citizen gets a clear answer without reading 40 pages of legalese
 - **Healthcare**: Patient intake assistant with symptom triage, clinical search, and referral suggestions — the clinician gets structured recommendations instead of raw search results
 
-Reference `docs/PAGES.md` and `docs/COMPONENT_REGISTRY.md` for implementation patterns, composable hooks, and registration steps.
+Reference `docs/CUSTOM_PAGE_PATTERNS.md` for implementation patterns, composable hooks, and registration steps.
 
 **Ask the SA:**
 
