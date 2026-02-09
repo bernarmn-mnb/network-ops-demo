@@ -79,6 +79,26 @@ A use case is considered **validated** when it has:
 
 ---
 
+### ✅ Workflow Automation (Elastic Workflows)
+
+| Attribute | Details |
+|-----------|---------|
+| **Status** | Validated |
+| **Customer Examples** | [Add customer names/codes here] |
+| **Datasets** | Any indexed content + domain-specific workflow recipes |
+| **Demo Type** | Full demo starter |
+| **Key Features** | YAML workflow recipes, one-click escalation, execution polling, recipe library |
+| **Pattern** | `hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md` |
+
+**What it demonstrates:**
+- Automated operational procedures triggered from search results
+- Chaining ES queries, AI agent calls, and connectors in YAML
+- One-click escalation with real-time status feedback
+- Recipe library for non-technical users to deploy automation
+- Bridge from "find the answer" to "take action" — all inside Elastic
+
+---
+
 ## In Progress
 
 ### 🔄 Recipe/Shopping Cart Assistant
@@ -182,6 +202,7 @@ A use case is considered **validated** when it has:
 
 | Use Case | Dataset Needs | Available | Gap |
 |----------|---------------|-----------|-----|
+| Workflow Automation | Domain data + YAML recipes | ✅ Any indexed content | None |
 | E-commerce Search | Products with images, prices, categories | ✅ Open Food Facts, Icecat | None |
 | Recipe Assistant | Recipes with ingredients, instructions | 🔄 Partial | Need curated set |
 | Fraud Detection | Transactions with fraud labels | ❌ | Need dataset |

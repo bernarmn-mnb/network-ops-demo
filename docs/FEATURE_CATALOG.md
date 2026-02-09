@@ -36,6 +36,7 @@ ______________________________________________________________________
 | **Agent Chat** | Streaming chat with reasoning & tool calls | Kibana URL + API Key + Agent ID | [Agent Builder Integration][agent-integration] |
 | **Multi-Agent (A2A)** | Coordinate multiple specialist agents via LLM router | Agent Builder + LLM Proxy | [A2A Coordinator Pattern][a2a-pattern] |
 | **MCP Tools** | Browse & test Model Context Protocol tools | Agent with MCP configured | [MCP Server Integration][mcp-pattern] |
+| **Workflows** | Chain ES queries, AI calls, and connectors into automated procedures | ES 9.3+ with Workflows enabled | [Workflow Integration][workflow-pattern] |
 | **Conversation Audit** | Review agent reasoning, tool calls, full history | Agent Builder connection | [Audit Page](./PAGES.md#audit-page) |
 
 ______________________________________________________________________
@@ -96,6 +97,9 @@ ______________________________________________________________________
 ### "Multi-agent orchestration"
 → **Full Demo App** + **Multi-Agent (A2A)** + **Conversation Audit**
 
+### "AI assistant with operational automation"
+→ **Full Demo App** + **Agent Chat** + **Workflows** + **Custom Branding**
+
 ### "Performance-focused demo"
 → Any of the above + **Backend APM** + **Search Analytics**
 
@@ -110,6 +114,7 @@ ______________________________________________________________________
 | Search | `ELASTICSEARCH_URL` or `ELASTIC_CLOUD_ID`, `ELASTIC_API_KEY`, `SEARCH_INDEX` |
 | APM/OTel | `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS` |
 | Branding | Nothing required (fully optional) |
+| Workflows | `WORKFLOWS_API_KEY`, `WORKFLOWS_KIBANA_URL` (separate key with `workflowsManagement` privilege) |
 
 ______________________________________________________________________
 
@@ -133,3 +138,4 @@ ______________________________________________________________________
 [esql-analytics]: ../hive-mind/patterns/observability/ESQL_SEARCH_ANALYTICS.md
 [otel-personalisation]: ../hive-mind/patterns/observability/OTEL_PERSONALIZATION_TRACKING.md
 [branding-extraction]: ../hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md
+[workflow-pattern]: ../hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md

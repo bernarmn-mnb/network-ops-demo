@@ -20,6 +20,7 @@
 | OverlayDemoPage | `pages/OverlayDemoPage.tsx` | Production | FloatingChatWidget overlay showcase |
 | OverlayGuidePage | `pages/OverlayGuidePage.tsx` | Production | Tampermonkey injection guide with script generator |
 | DemoGuidePage | `pages/DemoGuidePage.tsx` | Production | Presenter guide with demo tracks and talking points |
+| WorkflowsPage | `pages/WorkflowsPage.tsx` | Working | Workflow management: health, deploy, run, poll, recipe library |
 | WelcomePage | `pages/WelcomePage.tsx` | Production | Landing page with feature cards and connection status |
 
 ## Frontend Components
@@ -109,6 +110,7 @@
 | auditApi | `services/auditApi.ts` | Production | Conversation history API client |
 | analyticsApi | `services/analyticsApi.ts` | Production | ES|QL search analytics (CTR, MRR, zero-results) |
 | llmProxyApi | `services/llmProxyApi.ts` | Production | A2A coordinator LLM proxy client |
+| workflowsApi | `services/workflowsApi.ts` | Working | Workflows API client (search, deploy, run, poll, cancel) |
 
 ## Backend Routes
 
@@ -125,6 +127,7 @@
 | MCP | `routes/mcp.py` | `/api/mcp` | Production | MCP server proxy (JSON-RPC 2.0) |
 | A2A Chat | `routes/a2a/chat.py` | `/api/a2a` | Production | Coordinator chat with streaming |
 | A2A Health | `routes/a2a/health.py` | `/api/a2a/health` | Production | LLM proxy status check |
+| Workflows | `routes/workflows.py` | `/api/workflows` | Working | Proxy to Kibana Workflows Management API |
 | Agno Demo | `routes/agno_demo.py` | `/api/agno` | Experimental | Agno framework POC |
 
 ## Backend Libraries

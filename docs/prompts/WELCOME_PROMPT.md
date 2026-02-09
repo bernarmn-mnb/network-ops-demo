@@ -75,6 +75,7 @@ Now propose a specific plan. Cover:
 - **Agents**: What should the AI assistant know and do for this customer's domain?
 - **Branding**: Extract from the customer's website, or keep it generic? Before proposing extraction, check whether you have browser tools available (Playwright MCP, built-in browser, etc.) — if you do, offer to extract the brand directly using the technique in `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md`; if not, point the SA to the manual Brand Editor at `/brands`.
 - **Custom UX**: Will we build custom pages, or just configure the defaults? Push toward custom — a domain-specific page (fault dashboard, meal planner, policy navigator) is what separates a compelling demo from a generic one. Even one custom page makes the demo feel purpose-built.
+- **Workflows**: Does the use case have operational procedures that go beyond search and chat? Escalation, triage, reporting, approval chains? Elastic Workflows (Technical Preview, 9.3+) chain ES queries, AI agent calls, and connectors into automated procedures triggered from the UI. This is the bridge from "find the answer" to "take action" — and it differentiates Elastic from search-only competitors. If the customer's pain involves manual handoffs or process automation, workflows are a strong fit. See `hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md` for the pattern and `frontend/src/config/workflowRecipes.ts` for recipe examples.
 - **Delivery**: Localhost or Cloud Run, based on what you discussed
 - **Timeline**: What's realistic given the deadline?
 
@@ -100,10 +101,16 @@ Once the SA agrees on the strategy, shift from *what* to *how it feels*. This is
 - **Why it lands** — what makes this more compelling than a generic search page
 
 Examples of strong concepts by vertical:
-- **Industrial / Field Service**: Fault diagnosis dashboard with severity heatmap, chat advisor, and parts search — the engineer finds the fix in 30 seconds instead of 30 minutes
+- **Industrial / Field Service**: Fault diagnosis dashboard with severity heatmap, chat advisor, parts search, and one-click workflow escalation — the engineer finds the fix in 30 seconds and escalates with one click instead of filling out forms
 - **Retail / Grocery**: Weekly meal planner with drag-and-drop recipe cards, ingredient search, and a shopping list builder — the shopper goes from "what's for dinner" to a full plan in one conversation
 - **Insurance / Public Sector**: Guided policy navigator with step-by-step eligibility flow, document search, and plain-language chat — the citizen gets a clear answer without reading 40 pages of legalese
 - **Healthcare**: Patient intake assistant with symptom triage, clinical search, and referral suggestions — the clinician gets structured recommendations instead of raw search results
+
+If workflows were identified in the Strategy phase, propose how they integrate into the custom pages:
+- **Escalation buttons** on result cards that trigger a workflow with one click (see FaultDiagnosisPage for the pattern)
+- **Workflow management page** for deploying, running, and monitoring automation recipes
+- **Recipe library** with domain-specific YAML templates that non-technical users can deploy
+- The key UX principle: workflows should feel like a natural extension of the search/chat experience, not a separate tool
 
 Reference `docs/CUSTOM_PAGE_PATTERNS.md` for implementation patterns, composable hooks, and registration steps.
 
@@ -127,8 +134,9 @@ Create an epic and prioritised child tasks:
 2. **Branding** — extract and apply customer theme
 3. **Features** — configure the specific capabilities chosen
 4. **Agent setup** — system prompt, tools, knowledge sources
-5. **Demo guide** — talking points and demo flow
-6. **Testing** — dry run, edge cases, fallback plan
+5. **Workflows** (if applicable) — deploy escalation/triage/reporting workflows, create YAML recipes, wire into custom pages
+6. **Demo guide** — talking points and demo flow (include workflow track if applicable)
+7. **Testing** — dry run, edge cases, fallback plan
 7. If Cloud Run delivery was chosen, add deployment tasks (build, deploy, verify IAP access)
 
 Link child tasks to the epic. Set priorities based on the timeline.

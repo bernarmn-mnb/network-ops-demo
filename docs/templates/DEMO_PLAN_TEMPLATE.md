@@ -140,6 +140,7 @@
 | Analytics | Yes / No | Dashboard: {name} |
 | Branding | Yes / No | Brand: {name} |
 | Overlay Chat | Yes / No | Target site: {url} |
+| Workflows | Yes / No | Recipes: {escalation, triage, etc.} |
 
 ### Branding
 
@@ -222,7 +223,18 @@
 - [ ] Style with `var(--brand-*)` CSS variables and EUI components
 - [ ] See `docs/CUSTOM_PAGE_PATTERNS.md` for patterns
 
-#### Phase 4c: Demo Polish (Priority: Medium)
+#### Phase 4c: Workflows (Priority: Medium, if applicable)
+
+- [ ] Verify Elastic Workflows is enabled on the cluster (9.3+, Technical Preview)
+- [ ] Create `WORKFLOWS_API_KEY` with `workflowsManagement` Kibana privilege
+- [ ] Add `WORKFLOWS_API_KEY` and `WORKFLOWS_KIBANA_URL` to `backend/.env`
+- [ ] Write domain-specific YAML recipes in `frontend/src/config/workflowRecipes.ts`
+- [ ] Deploy recipes and verify execution via Workflows page
+- [ ] Wire escalation/action buttons into custom pages (see FaultDiagnosisPage pattern)
+- [ ] Add workflow demo track to `demoTracks.ts`
+- [ ] See `hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md` for full pattern
+
+#### Phase 4d: Demo Polish (Priority: Medium)
 
 - [ ] Update `DemoGuidePage` with domain-specific tracks and talking points
 - [ ] Set `DEMO_TITLE` and `DEMO_SUBTITLE` in `demoConfig.ts`
