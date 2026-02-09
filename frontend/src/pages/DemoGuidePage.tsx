@@ -47,9 +47,11 @@ import { AppHeader } from '../components/layout/AppHeader'
 /**
  * Basic demo info - UPDATE THESE for your demo
  */
+import { DEMO_TITLE, DEMO_SUBTITLE } from '../config/demoConfig'
+
 const DEMO_CONFIG = {
-  title: 'Demo Guide',
-  subtitle: 'Choose your demo track and follow the guided flow',
+  title: DEMO_TITLE || 'Demo Guide',
+  subtitle: DEMO_SUBTITLE || 'Choose your demo track and follow the guided flow',
 }
 
 /**

@@ -33,7 +33,7 @@ Do all of this silently before opening the conversation.
 
 ## The Conversation
 
-This is not a questionnaire. It's a collaborative brainstorm with four natural beats. Follow the energy of the conversation — don't force transitions.
+This is not a questionnaire. It's a collaborative brainstorm with five natural beats: Opening → Discovery → Strategy → UX Design → Plan Creation. Follow the energy of the conversation — don't force transitions.
 
 ### Opening
 
@@ -74,6 +74,7 @@ Now propose a specific plan. Cover:
 - **Experience**: Which features tell the story? (search, chat, multi-agent, analytics — don't use all of them)
 - **Agents**: What should the AI assistant know and do for this customer's domain?
 - **Branding**: Extract from the customer's website, or keep it generic? Before proposing extraction, check whether you have browser tools available (Playwright MCP, built-in browser, etc.) — if you do, offer to extract the brand directly using the technique in `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md`; if not, point the SA to the manual Brand Editor at `/brands`.
+- **Custom UX**: Will we build custom pages, or just configure the defaults? Push toward custom — a domain-specific page (fault dashboard, meal planner, policy navigator) is what separates a compelling demo from a generic one. Even one custom page makes the demo feel purpose-built.
 - **Delivery**: Localhost or Cloud Run, based on what you discussed
 - **Timeline**: What's realistic given the deadline?
 
@@ -86,6 +87,33 @@ If custom data is needed, explain what you'd generate and why. Guide the SA to p
 > "That's my proposed approach. Does this feel right, or would you adjust anything?"
 
 Do not build anything until the SA confirms or adjusts the proposal.
+
+### UX Design
+
+Once the SA agrees on the strategy, shift from *what* to *how it feels*. This is where you design experiences, not features.
+
+**Propose 2-3 custom page concepts** tailored to the domain. Don't just describe functionality — paint a picture of what the audience would see and why it would make them lean forward. For each concept, describe:
+
+- **What the page does** — the user experience in one sentence
+- **What data it shows** — which fields, aggregations, or agent responses it surfaces
+- **Which hooks it composes** — `useAgentChat` (chat state), `useSearchSimple` (search state), `useA2AChat` (multi-agent), `ChatContainer` ref (external message triggers)
+- **Why it lands** — what makes this more compelling than a generic search page
+
+Examples of strong concepts by vertical:
+- **Industrial / Field Service**: Fault diagnosis dashboard with severity heatmap, chat advisor, and parts search — the engineer finds the fix in 30 seconds instead of 30 minutes
+- **Retail / Grocery**: Weekly meal planner with drag-and-drop recipe cards, ingredient search, and a shopping list builder — the shopper goes from "what's for dinner" to a full plan in one conversation
+- **Insurance / Public Sector**: Guided policy navigator with step-by-step eligibility flow, document search, and plain-language chat — the citizen gets a clear answer without reading 40 pages of legalese
+- **Healthcare**: Patient intake assistant with symptom triage, clinical search, and referral suggestions — the clinician gets structured recommendations instead of raw search results
+
+Reference `hive-mind/patterns/elastic/CUSTOM_PAGE_PATTERNS.md` for implementation patterns, composable hooks, and registration steps.
+
+**Ask the SA:**
+
+> "Here are a few ideas for custom pages that would make this demo stand out. Which of these would land best with your audience — or does something else come to mind?"
+
+Don't force all concepts — one well-built custom page beats three half-baked ones. But always push for at least one custom page. Configuring defaults is necessary but not sufficient.
+
+**Pause here.** Only after the SA picks their favourite concept(s) do you move to Plan Creation.
 
 ### Plan Creation
 

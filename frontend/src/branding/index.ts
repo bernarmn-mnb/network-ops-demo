@@ -328,22 +328,30 @@ export const brands: Record<string, BrandTheme> = brandsRegistry
  * Get brand from URL parameter or localStorage
  */
 export function getSelectedBrandId(): string {
-  // Check URL parameter first
   if (typeof window !== 'undefined') {
+    // Check URL parameter first — and persist it so the brand "sticks"
     const params = new URLSearchParams(window.location.search)
     const urlBrand = params.get('brand')
     if (urlBrand && brands[urlBrand]) {
+      localStorage.setItem('selected-brand', urlBrand)
       return urlBrand
     }
-    
+
     // Check localStorage
     const storedBrand = localStorage.getItem('selected-brand')
     if (storedBrand && brands[storedBrand]) {
       return storedBrand
     }
+
+    // If there's exactly one non-default brand, use it
+    // (common case: demo has been customised for a single customer)
+    const customBrands = Object.keys(brands).filter(id => id !== 'default')
+    if (customBrands.length === 1) {
+      return customBrands[0]
+    }
   }
-  
-  return 'default'  // Default to Elastic branding
+
+  return 'default'
 }
 
 /**

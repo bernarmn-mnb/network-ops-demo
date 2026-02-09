@@ -1,22 +1,44 @@
 /**
  * Search Configuration
- * 
+ *
  * This file defines how the search page behaves - what index to search,
  * which fields to use, how to display results, and what filters to show.
- * 
+ *
+ * AUTO-POPULATION GUIDE (for build agents):
+ *
+ * After indexing data, discover fields by hitting:
+ *   GET /api/search/fields
+ *
+ * The response includes a `suggested_config` object — map it directly
+ * into this config. Always populate `display`, `facets`, and `rangeFilters`.
+ * Never leave the defaults from the template.
+ *
+ * Field mapping checklist:
+ *   - `index`: Set to your actual index name (from backend/.env SEARCH_INDEX)
+ *   - `fields.search`: Text fields with boosts (title^3, description^1, etc.)
+ *   - `display.title`: The primary text field (product name, article title, etc.)
+ *   - `display.subtitle`: Secondary text (brand, author, category)
+ *   - `display.description`: Body text or summary
+ *   - `display.image`: URL field for thumbnails (check URLs are valid!)
+ *   - `display.price`: Numeric price field (will format as currency)
+ *   - `display.badges`: Keyword fields shown as tags (category, status, type)
+ *   - `facets`: Keyword-type fields for sidebar filters (GET /api/search/fields shows types)
+ *   - `rangeFilters`: Numeric fields for sliders (price, rating, date ranges)
+ *   - `sortOptions`: Fields users would want to sort by (price, date, rating, relevance)
+ *
  * CUSTOMIZATION GUIDE (for LLM agents):
- * 
+ *
  * 1. To switch to a different index:
  *    - Change `index` to your index name
  *    - Update `fields.search` with your searchable fields
  *    - Update `fields.display` to map your fields to the UI
  *    - Update `facets` with your filterable keyword fields
- * 
+ *
  * 2. To add advanced relevancy (boosting, LTR, personalization):
  *    - Change `queryTemplate` to an advanced template name
  *    - Add any required `templateVars`
  *    - See backend/app/elasticsearch/templates/queries/ for available templates
- * 
+ *
  * 3. To add custom query logic:
  *    - Create a new template in templates/queries/
  *    - Or add a modifier in backend/app/elasticsearch/modifiers/

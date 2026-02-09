@@ -255,45 +255,78 @@ def _check_field_exists(es, index: str, field: str) -> bool:
         return False
 
 
+def _get_semantic_fields(es, index: str) -> list[str]:
+    """Get all semantic_text fields from the index mapping."""
+    try:
+        mapping = es.indices.get_mapping(index=index)
+        if index in mapping:
+            props = mapping[index]["mappings"].get("properties", {})
+        else:
+            first_index = next(iter(mapping))
+            props = mapping[first_index]["mappings"].get("properties", {})
+
+        semantic_fields = []
+        for field_name, field_info in props.items():
+            if field_info.get("type") == "semantic_text":
+                semantic_fields.append(field_name)
+        return semantic_fields
+    except Exception as e:
+        logger.warning(f"Could not get semantic fields for {index}: {e}")
+        return []
+
+
 def _build_robust_query(es, index: str, request: SearchRequest) -> dict:
     """Build Elasticsearch query with robust defaults.
 
     Strategy:
-    1. Try multi_match on known fields if they exist
-    2. Fall back to simple_query_string on all fields
-    3. Add aggregations only for fields that exist
+    1. Check for semantic_text fields and use semantic queries for them
+    2. Also include keyword matching on keyword fields
+    3. Fall back to simple_query_string on text fields
+    4. Add aggregations only for fields that exist
     """
     # Build bool query
     bool_query: dict[str, Any] = {}
 
     # Text search
     if request.query and request.query.strip():
-        # Try to use configured fields first
-        search_fields = SEARCH_CONFIG["searchFields"]
-
-        # Check if any configured fields exist
+        semantic_fields = _get_semantic_fields(es, index)
         text_fields = _get_index_text_fields(es, index)
 
-        if text_fields:
-            # Use simple_query_string which searches all text fields by default
-            # This is the most robust approach for unknown schemas
+        if semantic_fields:
+            # Build hybrid query: semantic on semantic_text fields + keyword matching
+            should_clauses = []
+            for sf in semantic_fields:
+                should_clauses.append({
+                    "semantic": {"field": sf, "query": request.query}
+                })
+            # Also add keyword matching on all keyword fields for exact matches
+            should_clauses.append({
+                "simple_query_string": {
+                    "query": request.query,
+                    "fields": ["*"],
+                    "default_operator": "OR",
+                }
+            })
+            bool_query["must"] = [
+                {"bool": {"should": should_clauses, "minimum_should_match": 1}}
+            ]
+        elif text_fields:
             bool_query["must"] = [
                 {
                     "simple_query_string": {
                         "query": request.query,
-                        "fields": ["*"],  # Search all fields
+                        "fields": ["*"],
                         "default_operator": "AND",
                         "analyze_wildcard": True,
                     }
                 }
             ]
         else:
-            # Fallback to multi_match on configured fields
             bool_query["must"] = [
                 {
                     "multi_match": {
                         "query": request.query,
-                        "fields": search_fields,
+                        "fields": SEARCH_CONFIG["searchFields"],
                         "type": "best_fields",
                         "fuzziness": "AUTO",
                     }
