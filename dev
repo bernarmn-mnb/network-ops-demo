@@ -768,11 +768,12 @@ verify_search() {
     local response
 
     # Test empty query (match_all)
+    local curl_status=0
     response=$(curl -s -X POST "http://localhost:${port}/api/search" \
         -H 'Content-Type: application/json' \
-        -d '{"query":""}' 2>&1)
+        -d '{"query":""}' 2>&1) || curl_status=$?
 
-    if [ $? -ne 0 ]; then
+    if [ "$curl_status" -ne 0 ]; then
         echo -e "${RED}❌ Search endpoint unreachable${NC}"
         exit 1
     fi
@@ -812,9 +813,10 @@ test_search() {
     # Test 1: Semantic query
     echo -e "\n${BLUE}Test 1: Semantic search${NC}"
     echo -e "${DIM}  Query: \"vibration at high speed\"${NC}"
-    local sem_response=$(curl -s -X POST "http://localhost:${port}/api/search" \
+    local sem_response
+    sem_response=$(curl -s -X POST "http://localhost:${port}/api/search" \
         -H 'Content-Type: application/json' \
-        -d '{"query":"vibration at high speed","page_size":3}')
+        -d '{"query":"vibration at high speed","page_size":3}') || true
 
     local sem_total=$(echo "$sem_response" | python3 -c "import sys,json; print(json.load(sys.stdin).get('total',0))" 2>/dev/null)
     local sem_top=$(echo "$sem_response" | python3 -c "
@@ -842,9 +844,10 @@ else:
     # Test 2: Keyword query (part number fragment)
     echo -e "\n${BLUE}Test 2: Keyword search${NC}"
     echo -e "${DIM}  Query: \"ECS-OZONE\"${NC}"
-    local kw_response=$(curl -s -X POST "http://localhost:${port}/api/search" \
+    local kw_response
+    kw_response=$(curl -s -X POST "http://localhost:${port}/api/search" \
         -H 'Content-Type: application/json' \
-        -d '{"query":"ECS-OZONE","page_size":3}')
+        -d '{"query":"ECS-OZONE","page_size":3}') || true
 
     local kw_total=$(echo "$kw_response" | python3 -c "import sys,json; print(json.load(sys.stdin).get('total',0))" 2>/dev/null)
     local kw_top=$(echo "$kw_response" | python3 -c "

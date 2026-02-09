@@ -43,7 +43,7 @@ function MessageBubbleComponent({ message }: MessageBubbleProps) {
         <EuiAvatar
           name={isUser ? 'You' : 'Assistant'}
           iconType={isUser ? 'user' : 'sparkles'}
-          color={isUser ? 'var(--brand-primary, #0077CC)' : 'var(--brand-accent, #00BFB3)'}
+          color={isUser ? '#0077CC' : '#00BFB3'}
           size="m"
         />
       </EuiFlexItem>

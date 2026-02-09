@@ -9,10 +9,11 @@ from pathlib import Path
 from decouple import AutoConfig
 
 
+_config = AutoConfig(search_path=Path(__file__).resolve().parents[1])
+
+
 class Settings:
     """Application settings loaded from environment variables."""
-
-    _config = AutoConfig(search_path=Path(__file__).resolve().parents[1])
 
     # Elastic Configuration
     KIBANA_URL: str = _config("KIBANA_URL", default="")
@@ -63,7 +64,7 @@ class Settings:
     @property
     def BACKEND_URL(self) -> str:
         """Backend URL, dynamically constructed from HOST and PORT when not explicitly set."""
-        explicit = self._config("BACKEND_URL", default="")
+        explicit = _config("BACKEND_URL", default="")
         if explicit:
             return explicit
         host = "localhost" if self.HOST == "0.0.0.0" else self.HOST
@@ -72,7 +73,7 @@ class Settings:
     # CORS Origins - dynamically include frontend port
     @property
     def CORS_ORIGINS(self) -> list[str]:
-        custom = self._config("CORS_ORIGINS", default="")
+        custom = _config("CORS_ORIGINS", default="")
         origins = [
             f"http://localhost:{self.FRONTEND_PORT}",
             f"http://127.0.0.1:{self.FRONTEND_PORT}",

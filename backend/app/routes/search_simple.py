@@ -277,14 +277,22 @@ def _get_semantic_fields(es, index: str) -> list[str]:
             first_index = next(iter(mapping))
             props = mapping[first_index]["mappings"].get("properties", {})
 
-        semantic_fields = []
-        for field_name, field_info in props.items():
-            if field_info.get("type") == "semantic_text":
-                semantic_fields.append(field_name)
+        semantic_fields: list[str] = []
+        _extract_semantic_fields(props, "", semantic_fields)
         return semantic_fields
     except Exception as e:
         logger.warning(f"Could not get semantic fields for {index}: {e}")
         return []
+
+
+def _extract_semantic_fields(properties: dict, prefix: str, result: list):
+    """Recursively extract semantic_text field names from mapping properties."""
+    for field_name, field_info in properties.items():
+        full_name = f"{prefix}{field_name}" if prefix else field_name
+        if field_info.get("type") == "semantic_text":
+            result.append(full_name)
+        elif "properties" in field_info:
+            _extract_semantic_fields(field_info["properties"], f"{full_name}.", result)
 
 
 def _build_robust_query(es, index: str, request: SearchRequest) -> dict:
@@ -316,7 +324,8 @@ def _build_robust_query(es, index: str, request: SearchRequest) -> dict:
                 "simple_query_string": {
                     "query": request.query,
                     "fields": ["*"],
-                    "default_operator": "OR",
+                    "default_operator": "AND",
+                    "analyze_wildcard": True,
                 }
             })
             bool_query["must"] = [

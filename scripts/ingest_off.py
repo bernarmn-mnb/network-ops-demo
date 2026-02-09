@@ -41,10 +41,15 @@ import urllib.error
 from pathlib import Path
 from typing import Any, Generator
 
-# Try to load dotenv if available
+# Load environment: app .env first, then secrets (admin key override)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 try:
     from dotenv import load_dotenv
-    load_dotenv(override=True)
+    load_dotenv(PROJECT_ROOT / "backend" / ".env")
+    secrets_env = PROJECT_ROOT / ".secrets" / "ootb-admin.env"
+    if secrets_env.exists():
+        load_dotenv(secrets_env, override=True)
 except ImportError:
     pass
 
@@ -554,9 +559,15 @@ def main():
         print("\n[DRY RUN] Skipping Elasticsearch indexing.")
         sys.exit(0)
 
-    # Index to Elasticsearch
-    es_url = os.environ.get("ELASTICSEARCH_URL", "http://localhost:9200")
-    api_key = os.environ.get("ELASTIC_API_KEY")
+    # Index to Elasticsearch (prefer ADMIN_API_KEY for write access)
+    es_url = os.environ.get("ELASTICSEARCH_URL", "").rstrip("/")
+    api_key = os.environ.get("ADMIN_API_KEY") or os.environ.get("ELASTIC_API_KEY")
+
+    if not es_url or not api_key:
+        print("\nERROR: ELASTICSEARCH_URL and an API key are required.")
+        print("Set ADMIN_API_KEY in .secrets/ootb-admin.env (write access) or")
+        print("ELASTIC_API_KEY in backend/.env (read-only, may fail on index creation).")
+        sys.exit(1)
 
     print(f"\nIndexing to Elasticsearch...")
     print(f"  URL: {es_url}")

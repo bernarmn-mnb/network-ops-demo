@@ -40,15 +40,18 @@ import urllib.error
 from pathlib import Path
 from typing import Any
 
-# Try to load dotenv if available
+# Load environment: app .env first, then secrets (admin key override)
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+
 try:
     from dotenv import load_dotenv
-    load_dotenv(override=True)
+    load_dotenv(PROJECT_ROOT / "backend" / ".env")
+    secrets_env = PROJECT_ROOT / ".secrets" / "ootb-admin.env"
+    if secrets_env.exists():
+        load_dotenv(secrets_env, override=True)
 except ImportError:
     pass
-
-
-SCRIPT_DIR = Path(__file__).parent
 SAMPLES_DIR = SCRIPT_DIR / "tests" / "icecat_samples"
 DEFAULT_INDEX = "products-icecat"
 
@@ -325,14 +328,13 @@ def main():
         print(json.dumps(display, indent=2))
         sys.exit(0)
 
-    # Check ES credentials
+    # Check ES credentials (prefer ADMIN_API_KEY for write access, fall back to ELASTIC_API_KEY)
     es_url = os.environ.get("ELASTICSEARCH_URL", "").rstrip("/")
-    api_key = os.environ.get("ELASTIC_API_KEY", "")
+    api_key = os.environ.get("ADMIN_API_KEY") or os.environ.get("ELASTIC_API_KEY", "")
     if not es_url or not api_key:
-        print("\nERROR: ELASTICSEARCH_URL and ELASTIC_API_KEY environment variables required.")
-        print("Set them in .env or export them:")
-        print("  export ELASTICSEARCH_URL='https://your-cluster.es.cloud.com'")
-        print("  export ELASTIC_API_KEY='your-api-key'")
+        print("\nERROR: ELASTICSEARCH_URL and an API key are required.")
+        print("Set ADMIN_API_KEY in .secrets/ootb-admin.env (write access) or")
+        print("ELASTIC_API_KEY in backend/.env (read-only, may fail on index creation).")
         sys.exit(1)
 
     # Create index
