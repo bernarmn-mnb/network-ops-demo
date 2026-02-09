@@ -100,6 +100,16 @@ const FEATURES: Feature[] = [
     requirements: {},
     useCase: 'Quickly customize colors and logos for different customers',
   },
+  {
+    id: 'workflows',
+    path: '/workflows',
+    title: 'Workflows',
+    description: 'Deploy, run, and monitor Elastic Workflows. Includes a recipe library with pre-built automation patterns for your domain.',
+    icon: 'pipelineApp',
+    category: 'demo',
+    requirements: { optional: 'Elastic 9.3+ with Workflows enabled' },
+    useCase: 'Automate operational procedures — escalation, triage, reporting — triggered from search results or on demand',
+  },
 
   // Development Tools
   {

@@ -81,6 +81,13 @@ export const NAV_ITEMS: NavItem[] = [
     category: 'demo',
   },
   {
+    path: '/workflows',
+    label: 'Workflows',
+    icon: 'pipelineApp',
+    description: 'Manage and run automated workflows',
+    category: 'demo',
+  },
+  {
     path: '/overlay',
     label: 'Overlay Demo',
     icon: 'popout',

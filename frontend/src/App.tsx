@@ -10,6 +10,7 @@ import { SearchPageSimple } from './pages/SearchPageSimple'
 import { DemoGuidePage } from './pages/DemoGuidePage'
 import { OverlayDemoPage } from './pages/OverlayDemoPage'
 import { OverlayGuidePage } from './pages/OverlayGuidePage'
+import { WorkflowsPage } from './pages/WorkflowsPage'
 
 /**
  * Main App Component
@@ -39,6 +40,7 @@ function App() {
       <Route path="/audit" element={<AuditPage />} />
       <Route path="/mcp" element={<MCPExplorerPage />} />
       <Route path="/search" element={<SearchPageSimple />} />
+      <Route path="/workflows" element={<WorkflowsPage />} />
       <Route path="/overlay" element={<OverlayDemoPage />} />
       <Route path="/overlay-guide" element={<OverlayGuidePage />} />
     </Routes>
