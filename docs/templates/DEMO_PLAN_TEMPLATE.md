@@ -201,12 +201,34 @@
 - [ ] Apply to demo pages
 - [ ] Verify look and feel
 
-#### Phase 4: Demo Flow (Priority: Medium)
+#### Phase 4a: Search Configuration (Priority: Medium)
 
-- [ ] Configure demo prompts
-- [ ] Set up navigation
-- [ ] Create demo guide
-- [ ] Add talking points
+- [ ] Hit `GET /api/search/fields` to discover available fields and `suggested_config`
+- [ ] Populate `searchConfig.ts` with actual index fields (index name, search fields with boosts)
+- [ ] Map display fields: title, description, image, price, badges — based on index mapping
+- [ ] Configure facets from keyword fields (category, brand, status, etc.)
+- [ ] Configure range filters from numeric fields (price, rating, date, etc.)
+- [ ] Set sort options relevant to the domain
+- [ ] Customize `demoPrompts.ts` with domain-specific suggested questions
+- [ ] Set `NAV_PAGES` in `demoConfig.ts` to show only relevant pages
+
+#### Phase 4b: Custom Pages (Priority: Medium)
+
+- [ ] Identify 1-2 custom page concepts (from UX Design brainstorm)
+- [ ] Create page component in `frontend/src/pages/`
+- [ ] Compose from hooks: `useAgentChat`, `useSearchSimple`, `useA2AChat`, `ChatContainer` ref
+- [ ] Add route in `App.tsx`
+- [ ] Register in `NAV_PAGES` in `demoConfig.ts`
+- [ ] Style with `var(--brand-*)` CSS variables and EUI components
+- [ ] See `hive-mind/patterns/elastic/CUSTOM_PAGE_PATTERNS.md` for patterns
+
+#### Phase 4c: Demo Polish (Priority: Medium)
+
+- [ ] Update `DemoGuidePage` with domain-specific tracks and talking points
+- [ ] Set `DEMO_TITLE` and `DEMO_SUBTITLE` in `demoConfig.ts`
+- [ ] Configure demo prompts that tell the story (problem → search → chat → resolution)
+- [ ] End-to-end walkthrough of the demo narrative
+- [ ] Verify all pages render correctly with actual data
 
 #### Phase 5: Testing (Priority: High)
 

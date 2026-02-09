@@ -65,7 +65,7 @@ def infer_purpose(field_name: str) -> str | None:
 
 def is_searchable(field_type: str) -> bool:
     """Determine if a field type is searchable."""
-    searchable_types = {"text", "keyword", "match_only_text"}
+    searchable_types = {"text", "keyword", "match_only_text", "semantic_text"}
     return field_type in searchable_types
 
 
@@ -222,10 +222,10 @@ async def get_fields() -> FieldsResponse:
         # Generate suggested config
         suggested = generate_suggested_config(fields)
 
-        # Check if search is "configured" (has meaningful suggested fields)
-        configured = bool(suggested.get("searchFields")) and bool(
-            suggested.get("display", {}).get("title")
-        )
+        # Check if search is "configured" (has searchable or semantic fields)
+        has_search_fields = bool(suggested.get("searchFields"))
+        has_semantic_fields = any(f.type == "semantic_text" for f in fields)
+        configured = has_search_fields or has_semantic_fields
 
         logger.info(
             f"Discovered {len(fields)} fields in index '{index}', configured={configured}"

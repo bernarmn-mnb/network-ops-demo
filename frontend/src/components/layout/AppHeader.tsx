@@ -14,6 +14,7 @@ import { ThemeToggle } from './ThemeToggle'
 import { BrandSwitcher } from '../branding/BrandSwitcher'
 import { useBrand } from '../providers/BrandedThemeProvider'
 import { getNavItems } from './navigationConfig'
+import { NAV_PAGES } from '../../config/demoConfig'
 
 /**
  * App Header Component
@@ -32,7 +33,9 @@ export function AppHeader() {
   const { brand } = useBrand()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  const navItems = getNavItems()
+  const navItems = getNavItems(
+    NAV_PAGES ? { includeOnly: NAV_PAGES } : undefined
+  )
   const currentPath = location.pathname
 
   // Use header-specific colors if defined, otherwise fall back to primary
