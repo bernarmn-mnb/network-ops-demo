@@ -453,7 +453,7 @@ Want to add a new dataset or agent to the shared project?
 
 ## Related Documentation
 
-- [Elastic Inference Service](../hive-mind/patterns/elastic/ELASTIC_INFERENCE_SERVICE.md)
+- [Elastic Inference Service](../hive-mind/patterns/search/ELASTIC_INFERENCE_SERVICE.md)
 - [Dataset Registry](../hive-mind/patterns/data/DATASET_REGISTRY.md)
-- [Agent Builder Integration](../hive-mind/patterns/elastic/AGENT_BUILDER_INTEGRATION.md)
-- [Agent Builder API Management](../hive-mind/patterns/elastic/AGENT_BUILDER_API_MANAGEMENT.md)
+- [Agent Builder Integration](../hive-mind/patterns/agent-builder/AGENT_BUILDER_INTEGRATION.md)
+- [Agent Builder API Management](../hive-mind/patterns/agent-builder/AGENT_BUILDER_API_MANAGEMENT.md)

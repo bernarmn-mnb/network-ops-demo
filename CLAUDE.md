@@ -73,7 +73,10 @@ When `.setup-complete` does NOT exist:
 
 | Category | Directory | Use When |
 |----------|-----------|----------|
-| **Elastic / Agent Builder** | `hive-mind/patterns/elastic/` | Agent Builder, A2A, MCP, ESQL, OTel, search retrievers, open crawler |
+| **Agent Builder** | `hive-mind/patterns/agent-builder/` | Agent Builder, A2A, MCP, streaming, userscript overlay |
+| **Search** | `hive-mind/patterns/search/` | Retrievers, indexing, ESQL, inference, query rules, LTR |
+| **Observability** | `hive-mind/patterns/observability/` | OTel, browser SDK, ESQL analytics, personalization |
+| **Open Crawler** | `hive-mind/patterns/open-crawler/` | Crawler configs, extraction, Elasticsearch integration |
 | **Agent Frameworks** | `hive-mind/patterns/agent-frameworks/` | Agno coordinator setup, multi-agent with memory |
 | **Data Generation** | `hive-mind/patterns/data/` | Datasets, generators, LLM data creation, fidelity requirements |
 | **Branding** | `hive-mind/patterns/branding/` | Extracting brand themes from websites, component theming |

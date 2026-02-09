@@ -44,7 +44,7 @@ except ValueError as e:
 
 # Initialize OpenTelemetry FIRST (before other middleware)
 # This ensures proper traceparent header extraction for distributed tracing
-# See: hive-mind/patterns/elastic/OTEL_DISTRIBUTED_TRACING.md
+# See: hive-mind/patterns/observability/OTEL_DISTRIBUTED_TRACING.md
 init_otel(app)
 
 # Configure CORS for frontend access (after OTel)

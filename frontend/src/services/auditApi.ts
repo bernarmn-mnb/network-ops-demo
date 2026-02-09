@@ -4,7 +4,7 @@
  * Fetches conversation history from the backend audit API.
  * The backend proxies requests to Elastic Agent Builder's conversation endpoints.
  * 
- * See: hive-mind/patterns/elastic/CONVERSATION_HISTORY_AUDIT.md
+ * See: hive-mind/patterns/agent-builder/CONVERSATION_HISTORY_AUDIT.md
  */
 
 const API_BASE = '/api/audit'

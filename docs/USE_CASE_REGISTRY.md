@@ -50,7 +50,7 @@ A use case is considered **validated** when it has:
 | **Datasets** | Any indexed content |
 | **Demo Type** | Full demo starter |
 | **Key Features** | SSE streaming, reasoning display, tool calls |
-| **Pattern** | `hive-mind/patterns/elastic/AGENT_BUILDER_INTEGRATION.md` |
+| **Pattern** | `hive-mind/patterns/agent-builder/AGENT_BUILDER_INTEGRATION.md` |
 
 **What it demonstrates:**
 - Conversational AI with context
@@ -69,7 +69,7 @@ A use case is considered **validated** when it has:
 | **Datasets** | Multiple domain datasets |
 | **Demo Type** | Full demo starter |
 | **Key Features** | LLM coordinator, agent routing, unified UI |
-| **Pattern** | `hive-mind/patterns/elastic/A2A_COORDINATOR_PATTERN.md` |
+| **Pattern** | `hive-mind/patterns/agent-builder/A2A_COORDINATOR_PATTERN.md` |
 
 **What it demonstrates:**
 - Multiple specialised agents
@@ -90,7 +90,7 @@ A use case is considered **validated** when it has:
 | **Datasets** | Recipe datasets (TBD), grocery products |
 | **Demo Type** | Overlay chat pattern |
 | **Key Features** | Cart-aware recommendations, recipe suggestions, streaming |
-| **Pattern** | `hive-mind/patterns/elastic/USERSCRIPT_INJECTION_PATTERN.md` |
+| **Pattern** | `hive-mind/patterns/agent-builder/USERSCRIPT_INJECTION_PATTERN.md` |
 | **Implementation** | `frontend/src/scripts/overlay-chat.user.js` |
 | **Beads** | elastic-agent-starter-hb3, elastic-agent-starter-5o2 |
 

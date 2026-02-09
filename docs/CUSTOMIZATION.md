@@ -5,7 +5,7 @@ This guide covers customization patterns for chat interfaces. These configuratio
 > **Which chat component do I need?**
 > - **ChatContainer** — Full-page chat for the demo app ([details below](#quick-prompts))
 > - **FloatingChatWidget** — Floating overlay for embedding in any page ([details](#floatingchatwidget))
-> - **Overlay Userscript** — Inject onto external websites ([Overlay Pattern](../hive-mind/patterns/elastic/USERSCRIPT_INJECTION_PATTERN.md))
+> - **Overlay Userscript** — Inject onto external websites ([Overlay Pattern](../hive-mind/patterns/agent-builder/USERSCRIPT_INJECTION_PATTERN.md))
 
 ______________________________________________________________________
 
@@ -326,7 +326,7 @@ For injecting chat onto websites you don't control (customer's live site), use t
 - Works on sites with strict CSP (uses `GM_xmlhttpRequest`)
 - Configurable via Tampermonkey menu
 
-**Full documentation**: [Overlay Pattern](../hive-mind/patterns/elastic/USERSCRIPT_INJECTION_PATTERN.md)
+**Full documentation**: [Overlay Pattern](../hive-mind/patterns/agent-builder/USERSCRIPT_INJECTION_PATTERN.md)
 
 ______________________________________________________________________
 

@@ -378,7 +378,7 @@ User Query
 └───────┘ └───────┘ └───────┘
 ```
 
-See `hive-mind/patterns/elastic/A2A_COORDINATOR_PATTERN.md` for details.
+See `hive-mind/patterns/agent-builder/A2A_COORDINATOR_PATTERN.md` for details.
 
 ______________________________________________________________________
 

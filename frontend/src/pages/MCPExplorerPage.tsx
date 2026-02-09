@@ -19,7 +19,7 @@
  * - GET /api/mcp/tools - List all available tools
  * - POST /api/mcp/tools/call - Execute a tool with arguments
  * 
- * @see hive-mind/patterns/elastic/MCP_SERVER_INTEGRATION.md for protocol details
+ * @see hive-mind/patterns/agent-builder/MCP_SERVER_INTEGRATION.md for protocol details
  */
 
 import { useState, useEffect, useCallback } from 'react'

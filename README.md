@@ -290,7 +290,7 @@ Demo AI on any website without modifying their code:
 - ✅ Auto-fetches branding from backend
 - ✅ Works on sites with strict CSP
 
-See [Overlay Pattern](./hive-mind/patterns/elastic/USERSCRIPT_INJECTION_PATTERN.md) for setup.
+See [Overlay Pattern](./hive-mind/patterns/agent-builder/USERSCRIPT_INJECTION_PATTERN.md) for setup.
 
 ### 📊 Analytics
 

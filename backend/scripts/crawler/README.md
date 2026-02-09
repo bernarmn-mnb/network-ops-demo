@@ -188,9 +188,9 @@ urltest → validate → console crawl → file crawl → validate results → i
 
 ## Related Documentation
 
-- [Open Crawler Quickstart](../../../hive-mind/patterns/elastic/open-crawler-quickstart.md)
-- [Open Crawler Elasticsearch Integration](../../../hive-mind/patterns/elastic/open-crawler-elasticsearch.md)
-- [Agent Builder API Management](../../../hive-mind/patterns/elastic/AGENT_BUILDER_API_MANAGEMENT.md)
+- [Open Crawler Quickstart](../../../hive-mind/patterns/open-crawler/OPEN_CRAWLER_QUICKSTART.md)
+- [Open Crawler Elasticsearch Integration](../../../hive-mind/patterns/open-crawler/OPEN_CRAWLER_ELASTICSEARCH.md)
+- [Agent Builder API Management](../../../hive-mind/patterns/agent-builder/AGENT_BUILDER_API_MANAGEMENT.md)
 - [Shared Serverless Project](../../../docs/SHARED_SERVERLESS_PROJECT.md)
 
 ## Notes

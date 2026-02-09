@@ -17,7 +17,7 @@ MCP Protocol:
     The Elastic MCP server uses JSON-RPC 2.0 over HTTP POST.
     All requests require specific headers including Accept: application/json.
     
-    See: hive-mind/patterns/elastic/MCP_SERVER_INTEGRATION.md
+    See: hive-mind/patterns/agent-builder/MCP_SERVER_INTEGRATION.md
 
 Note:
     This implementation uses raw httpx for simplicity rather than the official

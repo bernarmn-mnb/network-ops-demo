@@ -324,7 +324,7 @@ ______________________________________________________________________
 
 The hive-mind is missing a pattern for MCP integration. This research supports creating:
 
-- `hive-mind/patterns/elastic/MCP_SERVER_INTEGRATION.md`
+- `hive-mind/patterns/agent-builder/MCP_SERVER_INTEGRATION.md`
 
 ______________________________________________________________________
 

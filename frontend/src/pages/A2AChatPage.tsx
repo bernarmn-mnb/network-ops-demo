@@ -86,7 +86,7 @@ const CLIENT_FUNCTIONS: ClientFunctionDef[] = [
  * 2. **Add agents in Agent Builder** - They're auto-discovered via A2A cards
  * 3. **Customize system prompt** - Tell the coordinator how to route requests
  * 
- * See `hive-mind/patterns/elastic/A2A_COORDINATOR_PATTERN.md` for full guide.
+ * See `hive-mind/patterns/agent-builder/A2A_COORDINATOR_PATTERN.md` for full guide.
  */
 export function A2AChatPage() {
   const { brand } = useBrand()

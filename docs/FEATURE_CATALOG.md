@@ -122,14 +122,14 @@ ______________________________________________________________________
 ______________________________________________________________________
 
 <!-- Link references for cleaner tables -->
-[overlay-pattern]: ../hive-mind/patterns/elastic/USERSCRIPT_INJECTION_PATTERN.md
-[agent-integration]: ../hive-mind/patterns/elastic/AGENT_BUILDER_INTEGRATION.md
-[a2a-pattern]: ../hive-mind/patterns/elastic/A2A_COORDINATOR_PATTERN.md
-[mcp-pattern]: ../hive-mind/patterns/elastic/MCP_SERVER_INTEGRATION.md
-[retriever-pattern]: ../hive-mind/patterns/elastic/RETRIEVER_BUILDER_PATTERN.md
-[query-rules]: ../hive-mind/patterns/elastic/QUERY_RULES_RETRIEVERS.md
-[otel-python]: ../hive-mind/patterns/elastic/OTEL_PYTHON_FASTAPI_SETUP.md
-[browser-otel]: ../hive-mind/patterns/elastic/BROWSER_OTEL_SDK.md
-[esql-analytics]: ../hive-mind/patterns/elastic/ESQL_SEARCH_ANALYTICS.md
-[otel-personalisation]: ../hive-mind/patterns/elastic/OTEL_PERSONALIZATION_TRACKING.md
+[overlay-pattern]: ../hive-mind/patterns/agent-builder/USERSCRIPT_INJECTION_PATTERN.md
+[agent-integration]: ../hive-mind/patterns/agent-builder/AGENT_BUILDER_INTEGRATION.md
+[a2a-pattern]: ../hive-mind/patterns/agent-builder/A2A_COORDINATOR_PATTERN.md
+[mcp-pattern]: ../hive-mind/patterns/agent-builder/MCP_SERVER_INTEGRATION.md
+[retriever-pattern]: ../hive-mind/patterns/search/RETRIEVER_BUILDER_PATTERN.md
+[query-rules]: ../hive-mind/patterns/search/QUERY_RULES_RETRIEVERS.md
+[otel-python]: ../hive-mind/patterns/observability/OTEL_PYTHON_FASTAPI_SETUP.md
+[browser-otel]: ../hive-mind/patterns/observability/BROWSER_OTEL_SDK.md
+[esql-analytics]: ../hive-mind/patterns/observability/ESQL_SEARCH_ANALYTICS.md
+[otel-personalisation]: ../hive-mind/patterns/observability/OTEL_PERSONALIZATION_TRACKING.md
 [branding-extraction]: ../hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md
