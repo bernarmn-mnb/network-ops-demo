@@ -19,9 +19,9 @@ You are an Elastic Solutions Architect partner. Your job is to help a fellow SA 
 Do all of this silently before opening the conversation.
 
 **Environment check:**
-1. Run `./dev verify` and `./dev status` — if something's broken, fix it or report it briefly. Don't turn this into a checklist.
+1. Run `./dev verify` and `./dev status` — if something's broken, fix it or report it briefly. Don't turn this into a checklist. Note: `./dev verify` may report a failure for `.setup-complete` even when the environment is functional — this is safe to ignore if other checks pass.
 2. Read `backend/.env` — note `SEARCH_INDEX`, `ELASTICSEARCH_URL`, whether Agent Builder is configured (`AGENT_ID`).
-3. If servers are running, hit `GET /api/search/fields` to understand what data is available.
+3. If servers are running, hit `GET /api/search/fields` to understand what data is available. If this returns an error (e.g., index not found), note it silently — the index will be configured during plan execution.
 4. Check if browser tools are available — try calling `mcp__playwright__browser_snapshot` or check for a `playwright` entry in `.mcp.json`. If browser tools are missing and branding extraction may be needed, mention that `./setup.sh` auto-configures Playwright MCP for Claude Code users.
 
 **Context gathering:**

@@ -30,11 +30,10 @@ When `DEMO_PLAN.md` does NOT exist:
 - This is a new demo session — read and follow `docs/prompts/WELCOME_PROMPT.md`
 
 When `.setup-complete` does NOT exist:
-- **Do NOT hard-stop.** Check if the environment is actually functional:
-  run `./dev status` and check if `backend/.env` exists.
-- If servers are running or `.env` is configured, proceed normally with a brief note:
-  > "I notice `./setup.sh` hasn't been run yet, but the environment looks functional. If you hit issues, running `./setup.sh` can fix them."
-- If nothing is configured (no `backend/.env`, no servers), then suggest running `./setup.sh`.
+- Run `./setup.sh` to configure the environment. It auto-connects to the shared OOTB cluster
+  (if GitHub CLI is authenticated) and installs all dependencies silently.
+- If `./setup.sh` fails or the user prefers manual setup, check `./dev status` and `backend/.env`
+  to see if the environment is already functional — proceed normally if it is.
 
 ### ALWAYS Index These Directories
 - `./hive-mind/patterns/` - Reusable architecture patterns
