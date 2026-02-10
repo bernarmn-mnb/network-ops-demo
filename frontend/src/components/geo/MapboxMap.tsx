@@ -57,20 +57,6 @@ export function MapboxMap({
   const mapRef = useRef<MapRef>(null)
   const lastFitSeq = useRef(0)
 
-  // No token warning
-  if (!MAPBOX_TOKEN) {
-    return (
-      <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
-        <EuiText color="subdued" textAlign="center">
-          <p>
-            <strong>Mapbox token not configured.</strong><br />
-            Set <code>VITE_MAPBOX_TOKEN</code> in your environment or switch to Leaflet.
-          </p>
-        </EuiText>
-      </div>
-    )
-  }
-
   // Respond to fit-bounds requests
   useEffect(() => {
     if (fitBoundsSeq > lastFitSeq.current && fitBoundsTarget && mapRef.current) {
@@ -109,6 +95,20 @@ export function MapboxMap({
     },
     [onMapClick],
   )
+
+  // No token — early return AFTER all hooks
+  if (!MAPBOX_TOKEN) {
+    return (
+      <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
+        <EuiText color="subdued" textAlign="center">
+          <p>
+            <strong>Mapbox token not configured.</strong><br />
+            Set <code>VITE_MAPBOX_TOKEN</code> in your environment or switch to Leaflet.
+          </p>
+        </EuiText>
+      </div>
+    )
+  }
 
   // Build heatmap GeoJSON
   const heatmapGeoJSON: GeoJSON.FeatureCollection = {
