@@ -207,7 +207,7 @@ export function MapControls({
         <EuiFlexItem>
           <EuiButton
             size="s"
-            iconType="locate"
+            iconType="mapMarker"
             onClick={requestUserLocation}
             isLoading={locationLoading}
             fullWidth
