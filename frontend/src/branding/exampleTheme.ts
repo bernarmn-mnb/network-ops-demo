@@ -1,14 +1,22 @@
 /**
  * Example Brand Theme Template
- * 
+ *
  * Copy this file to create a new brand theme:
  * 1. Duplicate as [yourBrand]Theme.ts
  * 2. Replace the values with your extracted/designed branding
  * 3. The brand will be auto-discovered and registered!
- * 
+ *
+ * Extraction Priority (for AI agents):
+ * 1. Logo (MANDATORY — always extract, embed as SVG data URL or save to /brands/[id]/logos/)
+ * 2. Colors + fonts (required)
+ * 3. Gradients (extract from hero sections, buttons, backgrounds)
+ * 4. Hero imagery (og:image, hero sections → save to /brands/[id]/images/)
+ * 5. Font files (download @font-face sources → save to /brands/[id]/fonts/)
+ * 6. Favicon
+ *
  * For AI-powered extraction, see:
  * hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md
- * 
+ *
  * For a complete example with all options, see:
  * govukTheme.ts - demonstrates every branding capability
  */
@@ -167,7 +175,7 @@ export const exampleBranding = {
     .brand-card {
       border-left: 4px solid var(--brand-primary);
     }
-    
+
     /* Example: Custom badge */
     .brand-badge {
       background-color: var(--brand-primary);
@@ -178,14 +186,79 @@ export const exampleBranding = {
       font-weight: 600;
     }
   `,
+
+  // ============================================================================
+  // Optional: Visual Fidelity — Gradients
+  // ============================================================================
+
+  // Many modern brands use gradients as signature elements.
+  // Extract from hero sections, CTAs, and background elements.
+  gradients: {
+    primary: 'linear-gradient(135deg, #11B67A 0%, #0BE248 100%)',  // Main brand gradient
+    accent: 'linear-gradient(90deg, #0BE248 0%, #11B67A 100%)',    // Secondary gradient
+    hero: 'linear-gradient(180deg, #11B67A 0%, #0A8A5C 50%, #064D33 100%)', // Hero section overlay
+  },
+
+  // ============================================================================
+  // Optional: Visual Fidelity — Hero Image
+  // ============================================================================
+
+  // Hero/banner image for landing pages. Save locally to avoid CORS.
+  // Download to: frontend/public/brands/[brandId]/images/hero.jpg
+  heroImage: {
+    url: '/brands/example/images/hero.jpg',  // Local path (recommended) or external URL
+    alt: 'Example Brand Hero',
+    position: 'center',           // CSS background-position
+    overlay: 'rgba(0, 0, 0, 0.4)', // Dark overlay for text readability
+  },
+
+  // ============================================================================
+  // Optional: Visual Fidelity — Background Pattern
+  // ============================================================================
+
+  // Repeating background pattern for sections. Can be a URL or CSS pattern.
+  backgroundPattern: 'url(/brands/example/images/pattern.svg)',
+
+  // ============================================================================
+  // Optional: Visual Fidelity — Custom Font Loading (@font-face)
+  // ============================================================================
+
+  // Download font files to frontend/public/brands/[brandId]/fonts/
+  // The family name MUST match what's referenced in fonts.heading or fonts.body above
+  fontFaces: [
+    {
+      family: 'Your Brand Font',         // Must match fonts.heading reference
+      src: "url('/brands/example/fonts/brand-regular.woff2') format('woff2')",
+      weight: '400',
+      style: 'normal',
+      display: 'swap',                   // 'swap' recommended for fast rendering
+    },
+    {
+      family: 'Your Brand Font',
+      src: "url('/brands/example/fonts/brand-bold.woff2') format('woff2')",
+      weight: '700',
+      style: 'normal',
+      display: 'swap',
+    },
+  ],
+
+  // ============================================================================
+  // Optional: Visual Fidelity — Favicon
+  // ============================================================================
+
+  // Replace default favicon when brand is active
+  favicon: '/brands/example/favicon.ico',
 }
 
 /**
  * EUI Theme Modifications (optional)
- * 
+ *
  * Apply these overrides to EuiProvider for deeper EUI integration.
  * Note: Most styling is handled via CSS variables from the branding above.
  * This is for advanced EUI-specific customization.
+ *
+ * Visual fidelity fields (gradients, heroImage, fontFaces, favicon, backgroundPattern)
+ * do NOT need EUI-specific overrides — they are applied via BrandedThemeProvider.
  */
 export const exampleEuiTheme = {
   colors: {

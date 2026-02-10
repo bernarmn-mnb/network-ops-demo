@@ -46,9 +46,52 @@ export function BrandedDemoPage() {
       <EuiSpacer size="xxl" />
       <EuiSpacer size="xxl" />
 
+      {/* Visual Hero — renders when brand has a hero image or gradient */}
+      {(brand.heroImage || brand.gradients?.hero) && (
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            minHeight: '320px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            ...(brand.heroImage
+              ? {
+                  backgroundImage: `url(${brand.heroImage.url})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: brand.heroImage.position || 'center',
+                }
+              : {
+                  background: brand.gradients!.hero,
+                }),
+          }}
+        >
+          {/* Overlay for hero images to ensure text readability */}
+          {brand.heroImage && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundColor: brand.heroImage.overlay || 'rgba(0, 0, 0, 0.5)',
+              }}
+            />
+          )}
+          <div style={{ position: 'relative', textAlign: 'center', padding: '48px 24px', maxWidth: '700px' }}>
+            <EuiTitle size="l">
+              <h1 style={{ color: '#FFFFFF', marginBottom: '16px' }}>{brand.name}</h1>
+            </EuiTitle>
+            <EuiText style={{ color: 'rgba(255,255,255,0.9)' }}>
+              <p>AI-powered assistant, styled with branding extracted from {brand.sourceUrl || 'your website'}.</p>
+            </EuiText>
+          </div>
+        </div>
+      )}
+
       <EuiPageTemplate panelled={false} grow={true} restrictWidth={1000}>
         <EuiPageTemplate.Section>
-          {/* Hero Section */}
+          {/* Brand Info Panel */}
           <EuiPanel
             paddingSize="xl"
             style={{

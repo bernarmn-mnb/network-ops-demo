@@ -45,8 +45,8 @@ export function AppHeader() {
     : 'var(--brand-primary)'
   const headerTextColor = brand.colors.headerText || '#FFFFFF'
   
-  // Get the logo source (prefer url over svgDataUrl if both exist)
-  const logoSrc = brand.logo.url || brand.logo.svgDataUrl
+  // Get the logo source — prefer logoDark for the header since header bg is always dark
+  const logoSrc = brand.logoDark?.url || brand.logoDark?.svgDataUrl || brand.logo.url || brand.logo.svgDataUrl
   
   // Check if logo contains text - prefer explicit flag when available
   // If true, we don't show the brand name separately (avoids duplication)

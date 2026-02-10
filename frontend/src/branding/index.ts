@@ -95,6 +95,41 @@ export interface BrandLayout {
   headerHeight?: string
 }
 
+/** Gradient configuration for brand visual identity */
+export interface BrandGradients {
+  /** Primary brand gradient (e.g., "linear-gradient(135deg, #360065 0%, #6B21A8 100%)") */
+  primary?: string
+  /** Accent/secondary gradient */
+  accent?: string
+  /** Hero section gradient overlay */
+  hero?: string
+}
+
+/** Hero image configuration */
+export interface BrandHeroImage {
+  /** Image URL — local (/brands/ifs/images/hero.jpg) or external */
+  url: string
+  alt?: string
+  /** CSS background-position (default: "center") */
+  position?: string
+  /** CSS overlay color (e.g., "rgba(54, 0, 101, 0.7)") */
+  overlay?: string
+}
+
+/** @font-face declaration for custom font loading */
+export interface BrandFontFace {
+  /** Font family name (must match fonts.heading or fonts.body reference) */
+  family: string
+  /** CSS src value — url() format (e.g., "url('/brands/ifs/fonts/euclid.woff2') format('woff2')") */
+  src: string
+  /** Font weight or range (e.g., "400", "400 700") */
+  weight?: string
+  /** Font style (e.g., "normal", "italic") */
+  style?: string
+  /** Font-display strategy (default: "swap") */
+  display?: string
+}
+
 // ============================================================================
 // Main Brand Theme Type
 // ============================================================================
@@ -163,11 +198,11 @@ export interface BrandTheme {
   /** Layout constraints */
   layout?: BrandLayout
   
-  /** 
+  /**
    * Custom CSS to inject for brand-specific overrides.
    * Use sparingly - prefer structured properties above.
    * This CSS is injected globally when the brand is active.
-   * 
+   *
    * @example
    * customCss: `
    *   .govuk-tag { text-transform: uppercase; letter-spacing: 1px; }
@@ -175,6 +210,28 @@ export interface BrandTheme {
    * `
    */
   customCss?: string
+
+  // ============================================================================
+  // Visual Fidelity (Tier 4 — Gradients, Imagery, Fonts)
+  // ============================================================================
+
+  /** Brand gradients — signature visual identity element for many modern brands */
+  gradients?: BrandGradients
+
+  /** Hero image for landing/feature pages */
+  heroImage?: BrandHeroImage
+
+  /** Background pattern (CSS background value — url or repeating pattern) */
+  backgroundPattern?: string
+
+  /**
+   * @font-face declarations for custom font loading.
+   * Fonts should be hosted locally in /brands/[brandId]/fonts/ to avoid CORS.
+   */
+  fontFaces?: BrandFontFace[]
+
+  /** Favicon URL — replaces default when brand is active */
+  favicon?: string
 }
 
 // ============================================================================
@@ -235,6 +292,12 @@ function brandingToTheme(
     buttons: branding.buttons,
     layout: branding.layout,
     customCss: branding.customCss,
+    // Visual fidelity (Tier 4)
+    gradients: branding.gradients,
+    heroImage: branding.heroImage,
+    backgroundPattern: branding.backgroundPattern,
+    fontFaces: branding.fontFaces,
+    favicon: branding.favicon,
   }
 }
 

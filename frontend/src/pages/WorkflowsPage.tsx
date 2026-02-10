@@ -25,7 +25,6 @@ import {
   EuiEmptyPrompt,
   EuiHorizontalRule,
   EuiIcon,
-  EuiToolTip,
 } from '@elastic/eui'
 import { AppHeader } from '../components/layout/AppHeader'
 import {

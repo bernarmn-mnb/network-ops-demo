@@ -150,6 +150,25 @@ function generateCssVariables(brand: BrandTheme, colorMode: EuiThemeColorMode): 
       --brand-header-height: ${brand.layout.headerHeight || '48px'};` : `
       /* Layout defaults */
       --brand-header-height: 48px;`
+
+  // Generate gradient CSS variables
+  const gradientVars = brand.gradients ? `
+      /* Gradients */
+      --brand-gradient-primary: ${brand.gradients.primary || 'none'};
+      --brand-gradient-accent: ${brand.gradients.accent || 'none'};
+      --brand-gradient-hero: ${brand.gradients.hero || 'none'};` : ''
+
+  // Generate hero image CSS variables
+  const heroVars = brand.heroImage ? `
+      /* Hero Image */
+      --brand-hero-image: url('${brand.heroImage.url}');
+      --brand-hero-position: ${brand.heroImage.position || 'center'};
+      --brand-hero-overlay: ${brand.heroImage.overlay || 'transparent'};` : ''
+
+  // Generate background pattern CSS variable
+  const patternVars = brand.backgroundPattern ? `
+      /* Background Pattern */
+      --brand-background-pattern: ${brand.backgroundPattern};` : ''
   
   // Generate link styles if configured
   const linkStyles = brand.links ? `
@@ -225,6 +244,9 @@ function generateCssVariables(brand: BrandTheme, colorMode: EuiThemeColorMode): 
       ${buttonVars}
       ${secondaryButtonVars}
       ${layoutVars}
+      ${gradientVars}
+      ${heroVars}
+      ${patternVars}
     }
     
     /* Global body styles */
@@ -377,7 +399,40 @@ export function BrandedThemeProvider({
     }
     
     styleEl.textContent = generateCssVariables(brand, colorMode)
-    
+
+    // Inject @font-face declarations
+    const fontStyleId = 'branded-theme-fontfaces'
+    let fontStyleEl = document.getElementById(fontStyleId) as HTMLStyleElement | null
+    if (brand.fontFaces && brand.fontFaces.length > 0) {
+      if (!fontStyleEl) {
+        fontStyleEl = document.createElement('style')
+        fontStyleEl.id = fontStyleId
+        document.head.appendChild(fontStyleEl)
+      }
+      fontStyleEl.textContent = brand.fontFaces.map(ff => `
+        @font-face {
+          font-family: '${ff.family}';
+          src: ${ff.src};
+          font-weight: ${ff.weight || 'normal'};
+          font-style: ${ff.style || 'normal'};
+          font-display: ${ff.display || 'swap'};
+        }
+      `).join('\n')
+    } else if (fontStyleEl) {
+      fontStyleEl.textContent = ''
+    }
+
+    // Update favicon
+    if (brand.favicon) {
+      let faviconEl = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null
+      if (!faviconEl) {
+        faviconEl = document.createElement('link')
+        faviconEl.rel = 'icon'
+        document.head.appendChild(faviconEl)
+      }
+      faviconEl.href = brand.favicon
+    }
+
     // Set data attributes for CSS targeting
     document.body.setAttribute('data-brand', brandId)
     document.body.setAttribute('data-theme', colorMode)
