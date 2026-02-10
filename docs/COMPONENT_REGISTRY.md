@@ -20,6 +20,7 @@
 | OverlayDemoPage | `pages/OverlayDemoPage.tsx` | Production | FloatingChatWidget overlay showcase |
 | OverlayGuidePage | `pages/OverlayGuidePage.tsx` | Production | Tampermonkey injection guide with script generator |
 | DemoGuidePage | `pages/DemoGuidePage.tsx` | Production | Presenter guide with demo tracks and talking points |
+| GeoSearchPage | `pages/GeoSearchPage.tsx` | Working | Geo search with dual map implementations (Leaflet + Mapbox), 5 search modes |
 | WorkflowsPage | `pages/WorkflowsPage.tsx` | Working | Workflow management: health, deploy, run, poll, recipe library |
 | WelcomePage | `pages/WelcomePage.tsx` | Production | Landing page with feature cards and connection status |
 
@@ -68,6 +69,21 @@
 | ThemeToggle | `components/layout/ThemeToggle.tsx` | Production | Light/dark mode toggle |
 | PageInfoButton | `components/layout/PageInfoButton.tsx` | Production | Info flyout with page details |
 
+### Geo (`components/geo/`)
+
+| Component | Path | Status | Notes |
+|-----------|------|--------|-------|
+| MapProvider | `components/geo/MapProvider.tsx` | Working | Context for map library selection, viewport state, fit-to-bounds, user geolocation |
+| LeafletMap | `components/geo/LeafletMap.tsx` | Working | Leaflet map with markers, heatmap circles, delivery zone polygons, fit-to-bounds |
+| MapboxMap | `components/geo/MapboxMap.tsx` | Working | Mapbox GL JS map with vector tiles, heatmap layer, delivery zones (requires `VITE_MAPBOX_TOKEN`) |
+| MapControls | `components/geo/MapControls.tsx` | Working | Sidebar: library toggle, search mode radios, zoom controls, radius slider, filters |
+| StoreMarker | `components/geo/StoreMarker.tsx` | Working | Shared marker popup content (name, type, rating, distance) |
+| StoreDetailPanel | `components/geo/StoreDetailPanel.tsx` | Working | EuiFlyout with full store details on marker click |
+| FormatComparisonPanel | `components/geo/FormatComparisonPanel.tsx` | Working | Query inspector showing ES query + response JSON |
+| HeatmapLayer | `components/geo/HeatmapLayer.tsx` | Working | Heatmap data preparation utilities |
+| DeliveryZoneLayer | `components/geo/DeliveryZoneLayer.tsx` | Working | Delivery zone polygon data extraction |
+| VectorTileLayer | `components/geo/VectorTileLayer.tsx` | Working | Info badge for Mapbox-only vector tile mode |
+
 ### Search (`components/search/`)
 
 | Component | Path | Status | Notes |
@@ -110,6 +126,7 @@
 | auditApi | `services/auditApi.ts` | Production | Conversation history API client |
 | analyticsApi | `services/analyticsApi.ts` | Production | ES|QL search analytics (CTR, MRR, zero-results) |
 | llmProxyApi | `services/llmProxyApi.ts` | Production | A2A coordinator LLM proxy client |
+| useGeoSearch | `hooks/useGeoSearch.ts` | Working | Geo search: nearby, bounding box, aggregations, delivery zone check |
 | workflowsApi | `services/workflowsApi.ts` | Working | Workflows API client (search, deploy, run, poll, cancel) |
 
 ## Backend Routes
@@ -127,6 +144,7 @@
 | MCP | `routes/mcp.py` | `/api/mcp` | Production | MCP server proxy (JSON-RPC 2.0) |
 | A2A Chat | `routes/a2a/chat.py` | `/api/a2a` | Production | Coordinator chat with streaming |
 | A2A Health | `routes/a2a/health.py` | `/api/a2a/health` | Production | LLM proxy status check |
+| Geo Search | `routes/geo_search.py` | `/api/geo` | Working | Nearby, bounding box, aggregations, vector tiles, delivery zone check |
 | Workflows | `routes/workflows.py` | `/api/workflows` | Working | Proxy to Kibana Workflows Management API |
 | Agno Demo | `routes/agno_demo.py` | `/api/agno` | Experimental | Agno framework POC |
 
@@ -142,4 +160,5 @@
 | Config | `config.py` | Production | Pydantic settings with env var loading |
 | A2A Functions | `routes/a2a/functions.py` | Production | Function definition builders for agents |
 | A2A Handlers | `routes/a2a/handlers.py` | Production | Server/client function handlers |
+| Geo Queries | `elasticsearch/geo_queries.py` | Working | Reusable geo query builders (distance, bounding box, shape, aggregation) |
 | A2A Agents | `routes/a2a/agents.py` | Production | Agent discovery and management |

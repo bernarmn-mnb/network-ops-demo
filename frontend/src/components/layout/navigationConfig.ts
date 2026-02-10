@@ -88,6 +88,13 @@ export const NAV_ITEMS: NavItem[] = [
     category: 'demo',
   },
   {
+    path: '/geo',
+    label: 'Geo Search',
+    icon: 'mapMarker',
+    description: 'Store finder with maps & delivery zones',
+    category: 'demo',
+  },
+  {
     path: '/overlay',
     label: 'Overlay Demo',
     icon: 'popout',

@@ -22,6 +22,7 @@ from .routes.analytics import router as analytics_router
 from .routes.audit import router as audit_router
 from .routes.branding import router as branding_router
 from .routes.mcp import router as mcp_router
+from .routes.geo_search import router as geo_search_router
 from .routes.search import router as search_router
 from .routes.search_fields import router as search_fields_router
 from .routes.search_simple import router as search_simple_router
@@ -67,6 +68,7 @@ app.include_router(agno_router, prefix="/api/agno", tags=["Agno (Legacy)"])
 app.include_router(agno_v2_router, prefix="/api/agno/v2", tags=["Agno V2 (Framework)"])
 
 # Search & Analytics routes (requires Elasticsearch connection)
+app.include_router(geo_search_router)
 app.include_router(search_simple_router)
 app.include_router(search_router)
 app.include_router(search_fields_router)

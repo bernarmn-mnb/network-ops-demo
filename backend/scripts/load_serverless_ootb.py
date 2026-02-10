@@ -247,6 +247,7 @@ def get_stores_mapping(use_jina: bool = True) -> Dict[str, Any]:
                 },
                 "type": {"type": "keyword"},
                 "location": {"type": "geo_point"},
+                "delivery_zone": {"type": "geo_shape"},
                 "address": {"type": "text"},
                 "city": {"type": "keyword"},
                 "state": {"type": "keyword"},

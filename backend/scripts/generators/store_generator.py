@@ -17,6 +17,7 @@ Example:
     generator.to_ndjson(100, 'stores.ndjson')
 """
 
+import math
 import random
 from typing import Dict, Any, List, Tuple
 
@@ -88,7 +89,14 @@ DEFAULT_CONFIG = {
         'Business Solutions',
         'Education Discount'
     ],
-    'coordinate_jitter': 0.05  # Degrees of random offset from city centre
+    'coordinate_jitter': 0.05,  # Degrees of random offset from city centre
+    'delivery_radius_km': {
+        'Flagship': 15,
+        'Mall': 10,
+        'Outlet': 8,
+        'Express': 5,
+        'Warehouse': 20
+    }
 }
 
 
@@ -119,7 +127,8 @@ class StoreGenerator(BaseGenerator):
         self.features = self.config['features']
         self.services = self.config['services']
         self.jitter = self.config['coordinate_jitter']
-        
+        self.delivery_radius_km = self.config['delivery_radius_km']
+
         # Pre-compute city list
         self.cities = list(US_CITIES.keys())
     
@@ -164,7 +173,11 @@ class StoreGenerator(BaseGenerator):
         
         # Generate address
         address = self._generate_address(city_name, city_data['state'])
-        
+
+        # Generate delivery zone polygon
+        radius_km = self.delivery_radius_km.get(store_type, 10)
+        delivery_zone = self._generate_delivery_zone(lat, lon, radius_km)
+
         return {
             'id': store_id,
             'name': name,
@@ -183,7 +196,8 @@ class StoreGenerator(BaseGenerator):
             'hours': hours,
             'rating': round(random.uniform(3.5, 5.0), 1),
             'review_count': random.randint(10, 500),
-            'is_open_now': random.random() > 0.2  # 80% chance open
+            'is_open_now': random.random() > 0.2,  # 80% chance open
+            'delivery_zone': delivery_zone
         }
     
     def _generate_store_name(self, city: str, store_type: str, index: int) -> str:
@@ -287,6 +301,28 @@ class StoreGenerator(BaseGenerator):
             'sunday': sunday
         }
     
+    def _generate_delivery_zone(self, lat: float, lon: float, radius_km: float, num_points: int = 10) -> Dict[str, Any]:
+        """Generate a GeoJSON polygon approximating a delivery zone circle.
+
+        Args:
+            lat: Centre latitude.
+            lon: Centre longitude.
+            radius_km: Radius in kilometres.
+            num_points: Number of vertices for the polygon.
+
+        Returns:
+            GeoJSON-style polygon dict with [lon, lat] coordinate order.
+        """
+        coords = []
+        for i in range(num_points):
+            angle = 2 * math.pi * i / num_points
+            dlat = (radius_km / 111.0) * math.cos(angle)
+            dlon = (radius_km / (111.0 * math.cos(math.radians(lat)))) * math.sin(angle)
+            jitter = random.uniform(0.9, 1.1)
+            coords.append([round(lon + dlon * jitter, 6), round(lat + dlat * jitter, 6)])
+        coords.append(coords[0])  # Close the polygon
+        return {"type": "polygon", "coordinates": [coords]}
+
     def _generate_address(self, city: str, state: str) -> str:
         """Generate a street address."""
         return f"{self.fake.street_address()}, {city}, {state}"
