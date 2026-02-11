@@ -16,8 +16,11 @@ This project uses a shared knowledge base at `./hive-mind` (git submodule).
 
 2. Check if `./.beads` folder exists.
    If it exists, this project uses **beads (bd)** for issue tracking.
-   - Run `bd ready` and `bd blocked` to understand current work state
+   - **Run `bd ready`** to see what work is available and unblocked
+   - **Run `bd blocked`** to review blocked work and its dependencies
+   - **Run `bd list --status in_progress`** to find active work from previous sessions
    - Always `bd show <id>` to read acceptance criteria before starting an issue
+   - This is your primary source of truth for what needs doing — it survives session restarts
    - See the **Issue Tracking with Beads** section below for full workflow
 
 ### AFTER SETUP (New Demo Session)
@@ -347,14 +350,28 @@ Inference endpoint IDs (e.g. `.elser-2-elastic`, `.jina-embeddings-v3`) **change
 
 ## Issue Tracking with Beads (if `.beads/` exists)
 
-This project uses `bd` (beads) for issue tracking with dependency support. Beads is the **persistent backlog** that survives across sessions — always check it before starting work.
+This project uses **beads (bd)** as its persistent issue tracker. Beads survive session restarts, context compaction, and agent handoffs — unlike in-memory task lists which are lost when a session ends.
+
+**Check if enabled**: Look for `.beads/` folder in project root.
+
+**Rule**: Any work that takes more than a few minutes should have a bead. Temporary, in-session task lists (for example, an editor's built-in task features) are fine for within-session coordination, but beads are the source of truth across sessions.
 
 > **Full reference**: `hive-mind/meta/workflows/BEADS_ISSUE_TRACKER.md`
+
+### Setup (once per project)
+
+```bash
+# Install Claude Code hooks for automatic context recovery
+bd setup claude --project
+```
+
+This adds SessionStart and PreCompact hooks that inject `bd prime` context automatically.
 
 ### Session Start (ALWAYS do this)
 
 ```bash
 bd ready                    # What can I work on? (no blockers)
+bd list --status in_progress  # Active work from previous sessions?
 bd blocked                  # What's stuck and why
 bd stats                    # Overview of project state
 ```
@@ -383,11 +400,16 @@ bd create "Bug: null check missing" --type bug --deps "discovered-from:<id>"
 bd dep add <id> <blocker-id>
 ```
 
-### Completing Work
+### Completing Work — Write Rich Close Reasons
+
+Close reasons are how future sessions recover context. Include: what was done, key files, decisions, remaining work.
+
+**Bad**: `bd close <id> -r "Done"`
+**Good**: `bd close <id> -r "Implemented X in path/to/file.py. Key decision: used approach Y. Remaining: edge case Z needs testing."`
 
 ```bash
 bd comment <id> "Done — <brief summary of what was done>"
-bd close <id> -r "All acceptance criteria met"
+bd close <id> -r "What was done, key files changed, any remaining issues"
 bd ready                    # Check what unblocked
 ```
 
