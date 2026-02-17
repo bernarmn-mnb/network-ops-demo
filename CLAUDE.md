@@ -5,38 +5,49 @@
 
 ---
 
+## MANDATORY: Run On First Message
+
+> **You MUST complete ALL of these checks before responding to the user's first message.**
+> Do NOT engage with the user's request until these steps are done.
+> If the user says "hello", run onboarding first, then greet them.
+
+### Step 1: Run Session Summary
+Run `./dev session` to get the full environment status in one command. This checks:
+- Setup completion, hive-mind, beads, browser tools
+- Server status and health
+- Config (Elasticsearch, Kibana, search index, Agent ID, API key, OTel, LLM proxy)
+- Data availability (search fields)
+- Customer context files
+- Session type (new vs returning)
+
+Review the output and note any issues (e.g. hive-mind empty, agent not set).
+
+### Step 2: Fix Critical Issues
+- **Hive Mind empty** → Ask: "The Hive Mind context is missing. Would you like me to run `git submodule update --init` to download it?"
+- **Setup not complete** → Run `./setup.sh` to configure the environment. If it fails, check `./dev status` and `backend/.env` to see if the environment is already functional.
+
+### Step 3: Check Issue Tracker (if beads exists)
+If `./dev session` shows beads is configured, run:
+```bash
+bd ready                       # What can I work on? (no blockers)
+bd list --status in_progress   # Active work from previous sessions?
+bd blocked                     # What's stuck and why
+```
+This is your primary source of truth for what needs doing — it survives session restarts.
+See the **Issue Tracking with Beads** section below for full workflow.
+
+### Step 4: Determine Session Type
+- **`DEMO_PLAN.md` exists** (shown in session output) → Returning session. Read it for context, then `bd ready` to pick up where the last session left off.
+- **`DEMO_PLAN.md` does NOT exist** → New demo session. Read and follow `docs/prompts/WELCOME_PROMPT.md`.
+
+### Step 5: Report to User
+After completing the above, briefly tell the user what you found (environment status, open issues, session type) and ask how they'd like to proceed.
+
+---
+
 ## Hive Mind Integration
 
 This project uses a shared knowledge base at `./hive-mind` (git submodule).
-
-### AT STARTUP
-1. Check if the `./hive-mind` folder exists and is not empty.
-   If it is missing or empty, **STOP** and ask the user:
-   > "The Hive Mind context is missing. Would you like me to run the setup script to download it?"
-
-2. Check if `./.beads` folder exists.
-   If it exists, this project uses **beads (bd)** for issue tracking.
-   - **Run `bd ready`** to see what work is available and unblocked
-   - **Run `bd blocked`** to review blocked work and its dependencies
-   - **Run `bd list --status in_progress`** to find active work from previous sessions
-   - Always `bd show <id>` to read acceptance criteria before starting an issue
-   - This is your primary source of truth for what needs doing — it survives session restarts
-   - See the **Issue Tracking with Beads** section below for full workflow
-
-### AFTER SETUP (New Demo Session)
-
-When `DEMO_PLAN.md` exists:
-- This is a returning session — read `DEMO_PLAN.md` for context
-- Run `bd ready` to pick up where the last session left off
-
-When `DEMO_PLAN.md` does NOT exist:
-- This is a new demo session — read and follow `docs/prompts/WELCOME_PROMPT.md`
-
-When `.setup-complete` does NOT exist:
-- Run `./setup.sh` to configure the environment. It auto-connects to the shared OOTB cluster
-  (if GitHub CLI is authenticated) and installs all dependencies silently.
-- If `./setup.sh` fails or the user prefers manual setup, check `./dev status` and `backend/.env`
-  to see if the environment is already functional — proceed normally if it is.
 
 ### ALWAYS Index These Directories
 - `./hive-mind/patterns/` - Reusable architecture patterns
