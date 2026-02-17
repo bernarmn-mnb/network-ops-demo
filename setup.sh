@@ -152,9 +152,30 @@ echo -e "${BLUE}[2/6] Initializing project${NC}"
 
 if [ -d "hive-mind" ] && [ ! -d "hive-mind/patterns" ]; then
     log_info "Initializing hive-mind submodule..."
-    git submodule update --init --recursive > /dev/null 2>&1 && \
-        log_ok "hive-mind submodule" || \
-        log_warn "Could not init hive-mind submodule (AI assistance will be limited)"
+    SUBMODULE_ERR=$(git submodule update --init --recursive 2>&1)
+    if [ $? -eq 0 ]; then
+        log_ok "hive-mind submodule"
+    else
+        # Pinned commit may no longer exist (force-push in submodule repo).
+        # Retry with --remote to fetch the current branch HEAD instead.
+        if echo "$SUBMODULE_ERR" | grep -q "not our ref\|did not contain"; then
+            log_info "Pinned commit not found, fetching latest from remote..."
+            SUBMODULE_ERR2=$(git submodule deinit -f hive-mind 2>&1 && git submodule update --init --remote hive-mind 2>&1)
+            if [ $? -eq 0 ]; then
+                log_ok "hive-mind submodule (fetched latest)"
+            else
+                log_warn "Could not init hive-mind submodule (AI assistance will be limited)"
+                echo -e "       ${DIM}${SUBMODULE_ERR2}${NC}"
+            fi
+        else
+            log_warn "Could not init hive-mind submodule (AI assistance will be limited)"
+            echo -e "       ${DIM}${SUBMODULE_ERR}${NC}"
+            echo -e "       ${DIM}This is a private repo — check your GitHub credentials:${NC}"
+            echo -e "       ${DIM}  gh auth status   # GitHub CLI auth${NC}"
+            echo -e "       ${DIM}  ssh -T git@github.com   # SSH auth${NC}"
+            echo -e "       ${DIM}After fixing, re-run: git submodule update --init${NC}"
+        fi
+    fi
 elif [ -d "hive-mind/patterns" ]; then
     log_ok "hive-mind submodule"
 else
