@@ -718,6 +718,218 @@ cmd_verify_template() {
     $python_cmd scripts/verify-template.py "$@"
 }
 
+cmd_session() {
+    read_env_ports
+
+    local actual_backend_port=$BACKEND_PORT
+    local actual_frontend_port=$FRONTEND_PORT
+    if [ -f "$PID_DIR/backend.port" ]; then
+        actual_backend_port=$(cat "$PID_DIR/backend.port")
+    fi
+    if [ -f "$PID_DIR/frontend.port" ]; then
+        actual_frontend_port=$(cat "$PID_DIR/frontend.port")
+    fi
+
+    echo -e "${BLUE}Session Summary${NC}"
+    echo -e "${BLUE}===============${NC}"
+    echo ""
+
+    # --- Environment ---
+    echo -e "${BLUE}Environment${NC}"
+
+    # Setup
+    if [ -f ".setup-complete" ]; then
+        local ts=$(grep timestamp .setup-complete 2>/dev/null | cut -d' ' -f2)
+        echo -e "  Setup:          ${GREEN}✅ Complete${NC} ${DIM}($ts)${NC}"
+    else
+        echo -e "  Setup:          ${RED}❌ Not complete${NC} — run ./setup.sh"
+    fi
+
+    # Hive Mind
+    if [ -d "hive-mind/patterns" ]; then
+        echo -e "  Hive Mind:      ${GREEN}✅ Loaded${NC}"
+    elif [ -d "hive-mind" ]; then
+        echo -e "  Hive Mind:      ${YELLOW}⚠️  Empty${NC} — run: git submodule update --init"
+    else
+        echo -e "  Hive Mind:      ${RED}❌ Missing${NC}"
+    fi
+
+    # Beads
+    if [ -d ".beads" ]; then
+        echo -e "  Issue Tracker:  ${GREEN}✅ Beads configured${NC}"
+    else
+        echo -e "  Issue Tracker:  ${DIM}Not configured${NC}"
+    fi
+
+    # Browser tools
+    if [ -f ".mcp.json" ] && grep -q '"playwright"' .mcp.json 2>/dev/null; then
+        echo -e "  Browser Tools:  ${GREEN}✅ Playwright MCP${NC}"
+    else
+        echo -e "  Browser Tools:  ${DIM}Not configured${NC}"
+    fi
+
+    echo ""
+
+    # --- Servers ---
+    echo -e "${BLUE}Servers${NC}"
+
+    local backend_running=false
+    local frontend_running=false
+
+    if is_running "$BACKEND_PID_FILE"; then
+        echo -e "  Backend:        ${GREEN}● Running${NC} (port $actual_backend_port)"
+        backend_running=true
+    else
+        echo -e "  Backend:        ${RED}○ Stopped${NC}"
+    fi
+
+    if is_running "$FRONTEND_PID_FILE"; then
+        echo -e "  Frontend:       ${GREEN}● Running${NC} (port $actual_frontend_port)"
+        frontend_running=true
+    else
+        # Check if port is listening anyway (e.g. started outside ./dev)
+        if lsof -i:"$actual_frontend_port" > /dev/null 2>&1; then
+            echo -e "  Frontend:       ${YELLOW}● Port $actual_frontend_port in use${NC} (not managed by ./dev)"
+            frontend_running=true
+        else
+            echo -e "  Frontend:       ${RED}○ Stopped${NC}"
+        fi
+    fi
+
+    if [ "$backend_running" = true ]; then
+        local health_ok=false
+        curl -s --max-time 3 "http://localhost:$actual_backend_port/health" > /dev/null 2>&1 && health_ok=true
+        if [ "$health_ok" = true ]; then
+            echo -e "  Health Check:   ${GREEN}✅ OK${NC}"
+        else
+            echo -e "  Health Check:   ${YELLOW}⚠️  Not responding${NC}"
+        fi
+    fi
+
+    echo ""
+
+    # --- Config ---
+    echo -e "${BLUE}Config${NC} ${DIM}(backend/.env)${NC}"
+
+    if [ -f "backend/.env" ]; then
+        local es_url=$(grep -E '^ELASTICSEARCH_URL=' backend/.env 2>/dev/null | cut -d'=' -f2-)
+        local kibana_url=$(grep -E '^KIBANA_URL=' backend/.env 2>/dev/null | cut -d'=' -f2-)
+        local search_index=$(grep -E '^SEARCH_INDEX=' backend/.env 2>/dev/null | cut -d'=' -f2-)
+        local agent_id=$(grep -E '^AGENT_ID=' backend/.env 2>/dev/null | cut -d'=' -f2-)
+        local api_key=$(grep -E '^ELASTIC_API_KEY=' backend/.env 2>/dev/null | cut -d'=' -f2-)
+        local otel_endpoint=$(grep -E '^OTEL_EXPORTER_OTLP_ENDPOINT=' backend/.env 2>/dev/null | cut -d'=' -f2-)
+        local llm_proxy=$(grep -E '^LLM_PROXY_URL=' backend/.env 2>/dev/null | cut -d'=' -f2-)
+
+        echo -e "  Elasticsearch:  ${es_url:-(not set)}"
+        echo -e "  Kibana:         ${kibana_url:-(not set)}"
+        echo -e "  Search Index:   ${search_index:-products}"
+        if [ -n "$agent_id" ]; then
+            echo -e "  Agent ID:       ${GREEN}$agent_id${NC}"
+        else
+            echo -e "  Agent ID:       ${YELLOW}(not set)${NC}"
+        fi
+        if [ -n "$api_key" ]; then
+            echo -e "  API Key:        ${GREEN}✅ Set${NC} ${DIM}(${api_key:0:8}...)${NC}"
+        else
+            echo -e "  API Key:        ${RED}❌ Missing${NC}"
+        fi
+        if [ -n "$otel_endpoint" ]; then
+            echo -e "  OTel:           ${GREEN}✅ Configured${NC}"
+        else
+            echo -e "  OTel:           ${DIM}Not configured${NC}"
+        fi
+        if [ -n "$llm_proxy" ]; then
+            echo -e "  LLM Proxy:      ${GREEN}✅ Configured${NC}"
+        else
+            echo -e "  LLM Proxy:      ${DIM}Not configured${NC}"
+        fi
+    else
+        echo -e "  ${RED}❌ backend/.env not found${NC}"
+    fi
+
+    echo ""
+
+    # --- Data ---
+    if [ "$backend_running" = true ]; then
+        echo -e "${BLUE}Data${NC}"
+        local fields_response
+        fields_response=$(curl -s --max-time 5 "http://localhost:$actual_backend_port/api/search/fields" 2>/dev/null || true)
+        if [ -n "$fields_response" ] && [ "$fields_response" != "null" ]; then
+            local field_count=$(echo "$fields_response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('fields',d) if isinstance(d,dict) else d))" 2>/dev/null)
+            if [ -n "$field_count" ] && [ "$field_count" != "0" ]; then
+                echo -e "  Search Fields:  ${GREEN}$field_count fields available${NC}"
+            else
+                echo -e "  Search Fields:  ${YELLOW}⚠️  Index may not exist yet${NC}"
+            fi
+        else
+            echo -e "  Search Fields:  ${YELLOW}⚠️  Could not query${NC}"
+        fi
+        echo ""
+    fi
+
+    # --- Customer Context ---
+    echo -e "${BLUE}Customer Context${NC}"
+    if [ -d "customer-context" ]; then
+        local has_files=false
+        for subdir in emails notes requirements research; do
+            local dir="customer-context/$subdir"
+            if [ -d "$dir" ]; then
+                # Count files (excluding .gitkeep)
+                local count=$(find "$dir" -type f ! -name '.gitkeep' 2>/dev/null | wc -l | tr -d ' ')
+                if [ "$count" -gt 0 ]; then
+                    echo -e "  $subdir/:  ${GREEN}$count file(s)${NC}"
+                    has_files=true
+                else
+                    echo -e "  $subdir/:  ${DIM}empty${NC}"
+                fi
+            fi
+        done
+        if [ "$has_files" = false ]; then
+            echo -e "  ${DIM}No customer materials — will use vertical-level discovery${NC}"
+        fi
+    else
+        echo -e "  ${DIM}No customer-context/ directory${NC}"
+    fi
+
+    echo ""
+
+    # --- Session Type ---
+    echo -e "${BLUE}Session${NC}"
+
+    local session_type="new"
+
+    # Check beads for open issues (signal of prior work)
+    local ready_count=0
+    local in_progress=0
+    local blocked_count=0
+    if [ -d ".beads" ] && command -v bd &> /dev/null; then
+        ready_count=$(bd ready 2>/dev/null | grep -c '^\s*[A-Z0-9]' || echo "0")
+        in_progress=$(bd list --status in_progress 2>/dev/null | grep -c '^\s*[A-Z0-9]' || echo "0")
+        blocked_count=$(bd blocked 2>/dev/null | grep -c '^\s*[A-Z0-9]' || echo "0")
+    fi
+
+    # Determine session type
+    if [ -f "DEMO_PLAN.md" ]; then
+        session_type="returning"
+        echo -e "  Demo Plan:      ${GREEN}✅ Found${NC} (returning session)"
+    elif [ "$((ready_count + in_progress + blocked_count))" -gt 0 ]; then
+        session_type="returning"
+        echo -e "  Demo Plan:      ${DIM}Not found${NC}"
+        echo -e "  Session:        ${GREEN}Returning${NC} (open beads issues detected)"
+    else
+        echo -e "  Demo Plan:      ${DIM}Not found${NC} (new session)"
+    fi
+
+    # Show beads status if available
+    if [ -d ".beads" ] && command -v bd &> /dev/null; then
+        echo -e "  Ready Issues:   $ready_count"
+        echo -e "  In Progress:    $in_progress"
+        echo -e "  Blocked:        $blocked_count"
+    fi
+
+    echo ""
+}
+
 cmd_help() {
     read_env_ports
 
@@ -733,6 +945,7 @@ cmd_help() {
     echo "  verify           Quick setup verification (checks .env, venv, etc.)"
     echo "  verify-template  Structural integrity checks (routes, contracts, builds)"
     echo "  test-agent       Test Agent Builder connection (sends test message)"
+    echo "  session          Full session summary (environment, config, data, context)"
     echo "  verify-search    Verify search endpoint returns results and aggregations"
     echo "  test-search      Test semantic + keyword search quality"
     echo "  logs             Tail server logs (follows, use Ctrl+C to exit)"
@@ -897,6 +1110,7 @@ case "${1:-help}" in
     logs-snapshot) cmd_logs_snapshot "${2:-50}" ;;
     open)    cmd_open ;;
     use-ootb) cmd_use_ootb ;;
+    session) cmd_session ;;
     help|--help|-h) cmd_help ;;
     *)
         echo -e "${RED}Unknown command: $1${NC}"
