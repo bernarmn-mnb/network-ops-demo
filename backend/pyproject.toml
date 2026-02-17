@@ -18,6 +18,11 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi>=0.48b0",
     "opentelemetry-instrumentation-elasticsearch>=0.48b0",
     "opentelemetry-instrumentation-logging>=0.48b0",
+    "agno>=1.0.0",
+    "sqlalchemy>=2.0.0",
+    "openai>=1.0.0",
+    "PyYAML>=6.0.0",
+    "faker>=33.0.0",
 ]
 
 [project.scripts]
