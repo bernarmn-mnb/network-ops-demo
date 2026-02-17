@@ -195,6 +195,31 @@ if command -v uv &> /dev/null; then
     (cd backend && uv sync > /dev/null 2>&1) && \
         log_ok "Backend dependencies (uv sync)" || \
         log_fail "Backend dependency install failed"
+
+    # Keep requirements.txt in sync (used by CI and Dockerfiles)
+    log_info "Syncing requirements.txt from pyproject.toml..."
+    if (cd backend && uv pip compile pyproject.toml -o requirements.txt --quiet 2>/dev/null); then
+        # Add auto-generated header
+        TEMP_REQ=$(mktemp)
+        echo "# AUTO-GENERATED from pyproject.toml — do not edit manually." > "$TEMP_REQ"
+        echo "# To update: cd backend && uv pip compile pyproject.toml -o requirements.txt" >> "$TEMP_REQ"
+        echo "" >> "$TEMP_REQ"
+        cat backend/requirements.txt >> "$TEMP_REQ"
+        mv "$TEMP_REQ" backend/requirements.txt
+        log_ok "requirements.txt synced"
+    else
+        log_warn "Could not sync requirements.txt (update manually if needed)"
+    fi
+
+    # Verify the backend actually imports (catches missing dependencies)
+    log_info "Verifying backend imports..."
+    IMPORT_ERR=$(cd backend && uv run python -c "from app.main import app" 2>&1)
+    if [ $? -eq 0 ]; then
+        log_ok "Backend imports verified"
+    else
+        log_fail "Backend import check failed"
+        echo -e "       ${DIM}${IMPORT_ERR}${NC}" | tail -5 | sed 's/^/       /'
+    fi
 else
     log_warn "uv not available, skipping backend install"
 fi
@@ -282,31 +307,43 @@ log_info "Starting backend and frontend..."
     echo -e "       ${DIM}${line}${NC}"
 done
 
-# Give servers a moment to start
-sleep 2
-
 # Read actual ports
 BACKEND_PORT="8001"
 FRONTEND_PORT="3000"
 [ -f ".dev-pids/backend.port" ] && BACKEND_PORT=$(cat .dev-pids/backend.port)
 [ -f ".dev-pids/frontend.port" ] && FRONTEND_PORT=$(cat .dev-pids/frontend.port)
 
-# Quick health check
+# Poll for backend health (up to 10 seconds)
 BACKEND_OK=false
-FRONTEND_OK=false
-
-if curl -s --max-time 3 "http://localhost:$BACKEND_PORT/health" > /dev/null 2>&1; then
-    BACKEND_OK=true
-fi
-if curl -s --max-time 3 "http://localhost:$FRONTEND_PORT" > /dev/null 2>&1; then
-    FRONTEND_OK=true
-fi
+for i in $(seq 1 20); do
+    if curl -s --max-time 1 "http://localhost:$BACKEND_PORT/health" > /dev/null 2>&1; then
+        BACKEND_OK=true
+        break
+    fi
+    sleep 0.5
+done
 
 if [ "$BACKEND_OK" = true ]; then
     log_ok "Backend running on port $BACKEND_PORT"
 else
-    log_warn "Backend starting (may take a moment) on port $BACKEND_PORT"
+    log_fail "Backend failed to start on port $BACKEND_PORT"
+    if [ -f ".dev-logs/backend.log" ]; then
+        echo -e "       ${DIM}Last 10 lines of backend log:${NC}"
+        tail -10 .dev-logs/backend.log 2>/dev/null | while IFS= read -r line; do
+            echo -e "       ${DIM}${line}${NC}"
+        done
+    fi
 fi
+
+# Poll for frontend (up to 10 seconds)
+FRONTEND_OK=false
+for i in $(seq 1 20); do
+    if curl -s --max-time 1 "http://localhost:$FRONTEND_PORT" > /dev/null 2>&1; then
+        FRONTEND_OK=true
+        break
+    fi
+    sleep 0.5
+done
 
 if [ "$FRONTEND_OK" = true ]; then
     log_ok "Frontend running on port $FRONTEND_PORT"

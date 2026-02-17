@@ -92,8 +92,34 @@ async def root():
 
 @app.get("/health")
 async def health():
-    """Global health check."""
-    return {"status": "ok"}
+    """Global health check with config and connectivity validation."""
+    checks = {"status": "ok"}
+
+    # Config check
+    config_ok = bool(settings.ELASTICSEARCH_URL and settings.ELASTIC_API_KEY)
+    checks["config"] = "ok" if config_ok else "missing"
+
+    # ES connectivity (only if configured)
+    if config_ok:
+        try:
+            from elasticsearch import Elasticsearch
+
+            es = Elasticsearch(
+                settings.ELASTICSEARCH_URL,
+                api_key=settings.ELASTIC_API_KEY,
+                request_timeout=3,
+            )
+            es.info()
+            checks["elasticsearch"] = "ok"
+        except Exception:
+            checks["elasticsearch"] = "unreachable"
+
+    if all(v == "ok" for v in checks.values()):
+        checks["status"] = "ok"
+    else:
+        checks["status"] = "degraded"
+
+    return checks
 
 
 if __name__ == "__main__":

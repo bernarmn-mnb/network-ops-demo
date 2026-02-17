@@ -578,7 +578,18 @@ cmd_verify() {
         echo -e "${YELLOW}⚠️  Hive-mind empty${NC} - run: git submodule update --init"
     fi
     
-    # Check 6: If servers running, ping health
+    # Check 6: Backend import check
+    if command -v uv &> /dev/null; then
+        if (cd backend && uv run python -c "from app.main import app" > /dev/null 2>&1); then
+            echo -e "✅ Backend imports OK"
+        else
+            echo -e "${RED}❌ Backend import failed (missing dependencies?)${NC}"
+            echo -e "${DIM}   Run: cd backend && uv sync${NC}"
+            all_pass=false
+        fi
+    fi
+
+    # Check 7: If servers running, ping health
     read_env_ports
     local actual_backend_port=$BACKEND_PORT
     if [ -f "$PID_DIR/backend.port" ]; then
@@ -591,6 +602,12 @@ cmd_verify() {
             echo -e "✅ Backend health check passed"
         else
             echo -e "${YELLOW}⚠️  Backend running but health check failed${NC}"
+            if [ -f "$LOG_DIR/backend.log" ]; then
+                echo -e "${DIM}   Recent backend log:${NC}"
+                tail -5 "$LOG_DIR/backend.log" 2>/dev/null | while IFS= read -r line; do
+                    echo -e "${DIM}   ${line}${NC}"
+                done
+            fi
         fi
     else
         echo -e "${DIM}ℹ️  Servers not running (start with ./dev start)${NC}"
@@ -803,6 +820,12 @@ cmd_session() {
             echo -e "  Health Check:   ${GREEN}✅ OK${NC}"
         else
             echo -e "  Health Check:   ${YELLOW}⚠️  Not responding${NC}"
+            if [ -f "$LOG_DIR/backend.log" ]; then
+                echo -e "  ${DIM}Recent backend log:${NC}"
+                tail -5 "$LOG_DIR/backend.log" 2>/dev/null | while IFS= read -r line; do
+                    echo -e "  ${DIM}  ${line}${NC}"
+                done
+            fi
         fi
     fi
 
