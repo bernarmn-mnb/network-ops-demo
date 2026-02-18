@@ -96,8 +96,10 @@ Once the SA agrees on the strategy, shift from *what* to *how it feels*. This is
 **Propose 2-3 custom page concepts** tailored to the domain. Don't just describe functionality — paint a picture of what the audience would see and why it would make them lean forward. For each concept, describe:
 
 - **What the page does** — the user experience in one sentence
+- **What it looks like** — describe the visual impression: hero images, photo strips, card layouts, branded colours. A page should feel like a product, not a wireframe. Mention specific imagery (e.g. "circular food photos for meal categories", "severity-coloured heatmap with equipment thumbnails")
 - **What data it shows** — which fields, aggregations, or agent responses it surfaces
 - **Which hooks it composes** — `useAgentChat` (chat state), `useSearchSimple` (search state), `useA2AChat` (multi-agent), `ChatContainer` ref (external message triggers)
+- **The assistant persona** — if the page has chat, name the assistant and describe its personality (e.g. "Elkie, a friendly grocery advisor who knows the family's dietary needs")
 - **Why it lands** — what makes this more compelling than a generic search page
 
 Examples of strong concepts by vertical:
@@ -135,7 +137,7 @@ Create an epic and prioritised child tasks:
 3. **Features** — configure the specific capabilities chosen
 4. **Agent setup** — system prompt, tools, knowledge sources
 5. **Workflows** (if applicable) — deploy escalation/triage/reporting workflows, create YAML recipes, wire into custom pages
-6. **Demo guide** — talking points and demo flow (include workflow track if applicable)
+6. **Demo guide** — populate `frontend/src/config/demoTracks.ts` with the demo narrative designed above: tracks, scenarios, talking points, demo pills. This is what powers the `/guide` page. The UX Design conversation already produced the content — this task turns it into the structured `DemoTrack[]` format. See `docs/templates/BEADS_UI_TASKS.md` for the task template.
 7. **Testing** — dry run, edge cases, fallback plan
 8. If Cloud Run delivery was chosen, add deployment tasks (build, deploy, verify IAP access)
 
