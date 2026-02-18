@@ -199,10 +199,10 @@
 > **API-first**: Create agents and tools via the Kibana REST API — not the Kibana UI.
 > See `hive-mind/patterns/agent-builder/AGENT_BUILDER_API_MANAGEMENT.md` for full reference.
 
-- [ ] Create `index_search` tools for each data index the agent needs (`POST /api/agent_builder/tools`)
+- [ ] Create `index_search` tools for each data index the agent needs (`POST /api/agent/tools`)
 - [ ] Design system prompt (persona, capabilities, tool usage instructions, output format, style)
-- [ ] Create the agent (`POST /api/agent_builder/agents`) with system prompt and tool IDs
-- [ ] Test agent via API: send representative messages with `POST /api/agent_builder/converse`
+- [ ] Create the agent (`POST /api/agent/agents`) with system prompt and tool IDs
+- [ ] Test agent via API: send representative messages with `POST /api/agent/chat/test`
 - [ ] Verify: profile awareness, personalisation, tool usage, response quality
 - [ ] Set `AGENT_ID` in `backend/.env`
 - [ ] Test via the app: `./dev test-agent` and verify chat works in the UI

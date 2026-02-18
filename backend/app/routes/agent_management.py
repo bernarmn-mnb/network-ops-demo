@@ -15,7 +15,7 @@ from typing import Any
 
 import requests
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..config import settings
 
@@ -79,9 +79,12 @@ def proxy_delete(path: str) -> Any:
         resp = requests.delete(kibana_url(path), headers=get_headers(), timeout=30)
         if not resp.ok:
             raise HTTPException(status_code=resp.status_code, detail=resp.text)
-        if resp.text:
+        if resp.status_code == 204 or not resp.content or not resp.text.strip():
+            return {"status": "deleted"}
+        try:
             return resp.json()
-        return {"status": "deleted"}
+        except ValueError:
+            return {"status": "deleted", "message": resp.text}
     except requests.RequestException as e:
         raise HTTPException(status_code=502, detail=f"Kibana connection error: {e!s}")
 
@@ -94,8 +97,8 @@ class CreateAgentRequest(BaseModel):
     name: str
     description: str = ""
     instructions: str
-    tool_ids: list[str] = []
-    labels: list[str] = []
+    tool_ids: list[str] = Field(default_factory=list)
+    labels: list[str] = Field(default_factory=list)
 
 
 class UpdateAgentRequest(BaseModel):
@@ -110,7 +113,7 @@ class CreateToolRequest(BaseModel):
     type: str  # "index_search", "esql", "workflow"
     description: str
     configuration: dict[str, Any]
-    tags: list[str] = []
+    tags: list[str] = Field(default_factory=list)
 
 
 class TestChatRequest(BaseModel):
@@ -123,19 +126,19 @@ class TestChatRequest(BaseModel):
 
 
 @router.get("/agents")
-async def list_agents():
+def list_agents():
     """List all Agent Builder agents."""
     return proxy_get("api/agent_builder/agents")
 
 
 @router.get("/agents/{agent_id}")
-async def get_agent(agent_id: str):
+def get_agent(agent_id: str):
     """Get a specific agent's configuration including system prompt and tools."""
     return proxy_get(f"api/agent_builder/agents/{agent_id}")
 
 
 @router.post("/agents")
-async def create_agent(request: CreateAgentRequest):
+def create_agent(request: CreateAgentRequest):
     """Create a new Agent Builder agent.
 
     Accepts a flat request body and maps it to the Kibana API format.
@@ -155,7 +158,7 @@ async def create_agent(request: CreateAgentRequest):
 
 
 @router.put("/agents/{agent_id}")
-async def update_agent(agent_id: str, request: UpdateAgentRequest):
+def update_agent(agent_id: str, request: UpdateAgentRequest):
     """Update an existing agent's name, prompt, or tools.
 
     Only provided fields are updated. Omitted fields are left unchanged.
@@ -179,7 +182,7 @@ async def update_agent(agent_id: str, request: UpdateAgentRequest):
 
 
 @router.delete("/agents/{agent_id}")
-async def delete_agent(agent_id: str):
+def delete_agent(agent_id: str):
     """Delete an agent."""
     return proxy_delete(f"api/agent_builder/agents/{agent_id}")
 
@@ -188,13 +191,13 @@ async def delete_agent(agent_id: str):
 
 
 @router.get("/tools")
-async def list_tools():
+def list_tools():
     """List all available tools (built-in and custom)."""
     return proxy_get("api/agent_builder/tools")
 
 
 @router.post("/tools")
-async def create_tool(request: CreateToolRequest):
+def create_tool(request: CreateToolRequest):
     """Create a custom tool (index_search, esql, or workflow type)."""
     body = {
         "id": request.id,
@@ -207,7 +210,7 @@ async def create_tool(request: CreateToolRequest):
 
 
 @router.delete("/tools/{tool_id}")
-async def delete_tool(tool_id: str):
+def delete_tool(tool_id: str):
     """Delete a custom tool."""
     return proxy_delete(f"api/agent_builder/tools/{tool_id}")
 
@@ -216,7 +219,7 @@ async def delete_tool(tool_id: str):
 
 
 @router.post("/chat/test")
-async def test_chat(request: TestChatRequest):
+def test_chat(request: TestChatRequest):
     """Send a non-streaming test message to an agent.
 
     Returns the full response (no SSE). Useful for testing agent behaviour

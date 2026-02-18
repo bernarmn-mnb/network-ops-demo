@@ -134,10 +134,10 @@ bd create "End-to-end demo walkthrough" \
 bd create "Create Agent Builder agent for {domain}" \
   --type task \
   --priority 1 \
-  --acceptance "- [ ] index_search tools created via POST /api/agent_builder/tools for each data index
+  --acceptance "- [ ] index_search tools created via POST /api/agent/tools for each data index
 - [ ] System prompt designed with: persona, tool usage instructions, output format, conversation style
-- [ ] Agent created via POST /api/agent_builder/agents with prompt and tool IDs
-- [ ] Agent tested via POST /api/agent_builder/converse with representative messages
+- [ ] Agent created via POST /api/agent/agents with prompt and tool IDs
+- [ ] Agent tested via POST /api/agent/chat/test with representative messages
 - [ ] Agent looks up customer/user profile on first greeting
 - [ ] Agent uses search tools to find domain-relevant results
 - [ ] Agent response quality verified: correct tone, formatting, personalisation

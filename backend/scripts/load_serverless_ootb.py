@@ -568,7 +568,7 @@ Examples:
     
     print("\n✅ Data loading complete!")
     print("\nNext steps:")
-    print("  1. Create agents and tools via the API (POST /api/agent_builder/agents)")
+    print("  1. Create agents and tools via the backend proxy (POST /api/agent/agents, /api/agent/tools)")
     print("     See: hive-mind/patterns/agent-builder/AGENT_BUILDER_API_MANAGEMENT.md")
     print("  2. Set AGENT_ID in backend/.env")
     print("  3. Run ./dev start to launch the demo")
