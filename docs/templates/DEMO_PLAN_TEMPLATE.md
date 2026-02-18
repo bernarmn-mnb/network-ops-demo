@@ -191,9 +191,21 @@
 #### Phase 2: Configuration (Priority: High)
 
 - [ ] Configure backend/.env
-- [ ] Set up Agent Builder (if needed)
 - [ ] Configure search settings
 - [ ] Test basic functionality
+
+#### Phase 2b: Agent Builder Setup (Priority: High, if agent chat is needed)
+
+> **API-first**: Create agents and tools via the Kibana REST API — not the Kibana UI.
+> See `hive-mind/patterns/agent-builder/AGENT_BUILDER_API_MANAGEMENT.md` for full reference.
+
+- [ ] Create `index_search` tools for each data index the agent needs (`POST /api/agent/tools`)
+- [ ] Design system prompt (persona, capabilities, tool usage instructions, output format, style)
+- [ ] Create the agent (`POST /api/agent/agents`) with system prompt and tool IDs
+- [ ] Test agent via API: send representative messages with `POST /api/agent/chat/test`
+- [ ] Verify: profile awareness, personalisation, tool usage, response quality
+- [ ] Set `AGENT_ID` in `backend/.env`
+- [ ] Test via the app: `./dev test-agent` and verify chat works in the UI
 
 #### Phase 3: Branding (Priority: Medium)
 
@@ -233,14 +245,18 @@
 
 #### Phase 4c: Workflows (Priority: Medium, if applicable)
 
-- [ ] Verify Elastic Workflows is enabled on the cluster (9.3+, Technical Preview)
-- [ ] Create `WORKFLOWS_API_KEY` with `workflowsManagement` Kibana privilege
-- [ ] Add `WORKFLOWS_API_KEY` and `WORKFLOWS_KIBANA_URL` to `backend/.env`
-- [ ] Write domain-specific YAML recipes in `frontend/src/config/workflowRecipes.ts`
-- [ ] Deploy recipes and verify execution via Workflows page
+> **API-first**: Create and test workflows via the REST API — not the Kibana UI.
+> All workflow API calls require the extra header: `x-elastic-internal-origin: kibana`
+> See `hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md` for full reference.
+
+- [ ] Verify Workflows API is available: `GET /api/workflows/stats` (needs header above)
+- [ ] Write workflow YAML definitions (step types: `elasticsearch.search`, `ai.agent`, `ai.prompt`, `if`, `foreach`, connectors)
+- [ ] Create workflows via API: `POST /api/workflows` with `{ yaml: "..." }` body
+- [ ] Test workflows via API: `POST /api/workflows/{id}/run` with `{ inputs: {...} }`
+- [ ] Monitor execution: `GET /api/workflowExecutions/{execId}`
+- [ ] (Optional) Expose workflows as agent tools: create tool with `type: "workflow"`, add to agent's tool_ids
 - [ ] Wire escalation/action buttons into custom pages (see `docs/CUSTOM_PAGE_PATTERNS.md`)
 - [ ] Add workflow demo track to `demoTracks.ts`
-- [ ] See `hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md` for full pattern
 
 #### Phase 4d: Demo Guide & Narrative (Priority: Medium)
 
