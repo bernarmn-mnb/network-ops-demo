@@ -223,6 +223,14 @@
 - [ ] Style with `var(--brand-*)` CSS variables and EUI components
 - [ ] See `docs/CUSTOM_PAGE_PATTERNS.md` for patterns
 
+**Visual quality (build these in, don't bolt them on later):**
+- [ ] Add domain-relevant imagery: hero banners, photo strips, card thumbnails
+- [ ] Design empty states with visuals and actionable prompts
+- [ ] Brand the chat assistant: custom name, avatar, persona-aware greeting
+- [ ] Verify fixed header offset — content not hidden behind the 56px header
+- [ ] Test in dark mode — toggle theme, check for invisible text or hardcoded colours
+- [ ] Visually verify via browser screenshot (see `CLAUDE.md` → Visual Verification)
+
 #### Phase 4c: Workflows (Priority: Medium, if applicable)
 
 - [ ] Verify Elastic Workflows is enabled on the cluster (9.3+, Technical Preview)
@@ -234,13 +242,16 @@
 - [ ] Add workflow demo track to `demoTracks.ts`
 - [ ] See `hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md` for full pattern
 
-#### Phase 4d: Demo Polish (Priority: Medium)
+#### Phase 4d: Demo Guide & Narrative (Priority: Medium)
 
-- [ ] Update `DemoGuidePage` with domain-specific tracks and talking points
+- [ ] Populate `frontend/src/config/demoTracks.ts` with demo tracks from UX Design phase
+  - Each track: title, description, value proposition, 3-5 scenarios
+  - Each scenario: steps, talking points, demo pills linking to custom pages
+  - Narrative arc: problem → discovery → wow moment → resolution
 - [ ] Set `DEMO_TITLE` and `DEMO_SUBTITLE` in `demoConfig.ts`
-- [ ] Configure demo prompts that tell the story (problem → search → chat → resolution)
-- [ ] End-to-end walkthrough of the demo narrative
-- [ ] Verify all pages render correctly with actual data
+- [ ] Configure demo prompts in `demoPrompts.ts` that tell the story
+- [ ] End-to-end walkthrough of the demo narrative following the guide page
+- [ ] Full visual walkthrough: navigate every page, screenshot, verify dark mode
 
 #### Phase 5: Testing (Priority: High)
 

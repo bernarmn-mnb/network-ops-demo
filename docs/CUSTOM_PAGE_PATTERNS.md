@@ -380,6 +380,8 @@ If your page uses EUI icons not already in the cache, add them to `frontend/src/
 
 ## Styling Guidelines
 
+> See also: `CLAUDE.md` → **Visual Quality Standards** for mandatory rules during page construction.
+
 ### Use brand CSS variables
 
 Custom pages should respect the active brand theme. Use CSS variables set by `BrandContext`:
@@ -395,6 +397,17 @@ Custom pages should respect the active brand theme. Use CSS variables set by `Br
 }
 ```
 
+For dark mode compatibility, always use EUI variables as the inner fallback:
+```tsx
+style={{
+  color: 'var(--brand-text-body, var(--euiTextColor))',
+  background: 'var(--brand-background, var(--euiColorEmptyShade))',
+  borderColor: 'var(--brand-border, var(--euiColorLightShade))',
+}}
+```
+
+See `hive-mind/patterns/eui/DEMO_PAGE_VISUAL_DESIGN.md` for the full CSS variable reference and known component exceptions (e.g. `EuiAvatar` requires hex colours).
+
 ### Prefer EUI components
 
 EUI handles responsive layout, dark mode, accessibility, and theme consistency. Use EUI for structure and only drop to custom CSS for domain-specific visuals:
@@ -406,6 +419,46 @@ EUI handles responsive layout, dark mode, accessibility, and theme consistency. 
 - `EuiBadge` — status indicators
 - `EuiCard` — result cards
 - `EuiAccordion` — collapsible sections
+
+### Make it look like a product, not a prototype
+
+Demo pages should include domain-relevant imagery from the start — not as a polish step. Text-only pages feel like wireframes. Apply these during initial construction:
+
+**Hero banners**: Use a background photo with a semi-transparent brand-coloured overlay for section headers. This adds visual depth with minimal effort.
+
+**Photo strips**: Small circular images in a horizontal row work well for categories, inspiration, or featured items. Make them clickable to trigger chat prompts.
+
+**Card imagery**: Result cards, product cards, and recipe cards should include thumbnail images wherever the data provides image URLs.
+
+**Empty states**: Every empty list, grid, or accordion should show a relevant image and actionable text (e.g. "Ask the assistant to build your shopping list"). Never leave bare "no data" text.
+
+**Chat persona**: Give the assistant a name, custom avatar (SVG or image via `assistantAvatarUrl` prop), and a greeting that references the demo persona by name. This makes the chat feel purpose-built rather than generic.
+
+**Image sources**: Use Unsplash with URL parameters for server-side cropping: `https://images.unsplash.com/photo-{ID}?w={width}&h={height}&fit=crop`. Always add `loading="lazy"` to decorative images. For demos shown to live audiences, consider downloading key images to `public/images/` to avoid Unsplash rate limits.
+
+### Fixed header layout
+
+The app header is `position: fixed` at ~56px. Content that doesn't account for this will be hidden behind it.
+
+**For full-viewport layouts** (e.g. chat + sidebar pages): Use separate `position: fixed` containers with explicit `top` values. Don't rely on EUI generating spacer divs — in React fragment structures the spacer may not render.
+
+```tsx
+<AppHeader />  {/* 56px fixed header */}
+<div style={{ position: 'fixed', top: 56, left: 0, right: 0, /* secondary bar */ }}>
+<div style={{ position: 'fixed', top: 96, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
+  {/* Main content */}
+</div>
+```
+
+**For standard pages**: Use `EuiPageTemplate` which handles the offset automatically. The fixed layout is only needed for custom full-viewport designs.
+
+### Sidebar constraints
+
+Always set `minWidth` and `maxWidth` on sidebar panels to prevent overflow or collapse:
+
+```tsx
+<EuiFlexItem grow={4} style={{ minWidth: 320, maxWidth: 480 }}>
+```
 
 ### Responsive patterns
 

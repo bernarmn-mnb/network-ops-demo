@@ -114,8 +114,39 @@ This project uses a shared knowledge base at `./hive-mind` (git submodule).
    - The `npm run dev` script now auto-generates this cache on start.
    - If you add a new icon while the server is running, you must restart the server or run `npm run generate-icons`.
    - **GUARANTEE**: If an icon is missing, the app will not crash but the icon will not render. Always verify icons exist in the cache.
-2. **Theme**: Use EUI theme variables, support light/dark modes
+2. **Theme**: Use EUI theme variables, support light/dark modes. See `hive-mind/patterns/eui/DEMO_PAGE_VISUAL_DESIGN.md` for CSS variable reference.
 3. **Colors for EuiAvatar**: Must use hex values, not CSS variables
+
+---
+
+## Visual Quality Standards
+
+> These rules apply whenever you build or modify UI pages. The goal is to produce demo-quality output on the first pass, not after multiple rounds of human review.
+
+### During Page Construction
+
+1. **Dark mode first**: Use CSS variables (`var(--euiTextColor)`, `var(--euiColorLightShade)`, etc.) for all text, backgrounds, and borders. Never hardcode hex colours for theme-dependent surfaces. See `hive-mind/patterns/eui/DEMO_PAGE_VISUAL_DESIGN.md`.
+2. **Imagery over text**: Every custom page should include domain-relevant photography or illustration — hero banners, circular photo strips, card thumbnails, or profile images. Text-only pages feel like wireframes. Use Unsplash with `?w=X&h=Y&fit=crop` parameters and `loading="lazy"`.
+3. **Empty states matter**: Empty lists, grids, and accordions should have a visual element (small image or icon) and actionable text that tells the user what to do next. Never leave bare "no data" text.
+4. **Brand the chat**: If the page has a chat interface, give the assistant a custom name, avatar, and personalised greeting that references the demo persona. Don't use the default sparkles icon.
+5. **Fixed header awareness**: The app header is `position: fixed` at 56px height. Any content below it needs explicit offset. Don't rely on EUI generating spacer divs — use `position: fixed` with calculated `top` values for full-viewport layouts.
+
+### Visual Verification (MANDATORY)
+
+**After building or significantly modifying any page, you MUST visually verify it before marking the work as complete.**
+
+If browser tools are available (Playwright MCP or Claude-in-Chrome):
+1. Navigate to the page in the browser
+2. Take a screenshot and review it — check for: hidden content, broken layout, missing images, dark mode issues
+3. If the page has interactive sections (accordions, toggles, scrolling), test those and screenshot the results
+4. Toggle dark/light mode and verify both render correctly
+
+If browser tools are NOT available:
+1. Run `npx tsc --noEmit` to verify TypeScript compiles
+2. Check the browser console for errors via `./dev logs-snapshot`
+3. Note in your completion message that visual verification was not performed and should be checked manually
+
+**Do not mark a UI task as complete without visual verification.** "It compiles" is not "it looks right."
 
 ---
 

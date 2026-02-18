@@ -42,7 +42,14 @@ bd create "Build custom page: {PageName}" \
 - [ ] Uses EUI components for layout
 - [ ] Responsive at mobile and desktop widths
 - [ ] Works with actual indexed data (not mock data)
-- [ ] Any new EUI icons registered in icon cache"
+- [ ] Any new EUI icons verified against icon cache before use
+VISUAL QUALITY (see CLAUDE.md Visual Quality Standards):
+- [ ] Page includes domain-relevant imagery (hero banners, photos, thumbnails — not text-only)
+- [ ] Empty states have visual elements and actionable prompts
+- [ ] Chat assistant has a custom name, avatar, and personalised greeting (if page has chat)
+- [ ] Content not hidden behind fixed header (visually verified in browser)
+- [ ] Dark mode tested — toggle theme and confirm no invisible text or broken colours
+- [ ] Visually verified via browser screenshot before marking complete"
 ```
 
 ---
@@ -62,17 +69,24 @@ bd create "Customize demoPrompts for {domain}" \
 
 ---
 
-## Update DemoGuidePage
+## Populate DemoGuidePage
+
+> **Key file**: `frontend/src/config/demoTracks.ts` — this is where demo tracks live (not in the page component).
+> The UX Design conversation already produced the narrative — this task structures it into `DemoTrack[]` format.
 
 ```
-bd create "Update DemoGuidePage for {domain}" \
+bd create "Populate DemoGuidePage for {domain}" \
   --type task \
   --priority 2 \
-  --acceptance "- [ ] Demo tracks are domain-specific (not template defaults)
-- [ ] Each track has a clear narrative arc (problem → solution → wow moment)
-- [ ] Talking points reference actual features built in this demo
-- [ ] Tracks cover all custom pages and key capabilities
-- [ ] Guide page renders correctly with branding applied"
+  --acceptance "- [ ] demoTracks.ts has 1-3 domain-specific tracks (not template defaults)
+- [ ] Each track has title, description, valueProposition, and 3-5 scenarios
+- [ ] Each scenario has steps (what to do), talkingPoints (what to say), and demoPills (where to navigate)
+- [ ] Track narrative follows: problem → search/chat → wow moment → resolution
+- [ ] Talking points reference actual features and custom pages built in this demo
+- [ ] Demo pills link to correct routes (custom pages, search, chat)
+- [ ] DEMO_TITLE and DEMO_SUBTITLE set in demoConfig.ts
+- [ ] Guide page renders correctly with branding applied
+- [ ] Visually verified via browser screenshot"
 ```
 
 ---
@@ -105,7 +119,11 @@ bd create "End-to-end demo walkthrough" \
 - [ ] Custom page(s) function as designed
 - [ ] Branding is applied consistently across all visible pages
 - [ ] Demo prompts trigger the expected demo narrative
-- [ ] No broken images, missing data, or placeholder text visible"
+- [ ] No broken images, missing data, or placeholder text visible
+- [ ] Dark mode: toggle theme on every page — no invisible text, broken borders, or hardcoded colours
+- [ ] Each page visually verified via browser screenshot (not just TypeScript compilation)
+- [ ] Chat assistant has branded name, avatar, and persona-aware greeting
+- [ ] Empty states on all pages have visual weight (not bare text)"
 ```
 
 ---
