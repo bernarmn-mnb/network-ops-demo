@@ -390,6 +390,56 @@ Inference endpoint IDs (e.g. `.elser-2-elastic`, `.jina-embeddings-v3`) **change
 
 ---
 
+## Agent Builder & Workflows (Programmatic Management)
+
+**IMPORTANT: Always create agents, tools, and workflows via the API — not the Kibana UI.**
+
+Coding agents should never tell the user to "go to Kibana" to create an agent. Everything can be scripted.
+
+### Full API References (in hive-mind)
+
+- **Agent & Tool CRUD**: `hive-mind/patterns/agent-builder/AGENT_BUILDER_API_MANAGEMENT.md`
+- **Workflow YAML & API**: `hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md`
+- **MCP Endpoint**: `hive-mind/patterns/agent-builder/MCP_SERVER_INTEGRATION.md`
+
+### Backend Proxy Routes
+
+The backend provides proxy routes that keep API keys secure. Use these instead of hitting Kibana directly:
+
+```bash
+# Agent CRUD
+GET    /api/agent/agents                  # List all agents
+GET    /api/agent/agents/{id}             # Get agent config + prompt
+POST   /api/agent/agents                  # Create agent
+PUT    /api/agent/agents/{id}             # Update agent
+DELETE /api/agent/agents/{id}             # Delete agent
+
+# Tool CRUD
+GET    /api/agent/tools                   # List all tools
+POST   /api/agent/tools                   # Create tool (index_search, esql, workflow)
+DELETE /api/agent/tools/{id}              # Delete tool
+
+# Chat
+POST   /api/agent/chat                    # Streaming SSE (uses AGENT_ID from .env)
+POST   /api/agent/chat/test               # Non-streaming test (accepts any agent_id)
+
+# Workflows (full CRUD already exists)
+POST   /api/workflows                     # Create workflow (body: { yaml: "..." })
+POST   /api/workflows/{id}/run            # Run workflow
+GET    /api/workflows/executions/{id}     # Check execution status
+```
+
+### Agent Setup Sequence
+
+1. **Create tools first** — `POST /api/agent/tools` for each data index
+2. **Create the agent** — `POST /api/agent/agents` with system prompt and tool IDs
+3. **Test via API** — `POST /api/agent/chat/test` with representative messages
+4. **Iterate** — `PUT /api/agent/agents/{id}` to refine the prompt
+5. **Set AGENT_ID** in `backend/.env` — the streaming chat UI uses this
+6. **Test via UI** — `./dev test-agent`
+
+---
+
 ## Issue Tracking with Beads (if `.beads/` exists)
 
 This project uses **beads (bd)** as its persistent issue tracker. Beads survive session restarts, context compaction, and agent handoffs — unlike in-memory task lists which are lost when a session ends.

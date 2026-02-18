@@ -128,10 +128,53 @@ bd create "End-to-end demo walkthrough" \
 
 ---
 
+## Create Agent Builder agent via API
+
+```
+bd create "Create Agent Builder agent for {domain}" \
+  --type task \
+  --priority 1 \
+  --acceptance "- [ ] index_search tools created via POST /api/agent_builder/tools for each data index
+- [ ] System prompt designed with: persona, tool usage instructions, output format, conversation style
+- [ ] Agent created via POST /api/agent_builder/agents with prompt and tool IDs
+- [ ] Agent tested via POST /api/agent_builder/converse with representative messages
+- [ ] Agent looks up customer/user profile on first greeting
+- [ ] Agent uses search tools to find domain-relevant results
+- [ ] Agent response quality verified: correct tone, formatting, personalisation
+- [ ] AGENT_ID set in backend/.env
+- [ ] Chat works via the app UI (./dev test-agent passes)"
+```
+
+> **IMPORTANT**: Create agents and tools via the API, not the Kibana UI.
+> See `hive-mind/patterns/agent-builder/AGENT_BUILDER_API_MANAGEMENT.md`.
+
+---
+
+## Create and test workflows via API
+
+```
+bd create "Create workflows for {domain}" \
+  --type task \
+  --priority 2 \
+  --acceptance "- [ ] Workflow YAML authored with correct step types and template syntax
+- [ ] Workflow created via POST /api/workflows with yaml body
+- [ ] Workflow tested via POST /api/workflows/{id}/run with sample inputs
+- [ ] Workflow execution monitored via GET /api/workflowExecutions/{execId}
+- [ ] (If agent tool) workflow tool created and added to agent's tool_ids
+- [ ] Workflow results are correct and useful for the demo scenario"
+```
+
+> **IMPORTANT**: Workflows require header `x-elastic-internal-origin: kibana` on all API calls.
+> See `hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md`.
+
+---
+
 ## Notes for Build Agents
 
 - Create these tasks during the **Plan Creation** beat of the consultation
 - Link all tasks to the demo epic with `bd dep add`
-- Tasks should be created in dependency order: searchConfig before custom pages, demoConfig before walkthrough
+- Tasks should be created in dependency order: agent setup before custom pages, searchConfig before custom pages, demoConfig before walkthrough
 - Always run `bd ready` after creating tasks to verify the dependency graph
 - Reference `docs/CUSTOM_PAGE_PATTERNS.md` when working on custom page tasks
+- **Never tell the user to "go to Kibana"** for agent or workflow setup — use the API. See `hive-mind/patterns/agent-builder/AGENT_BUILDER_API_MANAGEMENT.md` and `WORKFLOW_INTEGRATION.md`
+- **Always test agents and workflows via API** before wiring up the UI — catch prompt issues early

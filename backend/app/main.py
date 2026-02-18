@@ -18,6 +18,7 @@ from .agno.routes import router as agno_v2_router
 from .routes.a2a import router as a2a_router
 from .routes.agno_demo import router as agno_router
 from .routes.agent import router as agent_router
+from .routes.agent_management import router as agent_management_router
 from .routes.analytics import router as analytics_router
 from .routes.audit import router as audit_router
 from .routes.branding import router as branding_router
@@ -60,6 +61,7 @@ app.add_middleware(
 
 # Register routes
 app.include_router(agent_router)
+app.include_router(agent_management_router)
 app.include_router(audit_router)
 app.include_router(branding_router)
 app.include_router(mcp_router)
