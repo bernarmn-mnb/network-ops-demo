@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # =============================================================================
-# Elastic Demo Starter - Silent Foundation Builder
+# Elastic Demo Starter - Foundation Builder
 # =============================================================================
-# Installs all prerequisites and dependencies, connects the OOTB shared cluster,
-# starts servers, and tells the user what to do next.
+# Sets up git isolation (branch + optional fork), installs all prerequisites
+# and dependencies, connects the OOTB shared cluster, starts servers, and
+# tells the user what to do next.
 #
-# NO prompts. NO feature selection. NO credential gathering.
-# Those are handled by the AI assistant after setup.
+# Only prompts: branch name and optional fork creation (first run only).
+# Feature selection and credential gathering are handled by the AI assistant.
 #
 # For advanced/manual configuration, run: uv run scripts/interactive_setup.py
 # =============================================================================
@@ -39,8 +40,92 @@ log_info() { echo -e "  ${DIM}..${NC}  $1"; }
 
 echo ""
 echo -e "${BOLD}Elastic Demo Starter - Setup${NC}"
-echo -e "${DIM}Silent foundation builder. No prompts, no questions.${NC}"
+echo -e "${DIM}Foundation builder. Installs deps, connects cluster, starts servers.${NC}"
 echo ""
+
+# =============================================================================
+# Step 0: Git setup — ensure the user isn't working directly on the template main
+# =============================================================================
+
+TEMPLATE_REPO="elastic/elastic-demo-starter"
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+ORIGIN_URL=$(git remote get-url origin 2>/dev/null || echo "")
+
+# Detect if origin points to the template repo and user is on main
+IS_TEMPLATE_ORIGIN=false
+if echo "$ORIGIN_URL" | grep -q "$TEMPLATE_REPO"; then
+    IS_TEMPLATE_ORIGIN=true
+fi
+
+if [ "$IS_TEMPLATE_ORIGIN" = true ] && [ "$CURRENT_BRANCH" = "main" ]; then
+    echo -e "${YELLOW}${BOLD}Git setup needed${NC}"
+    echo ""
+    echo -e "  You're on ${BOLD}main${NC} with origin pointing to the template repo."
+    echo -e "  Demo work should happen on a dedicated branch so main stays clean."
+    echo ""
+
+    # Derive a suggested branch name from the folder name
+    FOLDER_NAME=$(basename "$SCRIPT_DIR")
+    SUGGESTED_BRANCH=""
+    if [ "$FOLDER_NAME" != "elastic-demo-starter" ] && [ "$FOLDER_NAME" != "elastic-agent-starter" ]; then
+        # Folder was renamed — use it as the branch name
+        SANITIZED=$(echo "$FOLDER_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
+        SUGGESTED_BRANCH="demo/$SANITIZED"
+    fi
+
+    # Ask for branch name (only interactive prompt in the whole script)
+    if [ -n "$SUGGESTED_BRANCH" ]; then
+        echo -e "  Suggested branch: ${GREEN}${SUGGESTED_BRANCH}${NC} (based on folder name)"
+        echo -ne "  ${BOLD}Branch name${NC} [${SUGGESTED_BRANCH}]: "
+    else
+        echo -e "  ${DIM}Name it after the customer or use case, e.g. demo/ifs-field-service${NC}"
+        echo -ne "  ${BOLD}Branch name${NC} [demo/my-demo]: "
+    fi
+
+    read -r USER_BRANCH
+    DEMO_BRANCH="${USER_BRANCH:-${SUGGESTED_BRANCH:-demo/my-demo}}"
+
+    # Create the branch
+    git checkout -b "$DEMO_BRANCH" 2>/dev/null
+    echo -e "  ${GREEN}OK${NC}  Created branch ${BOLD}${DEMO_BRANCH}${NC}"
+
+    # Offer to create a fork if gh is authenticated
+    if command -v gh &> /dev/null && gh auth status &> /dev/null 2>&1; then
+        GH_USER=$(gh api user --jq '.login' 2>/dev/null || echo "")
+        FORK_URL=$(gh api "repos/$TEMPLATE_REPO/forks" --jq ".[] | select(.owner.login == \"$GH_USER\") | .clone_url" 2>/dev/null | head -1)
+
+        if [ -n "$FORK_URL" ]; then
+            # Fork already exists — add it as a remote if not already present
+            EXISTING_FORK=$(git remote -v 2>/dev/null | grep "$GH_USER" | head -1 | awk '{print $1}')
+            if [ -z "$EXISTING_FORK" ]; then
+                git remote add fork "$FORK_URL" 2>/dev/null
+                echo -e "  ${GREEN}OK${NC}  Added your fork as remote ${BOLD}fork${NC}"
+            else
+                echo -e "  ${GREEN}OK${NC}  Fork remote already configured (${EXISTING_FORK})"
+            fi
+        else
+            echo -ne "  ${BOLD}Create a GitHub fork?${NC} [Y/n]: "
+            read -r CREATE_FORK
+            if [ "${CREATE_FORK:-Y}" != "n" ] && [ "${CREATE_FORK:-Y}" != "N" ]; then
+                FORK_RESULT=$(gh repo fork "$TEMPLATE_REPO" --remote --remote-name fork 2>&1)
+                if [ $? -eq 0 ]; then
+                    echo -e "  ${GREEN}OK${NC}  Forked and added as remote ${BOLD}fork${NC}"
+                else
+                    echo -e "  ${YELLOW}!!${NC}  Could not create fork (you can do this later)"
+                    echo -e "       ${DIM}${FORK_RESULT}${NC}"
+                fi
+            fi
+        fi
+
+        echo -e "  ${DIM}Push your demo work with: git push -u fork ${DEMO_BRANCH}${NC}"
+    fi
+    echo ""
+elif [ "$IS_TEMPLATE_ORIGIN" = false ] && [ "$CURRENT_BRANCH" = "main" ]; then
+    # Origin is a fork or custom repo — just suggest a branch
+    echo -e "${DIM}Tip: Consider creating a demo branch (git checkout -b demo/customer-name) to keep main clean.${NC}"
+    echo ""
+fi
+
 echo -e "${BLUE}[1/6] Checking prerequisites${NC}"
 
 # --- Python version ---

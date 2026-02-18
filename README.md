@@ -94,19 +94,26 @@ Depending on which features you want to use:
 
 The fastest way to get started is to let your AI assistant do the work.
 
-1.  **Clone the repo**:
+1.  **Clone the repo** — name the folder after your customer or use case:
     ```bash
-    git clone https://github.com/elastic/elastic-demo-starter.git my-demo
-    cd my-demo
+    # Name it after the customer, not "my-demo"
+    git clone https://github.com/elastic/elastic-demo-starter.git ifs-field-service
+    cd ifs-field-service
     ```
 
-2.  **Open in your AI Editor**:
+2.  **Run setup** — it will install dependencies, connect to the shared cluster, create a demo branch, and optionally fork the repo:
+    ```bash
+    ./setup.sh
+    ```
+    Setup detects that you're on `main` with the template origin and prompts you to create a demo branch (e.g. `demo/ifs-field-service`). If you have GitHub CLI, it can also create a fork so you can push freely.
+
+3.  **Open in your AI Editor**:
     *   **Cursor**: Open the folder, press `Cmd+L` (Chat), and type:
         > "Read docs/prompts/WELCOME_PROMPT.md and follow the instructions."
     *   **Claude Code**: Run `claude` in the terminal and type:
         > "Read docs/prompts/WELCOME_PROMPT.md and follow the instructions."
 
-3.  **Follow the AI's lead**: It will interview you about your project goals, run the setup scripts, and create a customized execution plan.
+4.  **Follow the AI's lead**: It will interview you about your demo goals, propose a strategy, and create a customized execution plan.
 
 ---
 
@@ -128,14 +135,16 @@ This checks for Python 3.12+, Node.js 18+, Git, and optional tools like GitHub C
 
 ### 1. Clone the Repository
 
+Name the folder after your customer or demo purpose — not "my-demo":
+
 ```bash
 # Using GitHub CLI (recommended)
-gh repo clone elastic/elastic-demo-starter my-demo
+gh repo clone elastic/elastic-demo-starter acme-retail-demo
 
 # OR using git directly
-git clone https://github.com/elastic/elastic-demo-starter.git my-demo
+git clone https://github.com/elastic/elastic-demo-starter.git acme-retail-demo
 
-cd my-demo
+cd acme-retail-demo
 ```
 
 **Need GitHub CLI?**
@@ -144,36 +153,23 @@ brew install gh    # macOS
 gh auth login      # Authenticate
 ```
 
-### 2. Initialize Submodules
-
-```bash
-git submodule update --init --recursive
-```
-
-This downloads the `hive-mind/` shared knowledge base.
-
-### 3. Run the Setup Wizard
+### 2. Run Setup
 
 ```bash
 ./setup.sh
 ```
 
-The wizard will:
-1. ✅ **Validate environment** - Python 3.12+ (fails early if too old), Node.js 18+ (warns if older)
-2. 🔌 **Check network** - Verifies connectivity to Elastic Cloud, npm, PyPI
-3. 📦 **Initialize submodules** - Offers to fix if hive-mind is empty
-4. 🎯 **Ask which features you want to configure:**
-   - **Search** - Elasticsearch search UI with facets
-   - **AI Chat** - Agent Builder integration (Chat, Demo, Audit, MCP)
-   - **Analytics** - ES|QL dashboards and visualizations
-   - **Multi-Agent** - A2A orchestration with LLM coordinator
-   - **Observability** - OpenTelemetry (APM Traces, Click Tracking)
-5. 🔧 **Validate credentials** - Warns if API key format looks wrong
-6. 📦 **Install dependencies** - Shows errors if installation fails
-7. 🎨 **Set up branding** (optional)
-8. 🚀 **Launch the demo**
+Setup is silent (no interactive wizards). It will:
 
-> **Tip**: You can re-run `./setup.sh` anytime to add more features or change configuration.
+1. **Create a demo branch** — detects you're on `main` with the template origin and prompts for a branch name (e.g. `demo/acme-retail`). Optionally forks the repo via `gh` so you can push freely.
+2. **Check prerequisites** — Python 3.10+, Node.js 18+, git, uv (installs if missing)
+3. **Initialize submodules** — downloads the `hive-mind/` shared knowledge base
+4. **Install dependencies** — backend (Python via uv) and frontend (Node.js via yarn/npm)
+5. **Connect OOTB cluster** — fetches shared Elastic credentials via GitHub CLI (if authenticated)
+6. **Start servers** — launches backend and frontend in the background
+7. **Configure browser tools** — sets up Playwright MCP for AI-assisted branding extraction
+
+> **Tip**: You can re-run `./setup.sh` anytime. It's idempotent — it won't recreate branches or re-prompt if already configured.
 
 ### Running the Demo
 
@@ -710,12 +706,11 @@ Questions or ideas? Reach out on Slack: **#demo-starter**
 
 ## Re-running Setup
 
-You can re-run `./setup.sh` anytime to:
-- Add new feature configurations (Search, AI Chat, Analytics, etc.)
-- Modify existing connections
-- Reset and start fresh
-
-The wizard remembers what's already configured and lets you choose what to update.
+You can re-run `./setup.sh` anytime. It's idempotent:
+- Skips git setup if already on a demo branch
+- Skips dependency install if packages are current
+- Skips credential setup if `.env` already has valid values
+- Restarts servers with the latest code
 
 ---
 

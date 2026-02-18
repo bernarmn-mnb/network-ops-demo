@@ -4,50 +4,38 @@ This guide helps you identify and contribute reusable functionality back to the 
 
 ## Git Setup
 
-This project uses two remotes:
+`./setup.sh` handles git setup automatically — it creates a demo branch and optionally forks the repo. After setup, your remotes look like this:
 
-- **`origin`**: Your demo/fork repository (where you push your work)
-- **`upstream`**: The template repository (`elastic-demo-starter`)
+- **`origin`**: The template repository (`elastic/elastic-demo-starter`)
+- **`fork`**: Your personal fork (created by setup if you chose to fork)
 
-### Initial Setup
+Your demo work lives on a dedicated branch (e.g. `demo/acme-retail`). Push to your fork:
 
 ```bash
-# If you haven't already, add upstream
-git remote add upstream https://github.com/elastic/elastic-demo-starter.git
-
-# Verify remotes
-git remote -v
+git push -u fork demo/acme-retail
 ```
 
-### Optional: Change Origin to Your Own Repo
-
-If you want `origin` to point to your own repository (instead of the template):
+### Manual Setup (if you skipped setup.sh)
 
 ```bash
-# Remove current origin
-git remote remove origin
+# Create a demo branch
+git checkout -b demo/customer-name
 
-# Add your repo as origin
-git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPO.git
+# Fork via GitHub CLI
+gh repo fork elastic/elastic-demo-starter --remote --remote-name fork
 
-# Verify
-git remote -v
-# Should show:
-# origin    https://github.com/YOUR-USERNAME/YOUR-REPO.git
-# upstream  https://github.com/elastic/elastic-demo-starter.git
+# Or add a fork manually
+git remote add fork https://github.com/YOUR-USERNAME/elastic-demo-starter.git
 ```
 
 ### Syncing with Template
 
+Pull template updates from `origin/main` into your demo branch:
+
 ```bash
-# Fetch latest changes from template
-git fetch upstream
-
-# See what's new
-git log HEAD..upstream/main --oneline
-
-# Merge template updates into your demo (if needed)
-git merge upstream/main
+git fetch origin
+git log HEAD..origin/main --oneline    # See what's new
+git merge origin/main                  # Merge template updates
 ```
 
 ## Identifying Reusable Functionality
