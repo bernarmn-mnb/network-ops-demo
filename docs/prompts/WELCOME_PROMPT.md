@@ -81,6 +81,11 @@ Now propose a specific plan. Cover:
 
 Justify your choices with what you know about the vertical. Reference specific pain points from the value proposition file.
 
+**Capture the impact criteria now** — these will be verified after the build. For each proposed capability, articulate:
+- The **wow moment** the audience will experience (specific, not vague)
+- Why it matters to **this audience** specifically (not a generic benefit)
+- What **minimum bar** looks like if time runs short (fallback that still impresses)
+
 If custom data is needed, explain what you'd generate and why. Guide the SA to provide cluster credentials if write access is required (point them to `.secrets/ootb-admin.env`).
 
 **Pause here.** Say something like:
@@ -128,6 +133,8 @@ Don't force all concepts — one well-built custom page beats three half-baked o
 
 Once the SA agrees on the approach, create the execution plan.
 
+**The goal**: when the SA comes back, they should find a working demo that has been built, stability-tested, and verified against the original value proposition. Not just "it compiles" — "it lands."
+
 **If beads is available** (`.beads/` exists and `bd` works):
 
 Create an epic and prioritised child tasks:
@@ -137,9 +144,10 @@ Create an epic and prioritised child tasks:
 3. **Features** — configure the specific capabilities chosen
 4. **Agent setup** — create the agent and its tools **via the API** (see `hive-mind/patterns/agent-builder/AGENT_BUILDER_API_MANAGEMENT.md`). Design the system prompt during UX Design, then: create `index_search` tools via `POST /api/agent/tools` → create the agent via `POST /api/agent/agents` with the prompt and tool IDs → test with `POST /api/agent/chat/test` → set `AGENT_ID` in `backend/.env`. Never tell the SA to "go to Kibana" — everything is scriptable.
 5. **Workflows** (if applicable) — create workflows **via the API** using `POST /api/workflows` with YAML body (see `hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md`). Test with `POST /api/workflows/{id}/run`. Optionally expose as agent tools by creating a tool with `type: "workflow"`. Wire into custom pages.
-6. **Demo guide** — populate `frontend/src/config/demoTracks.ts` with the demo narrative designed above: tracks, scenarios, talking points, demo pills. This is what powers the `/guide` page. The UX Design conversation already produced the content — this task turns it into the structured `DemoTrack[]` format. See `docs/templates/BEADS_UI_TASKS.md` for the task template.
-7. **Testing** — dry run, edge cases, fallback plan
-8. If Cloud Run delivery was chosen, add deployment tasks (build, deploy, verify IAP access)
+6. **Demo guide** — populate `frontend/src/config/demoTracks.ts` with the demo narrative designed above: tracks, scenarios, talking points, demo pills. This is what powers the `/guide` page. The UX Design conversation already produced the content — this task turns it into the structured `DemoTrack[]` format. **Every pain point, wow moment, and audience hook from the value proposition must map to a specific demo moment.** Fill in the Traceability table in the plan to make this explicit. See `docs/templates/BEADS_UI_TASKS.md` for the task template.
+7. **Stability testing** — all pages load, search returns results, chat responds, no console errors, edge cases. This is "does it work."
+8. **Value verification** — after stability passes, verify the demo delivers on the impact criteria from the plan. Three passes: (a) API flow simulation — walk the demo scenario hitting backend endpoints directly, checking that search results are relevant, agent responses match the designed persona, and the happy path has no gaps; (b) browser walkthrough — navigate each page in demo guide order, screenshot wow moments, verify visual polish; (c) impact gap analysis — compare the built demo against each wow moment and audience hook, auto-fix easy gaps (prompt tweaks, config, copy, images), flag significant gaps for SA review. See `docs/templates/BEADS_UI_TASKS.md` for the task template.
+9. If Cloud Run delivery was chosen, add deployment tasks (build, deploy, verify IAP access)
 
 Link child tasks to the epic. Set priorities based on the timeline.
 

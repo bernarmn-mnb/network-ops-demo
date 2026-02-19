@@ -78,7 +78,13 @@ bd create "Customize demoPrompts for {domain}" \
 bd create "Populate DemoGuidePage for {domain}" \
   --type task \
   --priority 2 \
-  --acceptance "- [ ] demoTracks.ts has 1-3 domain-specific tracks (not template defaults)
+  --acceptance "VALUE PROP TRACEABILITY (every claim must have a demo moment):
+- [ ] Each pain point from DEMO_PLAN.md Section 1 maps to a specific demo interaction
+- [ ] Each wow moment from Impact Criteria has a corresponding scenario step
+- [ ] Each audience-specific hook is surfaced in a talking point
+- [ ] Traceability table in DEMO_PLAN.md Section 2 is fully populated (no empty rows)
+DEMO GUIDE CONTENT:
+- [ ] demoTracks.ts has 1-3 domain-specific tracks (not template defaults)
 - [ ] Each track has title, description, valueProposition, and 3-5 scenarios
 - [ ] Each scenario has steps (what to do), talkingPoints (what to say), and demoPills (where to navigate)
 - [ ] Track narrative follows: problem → search/chat → wow moment → resolution
@@ -169,11 +175,53 @@ bd create "Create workflows for {domain}" \
 
 ---
 
+## Value verification against plan
+
+> **When**: After stability testing passes. This is the final quality gate before the SA returns.
+> **Philosophy**: "Does it work?" is necessary but not sufficient. This checks "does it land?"
+
+```
+bd create "Value verification: does the demo deliver on the value proposition?" \
+  --type task \
+  --priority 1 \
+  --acceptance "PASS 1 — API FLOW SIMULATION (fast, catches content/logic gaps):
+- [ ] Re-read Impact Criteria and Wow Moments from DEMO_PLAN.md Section 1
+- [ ] Hit search API with each demo prompt — results are relevant and high-quality
+- [ ] Hit chat API with demo scenario messages — agent persona, tone, and tool usage match design
+- [ ] Walk the full demo scenario via API calls in sequence (simulating what the UI would do)
+- [ ] Happy path has no empty results, errors, or generic fallback responses
+- [ ] Workflow APIs return correct outputs (if applicable)
+PASS 2 — BROWSER WALKTHROUGH (visual, catches experience gaps):
+- [ ] Navigate each page following demo guide track order
+- [ ] Screenshot each key moment and each defined wow moment
+- [ ] Branding consistent and professional throughout
+- [ ] Imagery loads and is domain-relevant (not placeholders)
+- [ ] Chat greeting is personalised and on-brand
+- [ ] Transitions between demo scenes feel natural
+- [ ] Dark and light mode both polished
+PASS 3 — IMPACT GAP ANALYSIS (the 'would this land?' check):
+- [ ] Each wow moment from Impact Criteria verified as delivered, partial, or missing
+- [ ] Each audience-specific hook verified
+- [ ] Traceability table checked — every row has a working demo moment
+- [ ] Gaps categorised: auto-fix (apply immediately) or consult-SA (flag for review)
+- [ ] Auto-fixes applied: prompt tweaks, config, copy, images, sort order
+- [ ] Issues for SA review documented with clear description of the gap
+- [ ] Overall assessment recorded in DEMO_PLAN.md Section 5: verdict, confidence, honest answer to 'would you present this tomorrow?'"
+```
+
+> **Auto-fix vs. Consult SA decision framework:**
+> - **Auto-fix** (do it now): Prompt wording, config values, copy/text, missing images, sort order,
+>   facet labels, demo prompt phrasing, CSS tweaks — anything that doesn't change the agreed narrative
+> - **Consult SA** (flag for review): New pages, different data, changed narrative flow, additional features,
+>   removing agreed wow moments, significant persona changes — anything that changes the plan
+
+---
+
 ## Notes for Build Agents
 
 - Create these tasks during the **Plan Creation** beat of the consultation
 - Link all tasks to the demo epic with `bd dep add`
-- Tasks should be created in dependency order: agent setup before custom pages, searchConfig before custom pages, demoConfig before walkthrough
+- Tasks should be created in dependency order: agent setup before custom pages, searchConfig before custom pages, demoConfig before walkthrough, stability testing before value verification
 - Always run `bd ready` after creating tasks to verify the dependency graph
 - Reference `docs/CUSTOM_PAGE_PATTERNS.md` when working on custom page tasks
 - **Never tell the user to "go to Kibana"** for agent or workflow setup — use the API. See `hive-mind/patterns/agent-builder/AGENT_BUILDER_API_MANAGEMENT.md` and `WORKFLOW_INTEGRATION.md`

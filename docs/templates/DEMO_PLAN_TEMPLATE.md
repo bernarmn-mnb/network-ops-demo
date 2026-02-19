@@ -53,6 +53,22 @@
 - [ ] {Metric 2 - e.g., "Customer requests follow-up meeting"}
 - [ ] {Metric 3 - e.g., "POC approved"}
 
+### Impact Criteria
+
+> These criteria are the contract between what was promised during consultation
+> and what the built demo must deliver. They drive the Value Verification in Section 6.
+
+**Wow moments** (ordered by narrative arc):
+1. {Moment 1 — e.g., "AI understands domain jargon without explicit training"}
+2. {Moment 2 — e.g., "One-click escalation creates a ticket with full context"}
+3. {Moment 3 — e.g., "Dashboard shows real-time analytics the audience recognises"}
+
+**Audience-specific hooks**:
+- {Hook 1 — what resonates with this audience? e.g., "CTO cares about time-to-deploy"}
+- {Hook 2 — e.g., "Product team cares about UX quality and polish"}
+
+**Minimum bar for impact**: {What's the simplest version of this demo that would still impress the audience? This is the fallback if time runs short.}
+
 ---
 
 ## 2. Demo Scenario
@@ -102,6 +118,18 @@
 #### Closing (2 min)
 
 {How do you wrap up? What call to action?}
+
+### Value Prop → Demo Guide Traceability
+
+> Every pain point and wow moment from Section 1 must appear somewhere in the demo.
+> If a row has no demo moment, the demo has a gap. Fill it or drop the claim from the value prop.
+
+| Value Prop Element | Type | Demo Page / Interaction | Track & Scenario |
+|--------------------|------|------------------------|------------------|
+| {Pain point 1} | Pain point | {Page/feature that addresses it} | Track {N}, Scenario {M} |
+| {Wow moment 1} | Wow moment | {Specific interaction that delivers it} | Track {N}, Scenario {M} |
+| {Audience hook 1} | Hook | {Where in the flow it lands} | Track {N}, Scenario {M} |
+| {Differentiation point} | Differentiator | {What shows this} | Track {N}, Scenario {M} |
 
 ### Objection Handling
 
@@ -269,16 +297,98 @@
 - [ ] End-to-end walkthrough of the demo narrative following the guide page
 - [ ] Full visual walkthrough: navigate every page, screenshot, verify dark mode
 
-#### Phase 5: Testing (Priority: High)
+#### Phase 5: Stability Testing (Priority: High)
 
-- [ ] End-to-end test
+- [ ] All pages load without console errors
+- [ ] Search returns results for configured prompts
+- [ ] Chat responds without errors
+- [ ] Workflows execute (if applicable)
+- [ ] No broken images, missing data, or placeholder text
 - [ ] Edge case testing
-- [ ] Dry run with audience
 - [ ] Fix issues found
+
+#### Phase 6: Value Verification (Priority: High)
+
+> After stability testing passes, verify the demo delivers on the impact criteria
+> from Section 1. This is not "does it work" — it's "does it land."
+
+**Pass 1 — API Flow Simulation** (fast, catches content/logic gaps):
+- [ ] Re-read Impact Criteria and Wow Moments from Section 1
+- [ ] Walk demo scenario by hitting backend APIs: search, chat, workflows
+- [ ] Demo prompts return relevant, high-quality results (not generic)
+- [ ] Agent persona, tone, and tool usage match the design from UX phase
+- [ ] Agent handles the demo scenario's conversation flow naturally
+- [ ] No empty results, errors, or generic fallback responses on the happy path
+- [ ] Workflow outputs (if any) are correct and useful for the demo story
+
+**Pass 2 — Browser Walkthrough** (visual, catches experience gaps):
+- [ ] Navigate each page following the demo guide track order
+- [ ] Screenshot each key moment and each defined wow moment
+- [ ] Branding is consistent and professional throughout
+- [ ] Imagery loads and is domain-relevant (not placeholders)
+- [ ] Chat assistant greeting is personalised and on-brand
+- [ ] Transitions between demo scenes feel natural
+- [ ] Dark/light mode both look polished
+
+**Pass 3 — Impact Gap Analysis** (the "would this land?" check):
+- [ ] Compare built demo against each Impact Criterion from Section 1
+- [ ] Compare against the Traceability table in Section 2 — every row delivered?
+- [ ] For each gap: categorise as auto-fix or consult-SA
+- [ ] Apply auto-fixes (prompt tweaks, config, copy, images, sort order)
+- [ ] Document issues that need SA review with clear description of the gap
+- [ ] Record overall assessment and confidence level in Section 6
+
+**Decision framework for gap fixes:**
+- **Auto-fix** (do immediately): Prompt wording, config values, copy/text updates,
+  missing images, sort order, facet labels, demo prompt phrasing — anything that
+  doesn't change the demo's structure or agreed narrative
+- **Consult SA** (flag for review): New pages, different data, changed narrative flow,
+  additional features, removing agreed wow moments — anything that changes what
+  was agreed in the plan
 
 ---
 
-## 5. Progress Tracking
+## 5. Value Verification Results
+
+> Completed after Phase 6. This section documents whether the built demo delivers
+> on the value proposition agreed during consultation.
+
+### Pass 1: API Flow Simulation
+
+| Demo Step | API Call | Expected Result | Actual Result | Status |
+|-----------|----------|----------------|---------------|--------|
+| {Step from scenario} | `GET /api/search?q=...` | {What should come back} | {What came back} | Pass / Gap |
+| {Step from scenario} | `POST /api/agent/chat` | {Expected agent behaviour} | {What the agent did} | Pass / Gap |
+| {Step from scenario} | `POST /api/workflows/{id}/run` | {Expected outcome} | {What happened} | Pass / Gap |
+
+### Pass 2: Browser Walkthrough
+
+| Page | Action | Expected Impact | Actual Experience | Screenshot | Status |
+|------|--------|----------------|-------------------|------------|--------|
+| {Page 1} | {What to do} | {What audience should feel} | {What it actually felt like} | {link} | Pass / Gap |
+| {Page 2} | {What to do} | {What audience should feel} | {What it actually felt like} | {link} | Pass / Gap |
+
+### Pass 3: Impact Gap Analysis
+
+| Criterion (from Section 1) | Delivered? | Gap Description | Fix Type | Fixed? |
+|----------------------------|-----------|-----------------|----------|--------|
+| {Wow moment 1} | Yes / Partial / No | {What's missing} | Auto-fix / Consult SA | {Yes/Pending} |
+| {Wow moment 2} | Yes / Partial / No | {What's missing} | Auto-fix / Consult SA | {Yes/Pending} |
+| {Audience hook 1} | Yes / Partial / No | {What's missing} | Auto-fix / Consult SA | {Yes/Pending} |
+
+### Overall Assessment
+
+| Field | Value |
+|-------|-------|
+| **Verdict** | Ready / Needs Auto-fixes / Needs SA Review |
+| **Auto-fixes Applied** | {List of changes made} |
+| **Issues for SA Review** | {List of issues needing discussion} |
+| **Confidence Level** | High / Medium / Low |
+| **Would you present this tomorrow?** | {Honest assessment} |
+
+---
+
+## 6. Progress Tracking
 
 ### Milestones
 
@@ -313,7 +423,7 @@
 
 ---
 
-## 6. Resources
+## 7. Resources
 
 ### Documentation
 
