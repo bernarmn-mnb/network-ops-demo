@@ -230,6 +230,8 @@ def test_chat(request: TestChatRequest):
         "input": request.input,
         "agent_id": request.agent_id,
     }
+    if settings.CONNECTOR_ID:
+        body["connector_id"] = settings.CONNECTOR_ID
     if request.conversation_id:
         body["conversation_id"] = request.conversation_id
     return proxy_post("api/agent_builder/converse", body, timeout=120)

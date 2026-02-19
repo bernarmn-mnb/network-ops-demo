@@ -14,7 +14,6 @@ API ENDPOINTS:
 """
 
 import json
-from typing import Optional
 
 import requests
 from fastapi import APIRouter, HTTPException, Request
@@ -62,6 +61,10 @@ async def chat_agent(request: ChatRequest):
         "input": request.input,
         "agent_id": settings.AGENT_ID,
     }
+
+    # Include connector_id if configured (overrides agent's default LLM connector)
+    if settings.CONNECTOR_ID:
+        payload["connector_id"] = settings.CONNECTOR_ID
 
     # Include conversation_id if provided (for multi-turn conversations)
     if request.conversation_id:
