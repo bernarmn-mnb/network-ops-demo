@@ -21,6 +21,7 @@
 | OverlayGuidePage | `pages/OverlayGuidePage.tsx` | Production | Tampermonkey injection guide with script generator |
 | DemoGuidePage | `pages/DemoGuidePage.tsx` | Production | Presenter guide with demo tracks and talking points |
 | GeoSearchPage | `pages/GeoSearchPage.tsx` | Working | Geo search with dual map implementations (Leaflet + Mapbox), 5 search modes |
+| VoiceChatPage | `pages/VoiceChatPage.tsx` | Working | Voice-first chat UX with STT controls and TTS availability fallback |
 | WorkflowsPage | `pages/WorkflowsPage.tsx` | Working | Workflow management: health, deploy, run, poll, recipe library |
 | WelcomePage | `pages/WelcomePage.tsx` | Production | Landing page with feature cards and connection status |
 
@@ -90,6 +91,12 @@
 |-----------|------|--------|-------|
 | SearchResultCard | `components/search/SearchResultCard.tsx` | Production | Product card with generic JSON fallback |
 
+### Voice (`components/voice/`)
+
+| Component | Path | Status | Notes |
+|-----------|------|--------|-------|
+| VoiceChatControls | `components/voice/VoiceChatControls.tsx` | Working | Reusable mic/status control bar (idle/listening/processing/speaking) |
+
 ### Branding (`components/branding/`)
 
 | Component | Path | Status | Notes |
@@ -127,6 +134,8 @@
 | analyticsApi | `services/analyticsApi.ts` | Production | ES|QL search analytics (CTR, MRR, zero-results) |
 | llmProxyApi | `services/llmProxyApi.ts` | Production | A2A coordinator LLM proxy client |
 | useGeoSearch | `hooks/useGeoSearch.ts` | Working | Geo search: nearby, bounding box, aggregations, delivery zone check |
+| useVoiceChat | `hooks/useVoiceChat.ts` | Working | Wraps `useAgentChat` with browser STT and chunked TTS playback |
+| useTTSPlayback | `hooks/useTTSPlayback.ts` | Working | Queue-based TTS synthesis/playback with abort + cleanup handling |
 | workflowsApi | `services/workflowsApi.ts` | Working | Workflows API client (search, deploy, run, poll, cancel) |
 
 ## Backend Routes
@@ -145,6 +154,7 @@
 | A2A Chat | `routes/a2a/chat.py` | `/api/a2a` | Production | Coordinator chat with streaming |
 | A2A Health | `routes/a2a/health.py` | `/api/a2a/health` | Production | LLM proxy status check |
 | Geo Search | `routes/geo_search.py` | `/api/geo` | Working | Nearby, bounding box, aggregations, vector tiles, delivery zone check |
+| Voice | `routes/voice.py` | `/api/voice` | Working | Google Cloud TTS synthesis, voice presets, health check endpoint |
 | Workflows | `routes/workflows.py` | `/api/workflows` | Working | Proxy to Kibana Workflows Management API |
 | Agno Demo | `routes/agno_demo.py` | `/api/agno` | Experimental | Agno framework POC |
 

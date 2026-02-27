@@ -25,6 +25,9 @@ dependencies = [
     "faker>=33.0.0",
 ]
 
+[project.optional-dependencies]
+voice = ["google-cloud-texttospeech>=2.17.0"]
+
 [project.scripts]
 elastic-demo-starter-backend = "run:main"
 

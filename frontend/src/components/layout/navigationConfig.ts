@@ -95,6 +95,14 @@ export const NAV_ITEMS: NavItem[] = [
     category: 'demo',
   },
   {
+    path: '/voice',
+    label: 'Voice',
+    icon: 'discuss',
+    description: 'Voice-first chat with STT and TTS',
+    category: 'demo',
+    requiresAgent: true,
+  },
+  {
     path: '/overlay',
     label: 'Overlay Demo',
     icon: 'popout',

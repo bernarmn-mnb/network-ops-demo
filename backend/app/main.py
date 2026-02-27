@@ -1,4 +1,4 @@
-"""FastAPI Backend for Elastic Demo Starter
+"""FastAPI Backend for Elastic Demo Starter.
 
 This backend acts as a proxy between the frontend and Elastic Agent Builder,
 keeping API keys secure while enabling SSE streaming.
@@ -12,22 +12,23 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .agno.routes import router as agno_v2_router
 from .config import settings
 from .otel import init_otel
-from .agno.routes import router as agno_v2_router
 from .routes.a2a import router as a2a_router
-from .routes.agno_demo import router as agno_router
 from .routes.agent import router as agent_router
 from .routes.agent_management import router as agent_management_router
+from .routes.agno_demo import router as agno_router
 from .routes.analytics import router as analytics_router
 from .routes.audit import router as audit_router
 from .routes.branding import router as branding_router
-from .routes.mcp import router as mcp_router
 from .routes.geo_search import router as geo_search_router
+from .routes.mcp import router as mcp_router
 from .routes.search import router as search_router
 from .routes.search_fields import router as search_fields_router
 from .routes.search_simple import router as search_simple_router
 from .routes.tracking import router as tracking_router
+from .routes.voice import router as voice_router
 from .routes.workflows import router as workflows_router
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,9 @@ app.include_router(search_router)
 app.include_router(search_fields_router)
 app.include_router(analytics_router)
 app.include_router(tracking_router)
+
+# Voice (requires Google Cloud TTS credentials — optional)
+app.include_router(voice_router)
 
 # Workflows (requires Kibana Workflows feature enabled)
 app.include_router(workflows_router)

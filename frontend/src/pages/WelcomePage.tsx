@@ -101,6 +101,16 @@ const FEATURES: Feature[] = [
     useCase: 'Quickly customize colors and logos for different customers',
   },
   {
+    id: 'voice',
+    path: '/voice',
+    title: 'Voice Chat',
+    description: 'Voice-first chat interface with Speech-to-Text and Text-to-Speech. Speak to your agent and hear responses read aloud.',
+    icon: 'discuss',
+    category: 'demo',
+    requirements: { agentConnection: true, optional: 'Google Cloud TTS credentials for spoken responses' },
+    useCase: 'Build voice-enabled demos where users speak naturally to the AI assistant',
+  },
+  {
     id: 'workflows',
     path: '/workflows',
     title: 'Workflows',
