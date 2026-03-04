@@ -115,6 +115,8 @@ The fastest way to get started is to let your AI assistant do the work.
 
 4.  **Follow the AI's lead**: It will interview you about your demo goals, propose a strategy, and create a customized execution plan.
 
+> **Onboarding stability note**: If you've run hive-mind bootstrap/install scripts in another repo on this machine, you may have machine-level AI rules/skills configured already. For this project, always trust repo-local context first (`CLAUDE.md`, `docs/prompts/WELCOME_PROMPT.md`, and `hive-mind/`), then run `./dev session` to confirm the detected environment.
+
 ---
 
 ### 🐢 The Manual Way
