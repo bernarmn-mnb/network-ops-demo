@@ -565,3 +565,43 @@ bd dep tree <id>                 # Shows what blocks this issue
 bd blocked                       # Shows all blocked issues and why
 ```
 
+
+## hive-mind-start
+# Hive Mind
+
+This project uses hive-mind for Elastic integration patterns and AI skills.
+
+## Pattern-First Workflow
+1. Before implementing, check `hive-mind/.hive-mind-index.json` for relevant patterns by tag.
+2. Read the full pattern file before coding.
+3. Follow established conventions and code structure.
+4. Check skill `references/` directories for troubleshooting docs.
+
+## Skills Routing
+Route tasks through domain skills in `hive-mind/skills/`:
+- Agent chat, MCP, orchestration -> hive-agent-builder
+- OpenTelemetry, tracing, analytics -> hive-otel-tracing
+- Retrievers, indexing, query templates -> hive-search-retrievers
+- EUI, Vite, Next.js, theming -> hive-eui-frontend
+- Open Crawler setup -> hive-open-crawler
+- Docker, Cloud Run, dev scripts -> hive-deployment
+- Brand extraction, theming -> hive-demo-branding
+- Cart tracking, e-commerce -> hive-ecommerce
+- Dataset registry, generation -> hive-demo-data
+- Composite demo guides -> hive-demo-recipes
+- AI personas, prompts -> hive-meta
+- Team beads conventions -> hive-beads
+- MCP server configs -> hive-mcp
+
+## Recipe Shortcuts
+- /hive-demo-recipes search -> recipes/SEARCH_DEMO.md
+- /hive-demo-recipes agent-builder -> recipes/AGENT_BUILDER_DEMO.md
+- /hive-demo-recipes ecommerce -> recipes/ECOMMERCE_DEMO.md
+
+## Discovery Commands
+- /hive-mind list -> python hive-mind/scripts/hive-mind-index-cli.py list
+- /hive-mind search <tag> -> python hive-mind/scripts/hive-mind-index-cli.py search <tag>
+- /hive-mind tags [prefix] -> python hive-mind/scripts/hive-mind-index-cli.py tags [prefix]
+
+Start with `hive-mind/skills/hive-mind/SKILL.md` for broad requests.
+## hive-mind-end
