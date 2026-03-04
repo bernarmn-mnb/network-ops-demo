@@ -100,6 +100,25 @@ read_env_ports() {
     fi
 }
 
+# Detect whether hive-mind content is available across layouts.
+# Supports legacy patterns layout and newer skills/index layouts.
+is_hive_mind_loaded() {
+    [ -d "hive-mind/patterns" ] || \
+    [ -f "hive-mind/.hive-mind-index.json" ] || \
+    [ -d "hive-mind/skills" ] || \
+    [ -d "hive-mind/.cursor/skills" ]
+}
+
+# Count issue rows from bd command output in a portable way.
+count_bd_issue_lines() {
+    local output
+    local count
+
+    output=$("$@" 2>/dev/null || true)
+    count=$(printf '%s\n' "$output" | grep -cE '^[[:space:]]*([0-9]+\.|\[P[0-9]+\])' || true)
+    echo "${count:-0}"
+}
+
 # Update a single value in .env file
 update_env_value() {
     local key=$1
@@ -572,7 +591,7 @@ cmd_verify() {
     fi
     
     # Check 5: hive-mind submodule
-    if [ -d "hive-mind/patterns" ]; then
+    if is_hive_mind_loaded; then
         echo -e "✅ Hive-mind knowledge base"
     else
         echo -e "${YELLOW}⚠️  Hive-mind empty${NC} - run: git submodule update --init"
@@ -763,7 +782,7 @@ cmd_session() {
     fi
 
     # Hive Mind
-    if [ -d "hive-mind/patterns" ]; then
+    if is_hive_mind_loaded; then
         echo -e "  Hive Mind:      ${GREEN}✅ Loaded${NC}"
     elif [ -d "hive-mind" ]; then
         echo -e "  Hive Mind:      ${YELLOW}⚠️  Empty${NC} — run: git submodule update --init"
@@ -926,9 +945,9 @@ cmd_session() {
     local in_progress=0
     local blocked_count=0
     if [ -d ".beads" ] && command -v bd &> /dev/null; then
-        ready_count=$(bd ready 2>/dev/null | grep -c '^\s*[A-Z0-9]' || echo "0")
-        in_progress=$(bd list --status in_progress 2>/dev/null | grep -c '^\s*[A-Z0-9]' || echo "0")
-        blocked_count=$(bd blocked 2>/dev/null | grep -c '^\s*[A-Z0-9]' || echo "0")
+        ready_count=$(count_bd_issue_lines bd ready)
+        in_progress=$(count_bd_issue_lines bd list --status in_progress)
+        blocked_count=$(count_bd_issue_lines bd blocked)
     fi
 
     # Determine session type

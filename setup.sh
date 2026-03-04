@@ -34,6 +34,14 @@ log_warn() { echo -e "  ${YELLOW}!!${NC}  $1"; }
 log_fail() { echo -e "  ${RED}FAIL${NC}  $1"; ERRORS+=("$1"); }
 log_info() { echo -e "  ${DIM}..${NC}  $1"; }
 
+# Detect hive-mind content across legacy and newer layouts.
+is_hive_mind_loaded() {
+    [ -d "hive-mind/patterns" ] || \
+    [ -f "hive-mind/.hive-mind-index.json" ] || \
+    [ -d "hive-mind/skills" ] || \
+    [ -d "hive-mind/.cursor/skills" ]
+}
+
 # =============================================================================
 # Step 1: Check & install prerequisites
 # =============================================================================
@@ -235,7 +243,7 @@ fi
 echo ""
 echo -e "${BLUE}[2/6] Initializing project${NC}"
 
-if [ -d "hive-mind" ] && [ ! -d "hive-mind/patterns" ]; then
+if [ -d "hive-mind" ] && ! is_hive_mind_loaded; then
     log_info "Initializing hive-mind submodule..."
     SUBMODULE_ERR=$(git submodule update --init --recursive 2>&1)
     if [ $? -eq 0 ]; then
@@ -261,10 +269,16 @@ if [ -d "hive-mind" ] && [ ! -d "hive-mind/patterns" ]; then
             echo -e "       ${DIM}After fixing, re-run: git submodule update --init${NC}"
         fi
     fi
-elif [ -d "hive-mind/patterns" ]; then
+elif is_hive_mind_loaded; then
     log_ok "hive-mind submodule"
 else
     log_info "No hive-mind submodule (not a blocker)"
+fi
+
+if [ -d "hive-mind/.cursor/skills" ] || [ -d "hive-mind/skills" ]; then
+    log_info "Detected hive-mind skills format"
+elif [ -d "hive-mind/patterns" ]; then
+    log_info "Detected hive-mind patterns format"
 fi
 
 # =============================================================================
