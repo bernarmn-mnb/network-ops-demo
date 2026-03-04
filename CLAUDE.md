@@ -566,6 +566,7 @@ bd blocked                       # Shows all blocked issues and why
 ```
 
 
+
 ## hive-mind-start
 # Hive Mind
 
