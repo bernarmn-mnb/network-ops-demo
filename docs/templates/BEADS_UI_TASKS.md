@@ -27,6 +27,28 @@ bd create "Configure searchConfig.ts for {domain}" \
 
 ---
 
+## Capture interview output contract
+
+> Create this immediately after strategy/UX agreement and before implementation.
+> This task locks outcomes and rationale, not implementation shape.
+
+```
+bd create "Capture interview output contract for {domain}" \
+  --type task \
+  --priority 1 \
+  --acceptance "- [ ] Target audience and stakeholder(s) recorded in DEMO_PLAN.md
+- [ ] Top 3 wow moments captured and ordered by narrative arc
+- [ ] 1-3 main demo paths defined with exact actions and expected outcomes
+- [ ] UX archetype selected and justified for this use case
+- [ ] 2-4 Elastic capabilities mapped to concrete audience outcomes and proof points
+- [ ] Minimum bar for impact documented
+- [ ] Out-of-scope / non-goals documented
+- [ ] Delivery method and timeline confirmed
+- [ ] Scope freeze acknowledged before build execution starts"
+```
+
+---
+
 ## Build custom page: {PageName}
 
 ```
@@ -130,6 +152,27 @@ bd create "End-to-end demo walkthrough" \
 - [ ] Each page visually verified via browser screenshot (not just TypeScript compilation)
 - [ ] Chat assistant has branded name, avatar, and persona-aware greeting
 - [ ] Empty states on all pages have visual weight (not bare text)"
+```
+
+---
+
+## Golden path smoke test + release gate
+
+> Run this after stability testing and value verification. This is the final readiness gate.
+> Pass criteria are outcome-based and should work for any demo shape (analytics, search, agentic, workflow, etc.).
+
+```
+bd create "Golden path smoke test + release gate" \
+  --type task \
+  --priority 1 \
+  --acceptance "- [ ] Main demo path(s) from DEMO_PLAN.md executed end-to-end
+- [ ] For each path: expected outcome achieved and fail conditions absent
+- [ ] No P0/P1 defects on any main path
+- [ ] ./dev verify-template passes
+- [ ] npx tsc --noEmit passes
+- [ ] Console/network checked during walkthrough (no blocking errors)
+- [ ] Screenshot evidence captured for each wow moment
+- [ ] Final readiness verdict recorded in DEMO_PLAN.md (present tomorrow: yes/no with rationale)"
 ```
 
 ---

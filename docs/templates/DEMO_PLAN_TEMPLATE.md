@@ -10,6 +10,22 @@
 
 **One-liner**: {What this demo shows in one sentence}
 
+### Interview Output Contract (frozen after SA approval)
+
+> This is the consultation-to-build handoff. Keep this concise and explicit.
+
+| Field | Value |
+|-------|-------|
+| **Target audience** | {Who the demo is for} |
+| **Top 3 wow moments** | {Moment 1; Moment 2; Moment 3} |
+| **Main demo path count** | {1-3} |
+| **Chosen UX archetype** | {Investigative analytics dashboard / Triage console / Workflow cockpit / Assistant-led advisor / Hybrid} |
+| **Capability map (2-4)** | {Capability 1; Capability 2; Capability 3} |
+| **Minimum bar if time runs short** | {Fallback that still impresses} |
+| **Out of scope / non-goals** | {What we are explicitly not building} |
+| **Delivery method** | Localhost / Cloud Run + IAP |
+| **Timeline** | {Deadline and constraints} |
+
 ---
 
 ## 1. Value Proposition
@@ -40,6 +56,23 @@
 - {Capability 1}
 - {Capability 2}
 - {Capability 3}
+
+### Capability-to-Outcome Mapping
+
+> Outcome-first planning: explain why each chosen Elastic capability belongs in this demo.
+
+| Elastic Capability | Problem/Decision It Enables | Audience Value | Demo Proof Point |
+|--------------------|-----------------------------|----------------|------------------|
+| {Capability} | {What problem it solves} | {Why this audience cares} | {Specific interaction/result that proves value} |
+| {Capability} | {What problem it solves} | {Why this audience cares} | {Specific interaction/result that proves value} |
+
+### UX Archetype Rationale
+
+| Field | Value |
+|-------|-------|
+| **Primary archetype** | {Selected archetype} |
+| **Why it fits this use case** | {Reasoning} |
+| **Alternatives considered** | {What else was considered and why not chosen} |
 
 ### Differentiation
 
@@ -91,6 +124,16 @@
 | 3 | {User action} | {Feature/screen} | {Key message} |
 | 4 | {User action} | {Feature/screen} | {Key message} |
 | 5 | {User action} | {Feature/screen} | {Key message} |
+
+### Main Demo Paths (Golden Paths)
+
+> Define 1-3 paths only. These are the quality bar for release.
+
+| Path | Start State | User Actions | Expected Outcome | Fail Conditions |
+|------|-------------|--------------|------------------|-----------------|
+| Path 1 | {State} | {Action sequence} | {Specific success result} | {What counts as broken} |
+| Path 2 | {State} | {Action sequence} | {Specific success result} | {What counts as broken} |
+| Path 3 (optional) | {State} | {Action sequence} | {Specific success result} | {What counts as broken} |
 
 ### Demo Script
 
@@ -375,6 +418,17 @@
 | {Wow moment 1} | Yes / Partial / No | {What's missing} | Auto-fix / Consult SA | {Yes/Pending} |
 | {Wow moment 2} | Yes / Partial / No | {What's missing} | Auto-fix / Consult SA | {Yes/Pending} |
 | {Audience hook 1} | Yes / Partial / No | {What's missing} | Auto-fix / Consult SA | {Yes/Pending} |
+
+### Release Readiness Gate (hard pass/fail)
+
+| Gate | Result | Notes |
+|------|--------|-------|
+| Main demo path(s) pass end-to-end | Pass / Fail | {Brief evidence} |
+| No P0/P1 defects on main path | Pass / Fail | {Open defects if any} |
+| `./dev verify-template` passes | Pass / Fail | {Output summary} |
+| `npx tsc --noEmit` passes | Pass / Fail | {Output summary} |
+| Wow-moment screenshots captured | Pass / Fail | {File paths or links} |
+| Final verdict: "Would present tomorrow?" | Yes / No | {Honest rationale} |
 
 ### Overall Assessment
 
