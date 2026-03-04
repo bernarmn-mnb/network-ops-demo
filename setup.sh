@@ -516,6 +516,16 @@ MCPJSON
 fi
 
 # =============================================================================
+# Install global hive-mind awareness for AI tools (Claude Code + Cursor)
+# =============================================================================
+
+if [ -f "hive-mind/install.sh" ]; then
+    bash hive-mind/install.sh --no-skills --no-beads --no-rules --no-mcp --no-hooks
+else
+    log_info "hive-mind/install.sh not found — skipping global AI awareness"
+fi
+
+# =============================================================================
 # Detect IDE and print next steps
 # =============================================================================
 
