@@ -12,9 +12,6 @@
 
 import type { BrowserApiTool } from '../types/browserTools'
 
-/** @deprecated Import BrowserApiTool directly from '../types/browserTools' */
-export type { BrowserApiTool as BrowserApiToolDef }
-
 // Event types from Agent Builder
 export type EventType =
   | 'conversation_created'

@@ -113,5 +113,10 @@ window.__browserToolLog()
 
 ## Strict Mode
 
-Set `VITE_STRICT_BROWSER_TOOLS=true` in your `.env` to treat unrecognized
-tool calls as errors (useful during development).
+Set `VITE_STRICT_BROWSER_TOOLS=true` in your `.env` to enable stricter
+validation of browser tool calls (useful during development).
+
+In strict mode, if the agent calls a browser-prefixed tool and no handler
+is registered for it, the dispatcher logs a console error and records a
+failure in the dispatch log. Without strict mode, unhandled tools silently
+return `false`.

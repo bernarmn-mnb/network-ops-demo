@@ -125,18 +125,21 @@ export function useAgentChat({
                 }
 
               case 'tool_call': {
-                const toolId = (event.data.tool_id || event.data.tool_call_id) as string
+                const toolName = event.data.tool_id as string | undefined
+                const callId = event.data.tool_call_id as string | undefined
+                const toolId = toolName || callId || ''
                 const rawParams = (event.data.params || event.data.arguments || {}) as Record<string, unknown>
 
-                // Detect browser tool calls and emit to callback
-                if (toolId && onBrowserToolCall && (toolId.startsWith('browser_') || toolId.startsWith('browser.'))) {
+                if (toolName && onBrowserToolCall && (toolName.startsWith('browser_') || toolName.startsWith('browser.'))) {
                   const invocation: BrowserToolInvocation = {
-                    toolId: normalizeToolId(toolId),
-                    toolCallId: toolId,
+                    toolId: normalizeToolId(toolName),
+                    toolCallId: callId,
                     payload: getBrowserToolParams(rawParams),
                     timestamp: Date.now(),
                   }
-                  try { onBrowserToolCall(invocation) } catch { /* fire-and-forget */ }
+                  try {
+                    Promise.resolve(onBrowserToolCall(invocation)).catch(() => {})
+                  } catch { /* sync fire-and-forget */ }
                 }
 
                 return {
@@ -144,7 +147,7 @@ export function useAgentChat({
                   toolCalls: [
                     ...(msg.toolCalls || []),
                     {
-                      id: toolId,
+                      id: callId || toolId,
                       params: rawParams,
                       status: 'pending' as const,
                     },

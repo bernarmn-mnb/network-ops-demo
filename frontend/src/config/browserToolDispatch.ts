@@ -78,8 +78,13 @@ export function normalizeToolId(rawId: string): string {
 export function getBrowserToolParams(rawParams: unknown): unknown {
   if (rawParams && typeof rawParams === 'object' && !Array.isArray(rawParams)) {
     const obj = rawParams as Record<string, unknown>
-    // Unwrap kwargs if it's the only key or contains the actual params
-    if ('kwargs' in obj && typeof obj.kwargs === 'object') {
+    if (
+      'kwargs' in obj &&
+      obj.kwargs !== null &&
+      typeof obj.kwargs === 'object' &&
+      !Array.isArray(obj.kwargs) &&
+      Object.keys(obj).length === 1
+    ) {
       return obj.kwargs
     }
   }
@@ -167,19 +172,26 @@ export function dispatchBrowserTool(
   const handler = handlers[normalizedId]
 
   if (!handler) {
-    // Warn if this was a known tool without a handler (possible wiring bug)
-    if (knownToolIds?.has(normalizedId)) {
-      if (log) {
-        logDispatch({
-          toolId: invocation.toolId,
-          normalizedId,
-          timestamp: now,
-          success: false,
-          error: `Known tool but no handler registered: ${normalizedId}`,
-          summary: {},
-        })
-      }
+    const strict = isStrictMode()
+    const isKnown = knownToolIds?.has(normalizedId)
+
+    if (log && (isKnown || strict)) {
+      logDispatch({
+        toolId: invocation.toolId,
+        normalizedId,
+        timestamp: now,
+        success: false,
+        error: isKnown
+          ? `Known tool but no handler registered: ${normalizedId}`
+          : `Unrecognized browser tool in strict mode: ${normalizedId}`,
+        summary: {},
+      })
     }
+
+    if (strict) {
+      console.error(`[browser-tool STRICT] No handler for ${normalizedId}`)
+    }
+
     return false
   }
 
@@ -188,24 +200,34 @@ export function dispatchBrowserTool(
     const params = getBrowserToolParams(invocation.payload)
     const result = handler(params, { ...invocation, toolId: normalizedId }, context)
 
-    // Handle async handlers
     if (result instanceof Promise) {
-      result.catch((err: unknown) => {
-        const errorMessage = err instanceof Error ? err.message : String(err)
-        if (log) {
-          logDispatch({
-            toolId: invocation.toolId,
-            normalizedId,
-            timestamp: now,
-            success: false,
-            error: errorMessage,
-            summary: {},
-          })
-        }
-      })
-    }
-
-    if (log) {
+      result.then(
+        () => {
+          if (log) {
+            logDispatch({
+              toolId: invocation.toolId,
+              normalizedId,
+              timestamp: now,
+              success: true,
+              summary: {},
+            })
+          }
+        },
+        (err: unknown) => {
+          const errorMessage = err instanceof Error ? err.message : String(err)
+          if (log) {
+            logDispatch({
+              toolId: invocation.toolId,
+              normalizedId,
+              timestamp: now,
+              success: false,
+              error: errorMessage,
+              summary: {},
+            })
+          }
+        },
+      )
+    } else if (log) {
       logDispatch({
         toolId: invocation.toolId,
         normalizedId,
