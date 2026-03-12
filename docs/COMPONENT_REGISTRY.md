@@ -95,6 +95,9 @@
 | BrandedEmptyState | `components/common/BrandedEmptyState.tsx` | Production | Brand-themed empty state with icon/image/photo strip, falls back to EUI when no brand vars |
 | HeroSection | `components/common/HeroSection.tsx` | Working | Reusable hero banner with background image, overlay, and centered content; auto-reads brand heroImage |
 | PhotoStrip | `components/common/PhotoStrip.tsx` | Working | Horizontal row of images with shape variants (circle, rounded, square) for visual richness |
+| SplitChatContentLayout | `components/common/SplitChatContentLayout.tsx` | Working | Fixed-viewport two-column layout for chat + tabbed content panels with internal scrolling |
+| TabBar | `components/common/TabBar.tsx` | Working | Custom tab bar with equal-width buttons, icons, badge counts, and content dot indicators |
+| TaskSwitcher | `components/common/TaskSwitcher.tsx` | Working | Horizontal pill bar for top-level mode switching with icon and accent colour per task |
 
 ### Search (`components/search/`)
 
