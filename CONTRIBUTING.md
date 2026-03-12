@@ -99,6 +99,83 @@ Before contributing:
    - Update README if needed
    - Add to hive-mind patterns if it's a pattern
 
+### Step 2b: Design for Extensibility
+
+The template exists so demos can build on it. Every component you contribute should have a clear story for how a demo will extend it — not just use it as-is.
+
+#### Config-Driven over Hardcoded
+
+Generic components should accept a configuration object with sensible defaults that demos override. Don't bake in assumptions about any specific domain.
+
+**Bad** — hardcoded section titles assume e-commerce:
+```tsx
+<h2>Shop by Category</h2>
+```
+
+**Good** — configurable with generic default:
+```tsx
+<h2>{config.categoriesTitle || 'Browse Categories'}</h2>
+```
+
+**Pattern**: Define a `*Config` type with all customisable content, export a `defaultConfig` with placeholder values, and accept the config as a prop. See `homeConfig.ts` + `BrandedHomePage.tsx` for the canonical example.
+
+#### Composable, Not Monolithic
+
+A new page should compose existing template components rather than reimplementing them. Before building a new component, check `docs/COMPONENT_REGISTRY.md` for existing ones.
+
+| Instead of... | Compose with... |
+|---------------|-----------------|
+| Custom empty state markup | `BrandedEmptyState` |
+| Inline product cards | `SearchResultCard` |
+| Raw `fetch('/api/...')` calls | A `use*` hook (e.g. `useVisualSearch`, `useSearchSimple`) |
+| Bespoke floating chat | `FloatingChatWidget` with custom props |
+| Hardcoded persona data | `useProfile()` context |
+
+#### Extension Points Checklist
+
+When submitting a generic component, answer these questions in the PR description:
+
+1. **How does a demo customise the content?** (config object, props, data file, env var)
+2. **What does the component render with zero configuration?** It should look reasonable, not broken or empty.
+3. **Can a demo wrap or compose this component?** (e.g. `<BrandedHomePage config={myDemoConfig} />`)
+4. **Are labels, titles, and placeholder text generic?** No domain-specific vocabulary ("products", "recipes", "policies") in the defaults — or if present, configurable.
+5. **Does it respect the brand theme?** Uses CSS variables (`var(--brand-primary)`, `var(--euiTextColor)`) not hardcoded colours.
+6. **Is there a backend data source?** If so, is the index/field name configurable via `.env`?
+7. **Did you add it to `docs/COMPONENT_REGISTRY.md`?**
+
+#### Frontend Pages: The Config Pattern
+
+Every reusable page should follow this structure:
+
+```
+config/fooConfig.ts     — FooPageConfig type + generic defaults
+pages/FooPage.tsx       — accepts optional config prop, falls back to defaults
+```
+
+A demo then creates a thin wrapper:
+
+```tsx
+import { FooPage } from './FooPage'
+import type { FooPageConfig } from '../config/fooConfig'
+
+const myConfig: FooPageConfig = { title: 'My Demo Title', ... }
+export default () => <FooPage config={myConfig} />
+```
+
+#### Backend Routes: Environment-Driven
+
+Backend features should use `backend/app/config.py` settings with sensible defaults, not hardcoded values. Any index name, API key, or field name should be configurable via `backend/.env`.
+
+```python
+# Good: configurable
+index = settings.VISUAL_SEARCH_INDEX or "products"
+
+# Bad: hardcoded
+index = "mns-products"
+```
+
+Update `backend/.env.example` with every new environment variable.
+
 ### Step 3: Verify Template Integrity
 
 Before submitting, run the verification suite to make sure your changes don't break the template:
@@ -274,6 +351,41 @@ cd ..
 - ✅ `setup.sh` improvements
 - ✅ `dev` script enhancements
 - ✅ Generic utility functions
+
+## PR Review Checklist
+
+Reviewers should verify these before merging any component PR:
+
+### Must Pass
+
+- [ ] `./dev verify-template` — all checks green
+- [ ] `npx tsc --noEmit` — frontend compiles
+- [ ] No demo-specific content (grep for customer names, brand URLs, hardcoded data)
+- [ ] No `package-lock.json` (project uses `yarn.lock`)
+- [ ] No committed secrets or `.env` values
+- [ ] New components added to `docs/COMPONENT_REGISTRY.md`
+- [ ] New env vars added to `backend/.env.example`
+
+### Extensibility Review
+
+- [ ] **Config-driven**: Customisable content comes from a config object or props, not hardcoded strings
+- [ ] **Sensible defaults**: Component renders a reasonable placeholder state with zero configuration
+- [ ] **Composable**: New pages use existing components (`BrandedEmptyState`, `SearchResultCard`, `FloatingChatWidget`) rather than reimplementing
+- [ ] **Theme-aware**: Uses CSS variables for colours, respects dark/light mode
+- [ ] **Generic vocabulary**: Default labels don't assume a specific domain (e.g. "Browse Categories" not "Shop by Department")
+- [ ] **Backend configurable**: Index names, API keys, field names read from `settings` / `.env`, not hardcoded
+- [ ] **Clear extension story**: PR description explains how a demo would customise or extend the component
+
+### Common Issues to Catch
+
+| Issue | Fix |
+|-------|-----|
+| Lock file from wrong package manager | Remove `package-lock.json`, keep `yarn.lock` |
+| Inline imports (`import shutil` inside function) | Move to module level |
+| Hardcoded section titles | Make configurable via config prop with generic default |
+| Missing module-level `__init__.py` or barrel export | Add `index.ts` or barrel file for clean imports |
+| `__import__()` hacks | Use proper imports at the top of the file |
+| Component exists but not in registry | Add to `docs/COMPONENT_REGISTRY.md` |
 
 ## Questions?
 
