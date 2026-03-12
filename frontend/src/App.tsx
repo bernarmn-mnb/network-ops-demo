@@ -15,6 +15,7 @@ import { GeoSearchPage } from './pages/GeoSearchPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { VoiceChatPage } from './pages/VoiceChatPage'
 import { BrandedHomePage } from './pages/BrandedHomePage'
+import { VisualSearchPage } from './pages/VisualSearchPage'
 
 /**
  * Main App Component
@@ -31,6 +32,7 @@ import { BrandedHomePage } from './pages/BrandedHomePage'
  * - /search : Product search with faceted filtering
  * - /voice : Voice-first chat with STT and TTS
  * - /geo : Geo search with Mapbox/Leaflet maps & delivery zones
+ * - /visual-search : Text-to-image and image-to-image kNN visual search
  * - /overlay : Overlay chat demo (floating widget)
  * - /overlay-guide : Guide for injecting chat onto external sites
  */
@@ -50,6 +52,7 @@ function App() {
       <Route path="/workflows" element={<WorkflowsPage />} />
       <Route path="/geo" element={<GeoSearchPage />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/visual-search" element={<VisualSearchPage />} />
       <Route path="/voice" element={<VoiceChatPage />} />
       <Route path="/overlay" element={<OverlayDemoPage />} />
       <Route path="/overlay-guide" element={<OverlayGuidePage />} />

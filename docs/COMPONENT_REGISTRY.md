@@ -22,6 +22,7 @@
 | DemoGuidePage | `pages/DemoGuidePage.tsx` | Production | Presenter guide with demo tracks and talking points |
 | GeoSearchPage | `pages/GeoSearchPage.tsx` | Working | Geo search with dual map implementations (Leaflet + Mapbox), 5 search modes |
 | ProfilePage | `pages/ProfilePage.tsx` | Working | Data-driven demo persona page with stats, attributes, tags, people sections |
+| VisualSearchPage | `pages/VisualSearchPage.tsx` | Working | Text-to-image and image-to-image kNN search with Jina CLIP v2 |
 | VoiceChatPage | `pages/VoiceChatPage.tsx` | Working | Voice-first chat UX with STT controls and TTS availability fallback |
 | WorkflowsPage | `pages/WorkflowsPage.tsx` | Working | Workflow management: health, deploy, run, poll, recipe library |
 | WelcomePage | `pages/WelcomePage.tsx` | Production | Landing page with feature cards and connection status |
@@ -98,6 +99,7 @@
 | Component | Path | Status | Notes |
 |-----------|------|--------|-------|
 | SearchResultCard | `components/search/SearchResultCard.tsx` | Production | Product card with generic JSON fallback |
+| ProductDetailModal | `components/search/ProductDetailModal.tsx` | Working | Generic product detail modal for search and visual search |
 
 ### Voice (`components/voice/`)
 
@@ -173,6 +175,7 @@
 | Voice | `routes/voice.py` | `/api/voice` | Working | Google Cloud TTS synthesis, voice presets, health check endpoint |
 | Workflows | `routes/workflows.py` | `/api/workflows` | Working | Proxy to Kibana Workflows Management API |
 | Profiles | `routes/profiles.py` | `/api/profiles` | Working | Demo persona API with hot-reload |
+| Visual Search | `routes/visual_search.py` | `/api/visual-search` | Working | Jina CLIP v2 text/image kNN search |
 | Agno Demo | `routes/agno_demo.py` | `/api/agno` | Experimental | Agno framework POC |
 
 ## Backend Libraries

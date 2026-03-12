@@ -36,6 +36,10 @@ class Settings:
     # Search Configuration
     SEARCH_INDEX: str = _config("SEARCH_INDEX", default="products")
 
+    # Visual Search (Jina CLIP v2 for text-to-image / image-to-image kNN)
+    VISUAL_SEARCH_INDEX: str = _config("VISUAL_SEARCH_INDEX", default="products")
+    JINA_API_KEY: str = _config("JINA_API_KEY", default="")
+
     # LLM Proxy Configuration (for A2A Multi-Agent)
     LLM_PROXY_URL: str = _config("LLM_PROXY_URL", default="")
     LLM_PROXY_API_KEY: str = _config("LLM_PROXY_API_KEY", default="")

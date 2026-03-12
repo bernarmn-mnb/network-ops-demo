@@ -88,6 +88,13 @@ export const NAV_ITEMS: NavItem[] = [
     category: 'demo',
   },
   {
+    path: '/visual-search',
+    label: 'Visual Search',
+    icon: 'image',
+    description: 'Text-to-image and image-to-image kNN search',
+    category: 'demo',
+  },
+  {
     path: '/workflows',
     label: 'Workflows',
     icon: 'pipelineApp',

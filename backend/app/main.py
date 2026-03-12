@@ -30,6 +30,7 @@ from .routes.search_simple import router as search_simple_router
 from .routes.profiles import router as profiles_router
 from .routes.tracking import router as tracking_router
 from .routes.voice import router as voice_router
+from .routes.visual_search import router as visual_search_router
 from .routes.workflows import router as workflows_router
 
 logger = logging.getLogger(__name__)
@@ -73,6 +74,7 @@ app.include_router(agno_v2_router, prefix="/api/agno/v2", tags=["Agno V2 (Framew
 
 # Search & Analytics routes (requires Elasticsearch connection)
 app.include_router(geo_search_router)
+app.include_router(visual_search_router, prefix="/api/visual-search", tags=["visual-search"])
 app.include_router(search_simple_router)
 app.include_router(search_router)
 app.include_router(search_fields_router)
