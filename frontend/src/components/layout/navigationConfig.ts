@@ -8,6 +8,11 @@
  * - demo: Features for building customer demos
  * - tools: Development and debugging tools
  * - advanced: Features requiring additional setup
+ *
+ * Navigation layout is controlled by NAV_LAYOUT in demoConfig.ts:
+ * - main: pages shown directly in the menu
+ * - more: pages in a "More pages" submenu (null = auto-populate remaining)
+ * - hidden: pages excluded from navigation entirely (still routable by URL)
  */
 
 export interface NavItem {
@@ -20,6 +25,30 @@ export interface NavItem {
   requiresAgent?: boolean
   /** If true, requires LLM proxy configuration */
   requiresLLMProxy?: boolean
+}
+
+/**
+ * Two-tier navigation layout.
+ *
+ * Controls which pages appear in the main menu vs a "More pages" submenu.
+ * Pages not listed in main/more/hidden are treated as if they were in `more`
+ * when `more` is null (auto-populate), or hidden when `more` is explicit.
+ *
+ * @example
+ * // Search-focused: main pages inline, everything else in submenu
+ * { main: ['/', '/guide', '/search'], more: null, hidden: [] }
+ *
+ * @example
+ * // Agent-focused, hide search
+ * { main: ['/', '/guide', '/chat', '/audit'], more: null, hidden: ['/search'] }
+ */
+export interface NavLayoutConfig {
+  /** Pages shown directly in the main navigation, in display order */
+  main: string[]
+  /** Pages in "More pages" submenu. null = auto-include all remaining pages. */
+  more: string[] | null
+  /** Pages hidden from navigation entirely (still accessible by URL) */
+  hidden: string[]
 }
 
 /**
@@ -215,4 +244,48 @@ export function getNavItemsByCategory(): Record<string, NavItem[]> {
   })
   
   return grouped
+}
+
+/**
+ * Get navigation items split into main and "more" tiers.
+ *
+ * Resolution order:
+ * 1. If layout is provided, use its main/more/hidden config
+ * 2. If layout is null but legacyNavPages is set, show only those pages (flat, no submenu)
+ * 3. If both are null, show all pages flat
+ *
+ * @param layout - Two-tier layout config from demoConfig.ts, or null for flat nav
+ * @param legacyNavPages - Legacy NAV_PAGES whitelist for backward compat, or null
+ */
+export function getNavLayout(
+  layout: NavLayoutConfig | null,
+  legacyNavPages: string[] | null,
+): { main: NavItem[]; more: NavItem[] } {
+  if (!layout) {
+    const items = legacyNavPages
+      ? NAV_ITEMS.filter(item => legacyNavPages.includes(item.path))
+      : NAV_ITEMS
+    return { main: items, more: [] }
+  }
+
+  const { main: mainPaths, more: morePaths, hidden } = layout
+  const hiddenSet = new Set(hidden)
+  const mainSet = new Set(mainPaths)
+
+  const mainItems = mainPaths
+    .map(path => NAV_ITEMS.find(item => item.path === path))
+    .filter((item): item is NavItem => !!item)
+
+  let moreItems: NavItem[]
+  if (morePaths !== null) {
+    moreItems = morePaths
+      .map(path => NAV_ITEMS.find(item => item.path === path))
+      .filter((item): item is NavItem => !!item)
+  } else {
+    moreItems = NAV_ITEMS.filter(
+      item => !mainSet.has(item.path) && !hiddenSet.has(item.path),
+    )
+  }
+
+  return { main: mainItems, more: moreItems }
 }

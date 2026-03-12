@@ -7,20 +7,38 @@
  * CUSTOMIZE THIS FILE for your specific demo!
  */
 
+import type { NavLayoutConfig } from '../components/layout/navigationConfig'
+
 // =============================================================================
 // Navigation - which pages to show
 // =============================================================================
 
 /**
- * Pages to show in navigation.
- * Set to null to show all pages (template default).
- * Set to an array of paths to show only those pages.
+ * Two-tier navigation layout (recommended).
  *
- * Common demo configurations:
- * - Search demo: ['/', '/guide', '/search']
- * - Agent demo: ['/', '/guide', '/chat', '/audit']
- * - Full demo: ['/', '/guide', '/search', '/chat', '/audit']
- * - All pages: null
+ * - main:   pages shown directly in the menu, in display order
+ * - more:   pages under a "More pages" submenu (null = auto-include all remaining)
+ * - hidden: pages removed from navigation entirely (still routable by URL)
+ *
+ * Set to null to fall back to NAV_PAGES or show everything flat.
+ *
+ * Example configurations:
+ *
+ *   // Search-focused story with everything else in submenu
+ *   { main: ['/', '/guide', '/search'], more: null, hidden: [] }
+ *
+ *   // Agent-focused story, hide search entirely
+ *   { main: ['/', '/guide', '/chat', '/audit'], more: null, hidden: ['/search'] }
+ *
+ *   // All pages flat (no submenu) — same as null
+ *   null
+ */
+export const NAV_LAYOUT: NavLayoutConfig | null = null
+
+/**
+ * Legacy: flat page whitelist.
+ * Ignored when NAV_LAYOUT is set. Kept for backward compatibility.
+ * Set to an array of paths to show only those pages, or null for all.
  */
 export const NAV_PAGES: string[] | null = null
 

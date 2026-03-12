@@ -13,8 +13,8 @@ import {
 import { ThemeToggle } from './ThemeToggle'
 import { BrandSwitcher } from '../branding/BrandSwitcher'
 import { useBrand } from '../providers/BrandedThemeProvider'
-import { getNavItems } from './navigationConfig'
-import { NAV_PAGES } from '../../config/demoConfig'
+import { getNavLayout } from './navigationConfig'
+import { NAV_LAYOUT, NAV_PAGES } from '../../config/demoConfig'
 
 /**
  * App Header Component
@@ -33,10 +33,9 @@ export function AppHeader() {
   const { brand } = useBrand()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  const navItems = getNavItems(
-    NAV_PAGES ? { includeOnly: NAV_PAGES } : undefined
-  )
+  const { main: mainItems, more: moreItems } = getNavLayout(NAV_LAYOUT, NAV_PAGES)
   const currentPath = location.pathname
+  const isOnMorePage = moreItems.some(item => item.path === currentPath)
 
   // Use header-specific colors if defined, otherwise fall back to primary
   const hasHeaderBackground = brand.colors.headerBackground
@@ -153,7 +152,29 @@ export function AppHeader() {
               panels={[
                 {
                   id: 0,
-                  items: navItems.map((item) => ({
+                  items: [
+                    ...mainItems.map((item) => ({
+                      name: item.label,
+                      icon: <EuiIcon type={item.icon} />,
+                      onClick: () => {
+                        navigate(item.path)
+                        setIsMenuOpen(false)
+                      },
+                      isSelected: currentPath === item.path,
+                    })),
+                    ...(moreItems.length > 0
+                      ? [{
+                          name: `More pages${isOnMorePage ? ' •' : ''}`,
+                          icon: <EuiIcon type="apps" />,
+                          panel: 1,
+                        }]
+                      : []),
+                  ],
+                },
+                {
+                  id: 1,
+                  title: 'More pages',
+                  items: moreItems.map((item) => ({
                     name: item.label,
                     icon: <EuiIcon type={item.icon} />,
                     onClick: () => {
