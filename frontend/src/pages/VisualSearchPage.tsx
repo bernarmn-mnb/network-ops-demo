@@ -36,7 +36,7 @@ import {
 } from '@elastic/eui';
 import { AppHeader } from '../components/layout/AppHeader';
 import { SearchResultCard } from '../components/search/SearchResultCard';
-import { ProductDetailModal } from '../components/search/ProductDetailModal';
+import { ProductDetailModal, type ProductDetailConfig } from '../components/search/ProductDetailModal';
 import { defaultVisualSearchConfig, type VisualSearchConfig } from '../config/visualSearchConfig';
 
 interface VisualHit {
@@ -60,9 +60,11 @@ const MODE_OPTIONS = [
 
 interface VisualSearchPageProps {
   config?: VisualSearchConfig
+  /** Config passed through to ProductDetailModal (locale, currency, custom sections) */
+  productDetailConfig?: ProductDetailConfig
 }
 
-export function VisualSearchPage({ config }: VisualSearchPageProps) {
+export function VisualSearchPage({ config, productDetailConfig }: VisualSearchPageProps) {
   const cfg = config || defaultVisualSearchConfig;
   const [searchParams, setSearchParams] = useSearchParams();
   const [mode, setMode] = useState<SearchMode>('text');
@@ -658,6 +660,7 @@ export function VisualSearchPage({ config }: VisualSearchPageProps) {
         <ProductDetailModal
           source={selectedProduct.source}
           onClose={() => setSelectedProduct(null)}
+          config={productDetailConfig}
         />
       )}
     </>

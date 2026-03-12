@@ -70,7 +70,7 @@ export interface ChatWidgetConfig {
   /** Suggestion pills shown in the chat widget */
   suggestions?: Array<{ label: string; prompt: string }>
   /** Navigation action buttons in the widget */
-  navigationActions?: Array<{ label: string; path: string; icon?: string }>
+  navigationActions?: Array<{ label: string; description: string; path: string; icon: string }>
   /** Context string passed to the agent for this page */
   pageContext?: string
 }
