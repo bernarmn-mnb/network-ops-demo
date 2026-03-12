@@ -9,7 +9,7 @@ import {
 import { AppHeader } from '../components/layout/AppHeader'
 import { ChatContainer, ChatContainerRef } from '../components/chat/ChatContainer'
 import { PageInfoButton, PAGE_INFO } from '../components/layout/PageInfoButton'
-import { useBrand } from '../components/providers/BrandedThemeProvider'
+import { DEFAULT_PERSONA, buildPersonalisedGreeting } from '../config/agentPersona'
 import { DemoPromptPills } from '../components/demo'
 
 /**
@@ -23,7 +23,7 @@ import { DemoPromptPills } from '../components/demo'
  * - Reasoning steps and tool call visualization
  */
 export function ChatPage() {
-  const { brand } = useBrand()
+  const persona = DEFAULT_PERSONA
   const chatRef = useRef<ChatContainerRef>(null)
 
   // Handle demo prompt selection
@@ -61,10 +61,8 @@ export function ChatPage() {
           
           <ChatContainer
             ref={chatRef}
-            title={`${brand.name} Assistant`}
-            greeting={`Hello! I'm your ${brand.name} AI assistant. I'm here to help answer your questions and assist with tasks.
-
-What can I help you with today?`}
+            title={persona.name}
+            greeting={buildPersonalisedGreeting(persona, null, true)}
             placeholder="Ask me anything..."
           />
         </EuiPageTemplate.Section>
