@@ -36,7 +36,7 @@ Do all of this silently before opening the conversation.
 
 ## The Conversation
 
-This is not a questionnaire. It's a collaborative brainstorm with five natural beats: Opening → Discovery → Strategy → UX Design → Plan Creation. Follow the energy of the conversation — don't force transitions.
+This is not a questionnaire. It's a collaborative brainstorm. The normal flow has five beats: Opening → Discovery → Strategy → UX Design → Plan Creation. But if the SA doesn't have a clear customer or idea, an **Ideation** beat replaces Discovery: Opening → Ideation → Strategy → UX Design → Plan Creation. Follow the energy of the conversation — don't force transitions.
 
 ### Opening
 
@@ -46,15 +46,126 @@ Summarise what you found. Be specific — names, pain points, timeline. Then sha
 
 > "I read through the background materials. Here's what I picked up: [summary]. I already have some thoughts on approach — let me share them and you can tell me what resonates."
 
+Then continue to **Discovery**.
+
 **If customer-context is empty:**
 
-Ask the essential question:
+Start with the essential question:
 
 > "Tell me about the customer and the meeting — who are they, what's the opportunity, and when do you present?"
 
-Either way, your goal is to understand: who is the audience, what do they care about, and what would make them lean forward.
+If the SA gives you a clear customer and context, continue to **Discovery**.
+
+**If the SA doesn't have a clear idea** — they say something like "I don't have a specific customer", "I'm exploring", "hackathon", "what can I build?", "not sure what to demo", or they're vague and uncertain about what they want — don't push for a customer name. Shift to the **Ideation** beat below instead of Discovery.
+
+Either way, your goal is to understand: who is the audience, what do they care about, and what would make them lean forward. If nobody knows yet, Ideation will figure it out.
+
+### Ideation
+
+This beat replaces Discovery when the SA doesn't have a clear customer or use case. Your job is to narrow the infinite space of "what should I build?" down to a concrete, buildable proposal — fast.
+
+**Step 1: Explore their territory**
+
+Don't ask "what do you want to build?" — that's the question they can't answer. Instead, ask about their world:
+
+> "No worries — let's figure it out together. Tell me about your territory. What verticals do you cover? Who are your biggest accounts right now? What problems keep coming up in those conversations?"
+
+Listen for: vertical (retail, finance, healthcare, public sector, manufacturing, telco, etc.), recurring customer pain points, and whether they've seen competitors in deals. Even vague answers give you enough to work with.
+
+If they truly have no customer context (e.g. they're new, or this is pure exploration), ask what *interests* them:
+
+> "Fair enough. What part of Elastic gets you most excited? Search relevance? AI assistants? Multi-agent orchestration? Workflow automation? Or do you just want to see what's possible and pick from there?"
+
+**Step 2: Show the demo gallery**
+
+Based on what you've heard, present 2-3 concrete archetypes from the menu below. Don't list all of them — pick the ones that match. Describe what the *audience would see*, not what the tech does.
+
+---
+
+**AI Search + Assistant** — A branded search experience with faceted filtering and a chat assistant that answers questions grounded in the indexed data. The user searches, browses results with images and facets, then asks the assistant for help. *"Show me gluten-free options under £5"* → the assistant searches, explains, and recommends.
+
+Works for: retail, grocery, electronics, any product catalogue.
+
+- Data: OOTB products (ready now) or generate custom products
+- Build time: ~1-2 hours on OOTB data, 2-3 hours with custom data
+- Recipe: `hive-mind/recipes/SEARCH_DEMO.md`
+
+---
+
+**Operational Triage Console** — A domain-specific dashboard where an operator searches faults, incidents, or cases by severity. An AI advisor diagnoses issues and suggests fixes. One-click workflow escalation creates tickets or triggers automated procedures without leaving the app. *"Why is pump 7 overheating?"* → AI diagnoses the root cause, suggests a fix, and the operator escalates with one click.
+
+Works for: field service, IT ops, manufacturing, utilities, infrastructure.
+
+- Data: OOTB support tickets + knowledge base, or generate domain-specific incidents
+- Build time: ~2-3 hours with OOTB data, 3-4 hours with custom data + workflows
+- Stretch: Add workflow automation for escalation chains
+
+---
+
+**Customer Support Intelligence** — Support ticket search with an AI agent that looks up tickets, knowledge base articles, and customer history to suggest resolutions. Multi-agent option routes questions to specialist agents by domain. The story: *"Your support team gets answers in seconds instead of minutes — and every answer is grounded in your actual documentation."*
+
+Works for: any B2C or B2B company with a support function.
+
+- Data: OOTB support + knowledge (ready now)
+- Build time: ~1-2 hours on OOTB data, 3+ hours with multi-agent orchestration
+- Recipe: `hive-mind/recipes/AGENT_BUILDER_DEMO.md`
+
+---
+
+**E-Commerce with Analytics** — Product search with cart tracking, AI-powered recommendations, and OTel-powered analytics dashboards showing conversion funnels, click-through rates, and zero-result queries. The story: *"We don't just help your customers find products — we show you what they're searching for, what converts, and where you're losing them."*
+
+Works for: retail, marketplace, any commerce platform.
+
+- Data: OOTB products + stores (ready now)
+- Build time: ~2-3 hours
+- Recipe: `hive-mind/recipes/ECOMMERCE_DEMO.md`
+
+---
+
+**Domain Expert Advisor** — Chat-first experience where the AI is a vertical specialist: financial advisor, medical triage nurse, policy navigator, legal research assistant. The assistant has deep domain knowledge, retrieves relevant documents, and guides the user through complex decisions. The wow moment is domain fluency — *it sounds like it actually knows your business*.
+
+Works for: financial services, healthcare, insurance, government, legal.
+
+- Data: Generate 30-100 domain-specific documents with LLM
+- Build time: ~2-4 hours (data generation + agent persona design)
+- Pattern: `hive-mind/patterns/data/LLM_DATA_GENERATION.md`
+
+---
+
+**Step 3: Match to a build path**
+
+Once the SA picks an archetype (or mixes elements from several), recommend a build path based on their time and ambition:
+
+| Path | Time | When to Use | What You Get |
+|------|------|-------------|--------------|
+| **OOTB Quick Build** | 1-2 hours | Hackathon, first-time builder, or "show me what it does" | OOTB data + recipe + branding + custom agent persona |
+| **OOTB + Custom Pages** | 2-4 hours | SA wants something purpose-built but doesn't need custom data | OOTB data + 1-2 custom pages + workflows + branded agent |
+| **Custom Dataset** | 3-5 hours | Specific vertical/customer needs domain-specific data | LLM-generated data + full custom build |
+| **Full Custom** | 5+ hours | The showpiece — custom everything | Custom data + custom pages + workflows + analytics + branding extraction |
+
+For hackathons, push toward **OOTB Quick Build** or **OOTB + Custom Pages**. The biggest hackathon mistake is spending three hours generating the perfect dataset and running out of time before building anything visible. OOTB data exists so you can have a working demo in the first hour and iterate from there.
+
+> "For a hackathon, I'd start with OOTB data — you'll have something working in the first hour. You can always swap in custom data later, but a working demo with OOTB data beats a half-finished demo with perfect custom data every time."
+
+If the SA wants custom data, briefly explain the options:
+
+- **LLM generation** (30-100 records): Fast, high quality, great for domain-specific content. Uses the LLM proxy that's already configured in this project. See `hive-mind/patterns/data/LLM_DATA_GENERATION.md`.
+- **Script generators** (100-1000+ records): Use existing generators in `backend/scripts/generators/` for products, documents, support tickets, stores, banking events. Good for statistical patterns and analytics demos.
+- **External datasets**: Open Food Facts (grocery), Icecat (electronics). See `hive-mind/patterns/data/DATASET_REGISTRY.md`.
+
+**Step 4: Transition to Strategy**
+
+Once the SA has picked a direction, you have everything you need. Transition naturally:
+
+> "Great — so we're building [archetype] for [vertical context]. Let me put together a specific plan: what data, what the experience looks like, and how we make it land."
+
+Jump to **Strategy Proposal** and continue the normal flow from there. The SA's archetype choice and vertical context replace the customer-context that the Discovery beat would normally provide.
+
+---
 
 ### Discovery and Value Prop Matching
+
+*Skip this beat if you came from Ideation — the SA already has a direction and you should jump straight to Strategy Proposal.*
 
 Once you know the vertical, use your knowledge of Elastic's capabilities in that vertical to drive the conversation.
 
