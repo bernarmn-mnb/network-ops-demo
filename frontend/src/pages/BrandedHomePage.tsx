@@ -353,8 +353,11 @@ export function BrandedHomePage({ config }: BrandedHomePageProps) {
 
       <FloatingChatWidget
         title={`${brand.name} Assistant`}
-        greeting={`Welcome to ${brand.name}! I can help you discover products and find what you need. What would you like to explore?`}
+        greeting={cfg.chat?.greeting || `Welcome to ${brand.name}! I can help you discover products and find what you need. What would you like to explore?`}
         placeholder="Ask me anything..."
+        {...(cfg.chat?.suggestions && { suggestions: cfg.chat.suggestions })}
+        {...(cfg.chat?.navigationActions && { navigationActions: cfg.chat.navigationActions })}
+        {...(cfg.chat?.pageContext && { pageContext: cfg.chat.pageContext })}
       />
     </>
   )

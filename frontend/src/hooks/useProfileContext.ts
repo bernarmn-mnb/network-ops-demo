@@ -14,10 +14,19 @@ import { useMemo } from 'react'
 import { useProfile } from '../profiles'
 import type { DemoProfile } from '../profiles/types'
 
+export interface ProfileContextOptions {
+  /** Custom mapper for profile.extensions — replaces the default scalar iteration */
+  extensionsMapper?: (extensions: Record<string, unknown>) => string[]
+}
+
 /**
  * Convert a DemoProfile into a natural-language context block for the agent.
  */
-export function buildProfileContext(profile: DemoProfile, isGuest: boolean): string | null {
+export function buildProfileContext(
+  profile: DemoProfile,
+  isGuest: boolean,
+  options?: ProfileContextOptions,
+): string | null {
   if (isGuest) return null
 
   const lines: string[] = []
@@ -61,11 +70,15 @@ export function buildProfileContext(profile: DemoProfile, isGuest: boolean): str
     }
   }
 
-  // Extensions — generic iteration over scalar values
+  // Extensions — custom mapper or generic iteration
   if (profile.extensions) {
-    for (const [key, value] of Object.entries(profile.extensions)) {
-      if (value != null && typeof value !== 'object') {
-        lines.push(`${key}: ${String(value)}`)
+    if (options?.extensionsMapper) {
+      lines.push(...options.extensionsMapper(profile.extensions))
+    } else {
+      for (const [key, value] of Object.entries(profile.extensions)) {
+        if (value != null && typeof value !== 'object') {
+          lines.push(`${key}: ${String(value)}`)
+        }
       }
     }
   }
@@ -79,11 +92,11 @@ export function buildProfileContext(profile: DemoProfile, isGuest: boolean): str
  * Hook that returns a memoised profile context string.
  * Returns null for guest users.
  */
-export function useProfileContext(): string | null {
+export function useProfileContext(options?: ProfileContextOptions): string | null {
   const { profile, isGuest } = useProfile()
 
   return useMemo(
-    () => buildProfileContext(profile, isGuest),
-    [profile, isGuest],
+    () => buildProfileContext(profile, isGuest, options),
+    [profile, isGuest, options],
   )
 }

@@ -64,6 +64,17 @@ export interface FeaturedConfig {
   count?: number
 }
 
+export interface ChatWidgetConfig {
+  /** Override greeting text */
+  greeting?: string
+  /** Suggestion pills shown in the chat widget */
+  suggestions?: Array<{ label: string; prompt: string }>
+  /** Navigation action buttons in the widget */
+  navigationActions?: Array<{ label: string; path: string; icon?: string }>
+  /** Context string passed to the agent for this page */
+  pageContext?: string
+}
+
 export interface HomePageConfig {
   hero: HeroConfig
   categories: CategoryConfig[]
@@ -73,6 +84,8 @@ export interface HomePageConfig {
   assistantCta?: AssistantCtaConfig
   /** Optional persona greeting (e.g., "Welcome back, Sarah") */
   personaGreeting?: string
+  /** Configuration for the floating chat widget on the homepage */
+  chat?: ChatWidgetConfig
 }
 
 // ============================================================================

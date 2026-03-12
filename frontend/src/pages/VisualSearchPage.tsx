@@ -37,6 +37,7 @@ import {
 import { AppHeader } from '../components/layout/AppHeader';
 import { SearchResultCard } from '../components/search/SearchResultCard';
 import { ProductDetailModal } from '../components/search/ProductDetailModal';
+import { defaultVisualSearchConfig, type VisualSearchConfig } from '../config/visualSearchConfig';
 
 interface VisualHit {
   id: string;
@@ -57,33 +58,12 @@ const MODE_OPTIONS = [
   { id: 'image' as const, label: 'Paste an image URL', iconType: 'image' },
 ];
 
-const TEXT_SUGGESTIONS = [
-  { label: 'Red shoes', query: 'red shoes' },
-  { label: 'Modern furniture', query: 'modern furniture' },
-  { label: 'Landscape painting', query: 'landscape painting' },
-  { label: 'Leather bag', query: 'leather bag' },
-  { label: 'Sunset photography', query: 'sunset photography' },
-];
+interface VisualSearchPageProps {
+  config?: VisualSearchConfig
+}
 
-const IMAGE_SUGGESTIONS = [
-  {
-    label: 'Sneakers',
-    url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-    thumb: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&h=120&fit=crop',
-  },
-  {
-    label: 'Minimal lamp',
-    url: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&h=400&fit=crop',
-    thumb: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=120&h=120&fit=crop',
-  },
-  {
-    label: 'Blue chair',
-    url: 'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=400&h=400&fit=crop',
-    thumb: 'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=120&h=120&fit=crop',
-  },
-];
-
-export function VisualSearchPage() {
+export function VisualSearchPage({ config }: VisualSearchPageProps) {
+  const cfg = config || defaultVisualSearchConfig;
   const [searchParams, setSearchParams] = useSearchParams();
   const [mode, setMode] = useState<SearchMode>('text');
   const [input, setInput] = useState('');
@@ -229,7 +209,7 @@ export function VisualSearchPage() {
       {/* Hero header */}
       <div
         style={{
-          background: 'linear-gradient(135deg, var(--euiColorPrimary) 0%, var(--euiColorPrimaryDark) 100%)',
+          background: 'var(--brand-gradient-primary, linear-gradient(135deg, var(--euiColorPrimary) 0%, var(--euiColorPrimaryDark) 100%))',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -239,7 +219,7 @@ export function VisualSearchPage() {
             <EuiFlexItem grow={false}>
               <EuiTitle size="s">
                 <h1 style={{ color: '#FFFFFF', margin: 0, whiteSpace: 'nowrap' }}>
-                  Visual Search
+                  {cfg.title}
                 </h1>
               </EuiTitle>
             </EuiFlexItem>
@@ -257,11 +237,7 @@ export function VisualSearchPage() {
               <EuiFlexGroup gutterSize="s" responsive={false}>
                 <EuiFlexItem>
                   <EuiFieldText
-                    placeholder={
-                      mode === 'text'
-                        ? 'Describe a product style, e.g. "red velvet cushion"...'
-                        : 'Paste an image URL, e.g. https://...'
-                    }
+                    placeholder={cfg.placeholder}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -277,7 +253,7 @@ export function VisualSearchPage() {
                     isLoading={loading}
                     disabled={!input.trim() || available === false}
                     style={{
-                      backgroundColor: 'rgba(255,255,255,0.25)',
+                      backgroundColor: 'var(--brand-accent, rgba(255,255,255,0.25))',
                       borderColor: 'rgba(255,255,255,0.5)',
                     }}
                   >
@@ -301,7 +277,7 @@ export function VisualSearchPage() {
               </EuiText>
             </EuiFlexItem>
             {mode === 'text'
-              ? TEXT_SUGGESTIONS.map((pill) => (
+              ? cfg.textSuggestions.map((pill) => (
                   <EuiFlexItem key={pill.query} grow={false}>
                     <EuiBadge
                       color="hollow"
@@ -320,7 +296,7 @@ export function VisualSearchPage() {
                     </EuiBadge>
                   </EuiFlexItem>
                 ))
-              : IMAGE_SUGGESTIONS.map((pill) => (
+              : cfg.imageSuggestions.map((pill) => (
                   <EuiFlexItem key={pill.label} grow={false}>
                     <EuiBadge
                       color="hollow"
@@ -666,6 +642,9 @@ export function VisualSearchPage() {
                       <li>
                         <strong>Search:</strong> Approximate kNN with cosine similarity
                       </li>
+                      {cfg.techPanelNotes?.map((note, i) => (
+                        <li key={i}>{note}</li>
+                      ))}
                     </ul>
                   </EuiText>
                 </EuiFlexItem>

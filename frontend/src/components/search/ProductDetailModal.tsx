@@ -17,12 +17,29 @@ import {
   EuiDescriptionList,
   EuiHorizontalRule,
   EuiLink,
+  EuiTitle,
 } from '@elastic/eui';
+
+export interface ProductDetailConfig {
+  /** Locale for number formatting (default: 'en-US') */
+  locale?: string
+  /** Currency code (default: 'USD') */
+  currency?: string
+  /** Link text for external product URL (default: 'View product') */
+  productLinkText?: string
+  /** Custom sections rendered after the standard fields */
+  customSections?: Array<{
+    id: string
+    title: string
+    render: (source: Record<string, unknown>) => React.ReactNode | null
+  }>
+}
 
 interface ProductDetailModalProps {
   source: Record<string, unknown>;
   highlight?: Record<string, string[]> | null;
   onClose: () => void;
+  config?: ProductDetailConfig;
 }
 
 function extractField(source: Record<string, unknown>, ...keys: string[]): string {
@@ -42,15 +59,15 @@ function extractCategory(source: Record<string, unknown>): string[] {
   return [cat.l1, cat.l2, cat.l3, cat.l4].filter((v): v is string => !!v);
 }
 
-function formatCurrency(value: unknown): string | null {
+function formatCurrency(value: unknown, locale = 'en-US', currency = 'USD'): string | null {
   if (typeof value === 'number') {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
   }
   if (typeof value === 'string' && value) return value;
   return null;
 }
 
-export function ProductDetailModal({ source, highlight, onClose }: ProductDetailModalProps) {
+export function ProductDetailModal({ source, highlight, onClose, config }: ProductDetailModalProps) {
   const name = extractField(source, 'name', 'title', 'product_name');
   const description = extractField(source, 'description', 'desc', 'summary');
   const brand = extractField(source, 'brand', 'manufacturer', 'vendor');
@@ -58,7 +75,11 @@ export function ProductDetailModal({ source, highlight, onClose }: ProductDetail
   const url = extractField(source, 'url', 'link', 'product_url');
   const categories = extractCategory(source);
 
-  const price = formatCurrency(source.price_usd ?? source.price_gbp ?? source.price);
+  const price = formatCurrency(
+    source.price_usd ?? source.price_gbp ?? source.price,
+    config?.locale,
+    config?.currency,
+  );
   const displayName = highlight?.name?.[0] || highlight?.title?.[0] || name || 'Product Details';
 
   const detailItems: Array<{ title: NonNullable<React.ReactNode>; description: NonNullable<React.ReactNode> }> = [];
@@ -147,11 +168,24 @@ export function ProductDetailModal({ source, highlight, onClose }: ProductDetail
               </>
             )}
 
+            {config?.customSections?.map((section) => {
+              const content = section.render(source);
+              if (!content) return null;
+              return (
+                <div key={section.id}>
+                  <EuiHorizontalRule margin="s" />
+                  <EuiTitle size="xxs"><h4>{section.title}</h4></EuiTitle>
+                  <EuiSpacer size="s" />
+                  {content}
+                </div>
+              );
+            })}
+
             {url && (
               <>
                 <EuiSpacer size="m" />
                 <EuiLink href={url} target="_blank" external>
-                  View product
+                  {config?.productLinkText || 'View product'}
                 </EuiLink>
               </>
             )}
