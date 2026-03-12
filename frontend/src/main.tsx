@@ -4,6 +4,7 @@ import './iconCache'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { BrandedThemeProvider } from './components/providers/BrandedThemeProvider'
+import { ProfileProvider } from './profiles'
 import App from './App'
 
 /**
@@ -27,7 +28,9 @@ import App from './App'
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <BrowserRouter basename={import.meta.env.BASE_URL}>
     <BrandedThemeProvider>
-      <App />
+      <ProfileProvider>
+        <App />
+      </ProfileProvider>
     </BrandedThemeProvider>
   </BrowserRouter>
 )

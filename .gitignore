@@ -71,7 +71,8 @@ htmlcov/
 NEXT_STEPS_BRANDING.md
 
 # Runtime data (created by branding API)
-backend/data/
+backend/data/*
+!backend/data/profiles.json
 
 # Beads issue tracker (local to developer)
 .beads/

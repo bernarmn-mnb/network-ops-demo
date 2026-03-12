@@ -95,6 +95,13 @@ export const NAV_ITEMS: NavItem[] = [
     category: 'demo',
   },
   {
+    path: '/profile',
+    label: 'Profile',
+    icon: 'user',
+    description: 'Demo persona and personalisation settings',
+    category: 'demo',
+  },
+  {
     path: '/voice',
     label: 'Voice',
     icon: 'discuss',

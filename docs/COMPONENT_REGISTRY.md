@@ -21,6 +21,7 @@
 | OverlayGuidePage | `pages/OverlayGuidePage.tsx` | Production | Tampermonkey injection guide with script generator |
 | DemoGuidePage | `pages/DemoGuidePage.tsx` | Production | Presenter guide with demo tracks and talking points |
 | GeoSearchPage | `pages/GeoSearchPage.tsx` | Working | Geo search with dual map implementations (Leaflet + Mapbox), 5 search modes |
+| ProfilePage | `pages/ProfilePage.tsx` | Working | Data-driven demo persona page with stats, attributes, tags, people sections |
 | VoiceChatPage | `pages/VoiceChatPage.tsx` | Working | Voice-first chat UX with STT controls and TTS availability fallback |
 | WorkflowsPage | `pages/WorkflowsPage.tsx` | Working | Workflow management: health, deploy, run, poll, recipe library |
 | WelcomePage | `pages/WelcomePage.tsx` | Production | Landing page with feature cards and connection status |
@@ -97,6 +98,14 @@
 |-----------|------|--------|-------|
 | VoiceChatControls | `components/voice/VoiceChatControls.tsx` | Working | Reusable mic/status control bar (idle/listening/processing/speaking) |
 
+### Profiles (`profiles/`)
+
+| Component | Path | Status | Notes |
+|-----------|------|--------|-------|
+| ProfileProvider | `profiles/ProfileContext.tsx` | Working | Context provider with localStorage + URL param persistence |
+| ProfileSwitcher | `profiles/ProfileSwitcher.tsx` | Working | Header dropdown for persona switching |
+| useProfileContext | `hooks/useProfileContext.ts` | Working | Natural-language profile string for agent prompts |
+
 ### Branding (`components/branding/`)
 
 | Component | Path | Status | Notes |
@@ -156,6 +165,7 @@
 | Geo Search | `routes/geo_search.py` | `/api/geo` | Working | Nearby, bounding box, aggregations, vector tiles, delivery zone check |
 | Voice | `routes/voice.py` | `/api/voice` | Working | Google Cloud TTS synthesis, voice presets, health check endpoint |
 | Workflows | `routes/workflows.py` | `/api/workflows` | Working | Proxy to Kibana Workflows Management API |
+| Profiles | `routes/profiles.py` | `/api/profiles` | Working | Demo persona API with hot-reload |
 | Agno Demo | `routes/agno_demo.py` | `/api/agno` | Experimental | Agno framework POC |
 
 ## Backend Libraries

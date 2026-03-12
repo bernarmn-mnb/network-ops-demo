@@ -27,6 +27,7 @@ from .routes.mcp import router as mcp_router
 from .routes.search import router as search_router
 from .routes.search_fields import router as search_fields_router
 from .routes.search_simple import router as search_simple_router
+from .routes.profiles import router as profiles_router
 from .routes.tracking import router as tracking_router
 from .routes.voice import router as voice_router
 from .routes.workflows import router as workflows_router
@@ -76,6 +77,7 @@ app.include_router(search_simple_router)
 app.include_router(search_router)
 app.include_router(search_fields_router)
 app.include_router(analytics_router)
+app.include_router(profiles_router)
 app.include_router(tracking_router)
 
 # Voice (requires Google Cloud TTS credentials — optional)

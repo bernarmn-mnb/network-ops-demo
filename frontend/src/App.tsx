@@ -12,6 +12,7 @@ import { OverlayDemoPage } from './pages/OverlayDemoPage'
 import { OverlayGuidePage } from './pages/OverlayGuidePage'
 import { WorkflowsPage } from './pages/WorkflowsPage'
 import { GeoSearchPage } from './pages/GeoSearchPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { VoiceChatPage } from './pages/VoiceChatPage'
 
 /**
@@ -46,6 +47,7 @@ function App() {
       <Route path="/search" element={<SearchPageSimple />} />
       <Route path="/workflows" element={<WorkflowsPage />} />
       <Route path="/geo" element={<GeoSearchPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="/voice" element={<VoiceChatPage />} />
       <Route path="/overlay" element={<OverlayDemoPage />} />
       <Route path="/overlay-guide" element={<OverlayGuidePage />} />
