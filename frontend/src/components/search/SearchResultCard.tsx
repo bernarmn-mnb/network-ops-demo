@@ -1,12 +1,11 @@
 /**
- * Search Result Card for Starter Template
- * 
- * Supports two modes:
- * 1. Configured mode: Shows product card with title, image, price, etc.
- * 2. Generic mode: Shows raw JSON when fields don't match expected structure
- * 
- * The card automatically detects if expected fields exist and falls back
- * to generic mode if the index hasn't been configured yet.
+ * Search Result Card — Config-Driven
+ *
+ * Renders a product card using field mappings from searchConfig.display.
+ * Falls back to raw JSON mode for unconfigured indexes.
+ *
+ * Demos can override rendering entirely via the `renderResult` prop
+ * on SearchPageSimple, or customize field mapping via `displayConfig` prop.
  */
 
 import {
@@ -20,87 +19,55 @@ import {
   EuiCodeBlock,
   EuiToolTip,
 } from '@elastic/eui';
+import { searchConfig, formatPrice } from '../../config/searchConfig';
+import type { DisplayFieldsConfig } from '../../config/searchConfig';
 
-interface SearchResultCardProps {
+export interface SearchResultCardProps {
   /** Raw document from Elasticsearch */
   source: Record<string, unknown>;
   /** Document ID */
   id: string;
   /** Relevance score */
   score?: number | null;
-  /** Highlighted fields */
+  /** Highlighted fields from ES */
   highlight?: Record<string, string[]> | null;
   /** Position in results (1-indexed) */
   position: number;
-  /** Current search query (for analytics attribution) */
+  /** Current search query (for analytics) */
   searchQuery?: string;
   /** Click handler */
   onClick?: (id: string, position: number) => void;
   /** Force generic mode (for unconfigured indexes) */
   forceGenericMode?: boolean;
+  /** Override the global display field mapping */
+  displayConfig?: DisplayFieldsConfig;
 }
 
-/**
- * Check if the source has recognizable product fields
- */
-function hasKnownFields(source: Record<string, unknown>): boolean {
-  // Check for common title fields
-  const hasTitleField = !!(
-    source.title || 
-    source.name || 
-    source.product_name || 
-    source.item_name ||
-    source.headline
-  );
-  
-  // If we have at least a title-like field, consider it configured
-  return hasTitleField;
+/** Resolve a potentially nested field path (e.g., "category.l1") from source */
+export function resolveField(source: Record<string, unknown>, fieldPath: string): unknown {
+  const parts = fieldPath.split('.');
+  let current: unknown = source;
+  for (const part of parts) {
+    if (current === null || current === undefined || typeof current !== 'object') return undefined;
+    current = (current as Record<string, unknown>)[part];
+  }
+  return current;
 }
 
-/**
- * Extract the best available title from the source
- */
-function extractTitle(source: Record<string, unknown>): string {
-  return (
-    source.title ||
-    source.name ||
-    source.product_name ||
-    source.item_name ||
-    source.headline ||
-    source.label ||
-    ''
-  ) as string;
-}
-
-/**
- * Extract the best available description
- */
-function extractDescription(source: Record<string, unknown>): string {
-  return (
-    source.description ||
-    source.desc ||
-    source.summary ||
-    source.body ||
-    source.content ||
-    source.text ||
-    ''
-  ) as string;
-}
-
-/**
- * Extract the best available image URL
- */
-function extractImageUrl(source: Record<string, unknown>): string {
-  return (
-    source.image_url ||
-    source.imageUrl ||
-    source.image ||
-    source.img ||
-    source.photo ||
-    source.thumbnail ||
-    source.picture ||
-    ''
-  ) as string;
+/** Get a string value from source using the display config field name, with highlight support */
+export function getDisplayValue(
+  source: Record<string, unknown>,
+  fieldName: string | undefined,
+  highlight?: Record<string, string[]> | null,
+): string {
+  if (!fieldName) return '';
+  const highlighted = highlight?.[fieldName]?.[0];
+  if (highlighted) return highlighted;
+  const raw = resolveField(source, fieldName);
+  if (raw === null || raw === undefined) return '';
+  if (typeof raw === 'string') return raw;
+  if (typeof raw === 'number') return String(raw);
+  return '';
 }
 
 export function SearchResultCard({
@@ -111,182 +78,114 @@ export function SearchResultCard({
   position,
   onClick,
   forceGenericMode = false,
+  displayConfig,
 }: SearchResultCardProps) {
-  // Determine if we should use generic mode
-  const useGenericMode = forceGenericMode || !hasKnownFields(source);
+  const display = displayConfig ?? searchConfig.display;
+  const isGeneric = forceGenericMode || !resolveField(source, display.title);
 
-  // Handle click
-  const handleClick = () => {
-    if (onClick) {
-      onClick(id, position);
-    }
-  };
+  const handleClick = () => onClick?.(id, position);
 
-  // Generic mode: Show raw JSON
-  if (useGenericMode) {
-    // Get first few meaningful fields for preview
+  // Generic mode: raw JSON preview
+  if (isGeneric) {
     const previewFields = Object.entries(source)
       .filter(([key]) => !key.startsWith('_'))
       .slice(0, 4);
 
     return (
-      <EuiCard
-        title=""
-        onClick={handleClick}
-        paddingSize="s"
-        hasBorder
-        style={{ height: '100%', cursor: 'pointer' }}
-      >
-        {/* Document ID */}
+      <EuiCard title="" onClick={handleClick} paddingSize="s" hasBorder style={{ height: '100%', cursor: 'pointer' }}>
         <EuiToolTip content={`Document ID: ${id}`}>
-          <EuiBadge color="hollow" style={{ marginBottom: 8 }}>
-            #{position}
-          </EuiBadge>
+          <EuiBadge color="hollow" style={{ marginBottom: 8 }}>#{position}</EuiBadge>
         </EuiToolTip>
-
-        {/* Preview fields */}
         {previewFields.map(([key, value]) => (
           <div key={key} style={{ marginBottom: 4 }}>
-            <EuiText size="xs" color="subdued">
-              <strong>{key}:</strong>
-            </EuiText>
+            <EuiText size="xs" color="subdued"><strong>{key}:</strong></EuiText>
             <EuiText size="xs">
-              {typeof value === 'string' 
+              {typeof value === 'string'
                 ? value.length > 100 ? value.substring(0, 100) + '...' : value
                 : JSON.stringify(value)?.substring(0, 100)}
             </EuiText>
           </div>
         ))}
-
         <EuiSpacer size="s" />
-
-        {/* Full JSON (collapsed) */}
-        <EuiCodeBlock
-          language="json"
-          fontSize="s"
-          paddingSize="s"
-          overflowHeight={120}
-          isCopyable
-        >
+        <EuiCodeBlock language="json" fontSize="s" paddingSize="s" overflowHeight={120} isCopyable>
           {JSON.stringify(source, null, 2)}
         </EuiCodeBlock>
-
-        {/* Score */}
-        {score !== undefined && score !== null && (
+        {score != null && (
           <>
             <EuiSpacer size="xs" />
-            <EuiText size="xs" color="subdued">
-              Score: {score.toFixed(2)}
-            </EuiText>
+            <EuiText size="xs" color="subdued">Score: {score.toFixed(2)}</EuiText>
           </>
         )}
       </EuiCard>
     );
   }
 
-  // Configured mode: Show product card
-  const title = extractTitle(source);
-  const description = extractDescription(source);
-  const imageUrl = extractImageUrl(source);
-  const price = source.price as number | undefined;
-  const brand = (source.brand || source.manufacturer || source.vendor || '') as string;
-  const category = (source.category || source.type || source.department || '') as string;
-
-  // Get highlighted title if available
-  const displayTitle = highlight?.title?.[0] || highlight?.name?.[0] || title || 'Untitled';
-
-  // Format price
-  const formatPrice = (value: number | undefined) => {
-    if (value === undefined || value === null) return null;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
+  // Config-driven mode
+  const title = getDisplayValue(source, display.title, highlight);
+  const subtitle = getDisplayValue(source, display.subtitle);
+  const description = getDisplayValue(source, display.description);
+  const imageUrl = getDisplayValue(source, display.image);
+  const priceRaw = display.price ? resolveField(source, display.price) : undefined;
+  const priceFormatted = typeof priceRaw === 'number' ? formatPrice(priceRaw) : typeof priceRaw === 'string' ? priceRaw : null;
+  const badges = (display.badges ?? [])
+    .map(f => {
+      const v = resolveField(source, f);
+      return typeof v === 'string' ? v : null;
+    })
+    .filter(Boolean) as string[];
 
   return (
-    <EuiCard
-      title=""
-      onClick={handleClick}
-      paddingSize="s"
-      hasBorder
-      style={{ height: '100%', cursor: 'pointer' }}
-    >
-      {/* Product Image */}
+    <EuiCard title="" onClick={handleClick} paddingSize="s" hasBorder style={{ height: '100%', cursor: 'pointer' }}>
       {imageUrl && (
         <>
           <EuiImage
             src={imageUrl}
-            alt={title}
-            style={{
-              width: '100%',
-              height: 180,
-              objectFit: 'contain',
-              backgroundColor: '#f5f5f5',
-              borderRadius: 4,
-            }}
+            alt={title || 'Product image'}
+            style={{ width: '100%', height: 180, objectFit: 'contain', backgroundColor: '#f5f5f5', borderRadius: 4 }}
           />
           <EuiSpacer size="s" />
         </>
       )}
-
-      {/* Brand Badge */}
-      {brand && (
+      {subtitle && (
         <>
-          <EuiBadge color="hollow">{brand}</EuiBadge>
+          <EuiBadge color="hollow">{subtitle}</EuiBadge>
           <EuiSpacer size="xs" />
         </>
       )}
-
-      {/* Title */}
       <EuiText size="s">
-        <strong dangerouslySetInnerHTML={{ __html: displayTitle }} />
+        <strong dangerouslySetInnerHTML={{ __html: title || 'Untitled' }} />
       </EuiText>
-
-      {/* Description (truncated) */}
       {description && (
         <>
           <EuiSpacer size="xs" />
           <EuiText size="xs" color="subdued">
-            <p style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              margin: 0,
-            }}>
+            <p style={{ overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', margin: 0 }}>
               {description}
             </p>
           </EuiText>
         </>
       )}
-
       <EuiSpacer size="s" />
-
-      {/* Price and Category */}
       <EuiFlexGroup justifyContent="spaceBetween" alignItems="center" gutterSize="s">
         <EuiFlexItem grow={false}>
-          {price !== undefined && (
-            <EuiText size="m">
-              <strong>{formatPrice(price)}</strong>
-            </EuiText>
+          {priceFormatted && (
+            <EuiText size="m"><strong>{priceFormatted}</strong></EuiText>
           )}
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
-          {category && (
-            <EuiBadge color="default">{category}</EuiBadge>
-          )}
+          <EuiFlexGroup gutterSize="xs" wrap>
+            {badges.map(badge => (
+              <EuiFlexItem key={badge} grow={false}>
+                <EuiBadge color="default">{badge}</EuiBadge>
+              </EuiFlexItem>
+            ))}
+          </EuiFlexGroup>
         </EuiFlexItem>
       </EuiFlexGroup>
-
-      {/* Score (for debugging - can be removed in production) */}
-      {score !== undefined && score !== null && (
+      {score != null && (
         <>
           <EuiSpacer size="xs" />
-          <EuiText size="xs" color="subdued">
-            Score: {score.toFixed(2)}
-          </EuiText>
+          <EuiText size="xs" color="subdued">Score: {score.toFixed(2)}</EuiText>
         </>
       )}
     </EuiCard>

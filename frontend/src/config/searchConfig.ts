@@ -106,6 +106,36 @@ export interface DisplayFieldsConfig {
   stockQuantity?: string
 }
 
+/** Configuration for a search mode (keyword, semantic, etc.) */
+export interface SearchModeConfig {
+  /** Unique mode identifier */
+  id: string
+  /** EUI icon name for the toolbar button */
+  icon: string
+  /** Short display label */
+  label: string
+  /** Tooltip shown on hover */
+  tooltip: string
+  /** Placeholder text for the search input in this mode */
+  placeholder: string
+}
+
+/** A demo query pill — a clickable suggestion shown below the search bar */
+export interface DemoPill {
+  /** Display label */
+  label: string
+  /** Query text to execute */
+  query: string
+}
+
+/** Currency formatting configuration */
+export interface CurrencyConfig {
+  /** Intl locale string (e.g., 'en-US', 'en-GB') */
+  locale: string
+  /** ISO 4217 currency code (e.g., 'USD', 'GBP', 'EUR') */
+  code: string
+}
+
 export interface SearchConfig {
   /** Elasticsearch index name */
   index: string
@@ -155,6 +185,40 @@ export interface SearchConfig {
     direction: 'asc' | 'desc'
     label: string
   }>
+
+  /** Currency for price formatting (default: { locale: 'en-US', code: 'USD' }) */
+  currency?: CurrencyConfig
+
+  /**
+   * Search modes available in the toolbar.
+   * Default: keyword only (no toolbar shown).
+   * When multiple modes are configured, a mode toolbar appears next to the search input.
+   *
+   * Modes with id 'keyword' or 'semantic' use the standard /api/search endpoint
+   * with search_type parameter. Custom mode IDs are passed through for demos
+   * that provide their own search functions.
+   */
+  searchModes?: SearchModeConfig[]
+
+  /**
+   * Demo query pills shown below the search bar, keyed by mode ID.
+   * When present, clickable pill buttons appear for quick demo queries.
+   *
+   * @example
+   * demoPills: {
+   *   keyword: [
+   *     { label: 'Laptop', query: 'laptop' },
+   *     { label: 'Headphones', query: 'wireless headphones' },
+   *   ],
+   *   semantic: [
+   *     { label: 'Gift for dad', query: 'gift ideas for father' },
+   *   ],
+   * }
+   */
+  demoPills?: Record<string, DemoPill[]>
+
+  /** Custom page title (default: "Search") */
+  pageTitle?: string
 }
 
 // ============================================================================
@@ -290,6 +354,18 @@ export function getSearchFieldsWithBoost(): string[] {
  */
 export function getFacetFields(): string[] {
   return searchConfig.facets?.map(f => f.field) || []
+}
+
+/** Get currency config with fallback to USD */
+export function getCurrencyConfig(): CurrencyConfig {
+  return searchConfig.currency ?? { locale: 'en-US', code: 'USD' }
+}
+
+/** Format a price value using the configured currency */
+export function formatPrice(value: number | undefined | null): string | null {
+  if (value === undefined || value === null) return null
+  const { locale, code } = getCurrencyConfig()
+  return new Intl.NumberFormat(locale, { style: 'currency', currency: code }).format(value)
 }
 
 /**

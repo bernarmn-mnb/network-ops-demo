@@ -18,6 +18,7 @@
  * - Resizable sidebar panel
  */
 
+import type { ReactNode } from 'react';
 import { useCallback, useState, useEffect } from 'react';
 import { recordClickEvent } from '../otel';
 import {
@@ -36,14 +37,20 @@ import {
   EuiFacetButton,
   EuiFieldSearch,
   EuiButton,
+  EuiButtonIcon,
   EuiCode,
   EuiAccordion,
   EuiLink,
+  EuiSelect,
+  EuiBadge,
+  EuiToolTip,
 } from '@elastic/eui';
 import { AppHeader } from '../components/layout/AppHeader';
 import { SearchResultCard } from '../components/search/SearchResultCard';
 import { useSearchSimple } from '../hooks/useSearchSimple';
+import type { SearchHit } from '../hooks/useSearchSimple';
 import { searchConfig } from '../config/searchConfig';
+import type { SearchModeConfig, DemoPill } from '../config/searchConfig';
 
 interface FieldsConfig {
   index: string;
@@ -62,7 +69,38 @@ interface FieldsConfig {
   } | null;
 }
 
-export function SearchPageSimple() {
+export interface SearchPageSimpleProps {
+  /** Custom result card renderer. Replaces the default SearchResultCard. */
+  renderResult?: (hit: SearchHit, options: { position: number; onClick: () => void; isConfigured: boolean }) => ReactNode;
+  /** Custom detail view. When set, clicking a result opens this view. Return null to use default click behavior. */
+  renderDetail?: (hit: SearchHit, onClose: () => void) => ReactNode;
+  /** Custom empty state (before first search) */
+  renderEmptyState?: () => ReactNode;
+  /** Additional actions rendered in the header area (e.g., floating chat button) */
+  headerActions?: ReactNode;
+}
+
+export function SearchPageSimple({
+  renderResult,
+  renderDetail,
+  renderEmptyState,
+  headerActions,
+}: SearchPageSimpleProps = {}) {
+  // Search mode state
+  const searchModes = searchConfig.searchModes ?? [];
+  const hasMultipleModes = searchModes.length > 1;
+  const [activeMode, setActiveMode] = useState<string>(searchModes[0]?.id ?? 'keyword');
+  const activeModeConfig = searchModes.find(m => m.id === activeMode) ?? searchModes[0];
+
+  // Active pills
+  const activePills: DemoPill[] = searchConfig.demoPills?.[activeMode] ?? [];
+
+  // Sort state (derive from config)
+  const sortOptions = searchConfig.sortOptions ?? [];
+
+  // Detail view state
+  const [detailHit, setDetailHit] = useState<SearchHit | null>(null);
+
   const {
     query,
     results,
@@ -78,8 +116,14 @@ export function SearchPageSimple() {
     search,
     setPage,
     setFilter,
+    setSort,
+    sortBy,
+    sortDir,
     clearFilters,
-  } = useSearchSimple({ pageSize: 12 });
+  } = useSearchSimple({
+    pageSize: searchConfig.pageSize ?? 12,
+    searchType: activeMode,
+  });
 
   const [searchInput, setSearchInput] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
@@ -114,12 +158,39 @@ export function SearchPageSimple() {
   // Determine if search is properly configured
   const isConfigured = fieldsConfig?.configured ?? true;
 
-  // Handle search submission
+  // Handle search submission (use overrides to avoid stale closure)
   const handleSearch = useCallback(() => {
     setQuery(searchInput);
     setHasSearched(true);
-    search();
+    search({ query: searchInput });
   }, [searchInput, setQuery, search]);
+
+  // Mode switching — re-run search with new mode
+  const handleModeChange = useCallback((modeId: string) => {
+    setActiveMode(modeId);
+    if (hasSearched) {
+      search({ query: searchInput || query, searchType: modeId });
+    }
+  }, [hasSearched, searchInput, query, search]);
+
+  // Demo pill click — set query and search
+  const handlePillClick = useCallback((pill: DemoPill) => {
+    setSearchInput(pill.query);
+    setQuery(pill.query);
+    setHasSearched(true);
+    search({ query: pill.query });
+  }, [setQuery, search]);
+
+  // Sort change
+  const selectedSort = sortBy ? `${sortBy}:${sortDir}` : '_score:desc';
+  const handleSortChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    const [field, dir] = value.split(':') as [string, 'asc' | 'desc'];
+    const newSortBy = field === '_score' ? null : field;
+    const newSortDir = dir ?? 'desc';
+    setSort(newSortBy, newSortDir);
+    search({ sortBy: newSortBy, sortDir: newSortDir });
+  }, [setSort, search]);
 
   // Handle Enter key in search box
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -128,14 +199,22 @@ export function SearchPageSimple() {
     }
   }, [handleSearch]);
 
-  // Handle result click with OTel tracking
+  // Handle result click with OTel tracking and detail view support
   const handleResultClick = useCallback((
-    resultId: string, 
+    resultId: string,
     position: number,
-    productData?: { brand?: string; category?: string; price?: number; name?: string }
+    hit?: SearchHit,
   ) => {
-    recordClickEvent(resultId, position, query, undefined, productData);
-  }, [query]);
+    recordClickEvent(resultId, position, query, undefined, {
+      brand: hit?.source?.brand as string,
+      category: hit?.source?.category as string,
+      price: hit?.source?.price as number,
+      name: (hit?.source?.title ?? hit?.source?.name) as string,
+    });
+    if (renderDetail && hit) {
+      setDetailHit(hit);
+    }
+  }, [query, renderDetail]);
 
   // Render facet filters from aggregations
   const renderFacets = () => {
@@ -285,6 +364,9 @@ export function SearchPageSimple() {
     }
 
     if (!hasSearched) {
+      if (renderEmptyState) {
+        return renderEmptyState();
+      }
       return (
         <EuiEmptyPrompt
           iconType="search"
@@ -307,32 +389,38 @@ export function SearchPageSimple() {
       );
     }
 
+    const pageSizeVal = searchConfig.pageSize ?? 12;
+
     return (
       <>
         <EuiFlexGroup wrap gutterSize="l">
-          {results.map((hit, index) => (
-            <EuiFlexItem key={hit.id} grow={false} style={{ width: isConfigured ? 280 : 350 }}>
-              <SearchResultCard
-                source={hit.source}
-                id={hit.id}
-                score={hit.score}
-                highlight={hit.highlight}
-                position={index + 1 + (page - 1) * 12}
-                searchQuery={query}
-                forceGenericMode={!isConfigured}
-                onClick={() => handleResultClick(
-                  hit.id,
-                  index + 1 + (page - 1) * 12,
-                  {
-                    brand: hit.source.brand as string,
-                    category: hit.source.category as string,
-                    price: hit.source.price as number,
-                    name: hit.source.title as string,
-                  }
-                )}
-              />
-            </EuiFlexItem>
-          ))}
+          {results.map((hit, index) => {
+            const pos = index + 1 + (page - 1) * pageSizeVal;
+            const onClickResult = () => handleResultClick(hit.id, pos, hit);
+
+            if (renderResult) {
+              return (
+                <EuiFlexItem key={hit.id} grow={false} style={{ width: 280 }}>
+                  {renderResult(hit, { position: pos, onClick: onClickResult, isConfigured })}
+                </EuiFlexItem>
+              );
+            }
+
+            return (
+              <EuiFlexItem key={hit.id} grow={false} style={{ width: isConfigured ? 280 : 350 }}>
+                <SearchResultCard
+                  source={hit.source}
+                  id={hit.id}
+                  score={hit.score}
+                  highlight={hit.highlight}
+                  position={pos}
+                  searchQuery={query}
+                  forceGenericMode={!isConfigured}
+                  onClick={() => onClickResult()}
+                />
+              </EuiFlexItem>
+            );
+          })}
         </EuiFlexGroup>
         
         {totalPages > 1 && (
@@ -343,8 +431,9 @@ export function SearchPageSimple() {
                 pageCount={totalPages}
                 activePage={page - 1}
                 onPageClick={(pageIndex) => {
-                  setPage(pageIndex + 1);
-                  search();
+                  const newPage = pageIndex + 1;
+                  setPage(newPage);
+                  search({ page: newPage });
                 }}
               />
             </EuiFlexGroup>
@@ -363,9 +452,18 @@ export function SearchPageSimple() {
       <EuiPageTemplate restrictWidth={1400} panelled={false}>
         <EuiPageTemplate.Section>
           {/* Page Title */}
-          <EuiTitle size="l">
-            <h1>Search {!isConfigured && '(Unconfigured)'}</h1>
-          </EuiTitle>
+          <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
+            <EuiFlexItem grow={false}>
+              <EuiTitle size="l">
+                <h1>{searchConfig.pageTitle ?? 'Search'} {!isConfigured && '(Unconfigured)'}</h1>
+              </EuiTitle>
+            </EuiFlexItem>
+            {headerActions && (
+              <EuiFlexItem grow={false}>
+                {headerActions}
+              </EuiFlexItem>
+            )}
+          </EuiFlexGroup>
           <EuiSpacer size="l" />
 
           {/* Connection Error */}
@@ -374,11 +472,33 @@ export function SearchPageSimple() {
           {/* Configuration Warning */}
           {renderConfigWarning()}
 
+          {/* Mode toolbar (only when multiple modes) */}
+          {hasMultipleModes && (
+            <>
+              <EuiFlexGroup gutterSize="xs" alignItems="center">
+                {searchModes.map((mode: SearchModeConfig) => (
+                  <EuiFlexItem key={mode.id} grow={false}>
+                    <EuiToolTip content={mode.tooltip}>
+                      <EuiButtonIcon
+                        iconType={mode.icon}
+                        aria-label={mode.label}
+                        color={activeMode === mode.id ? 'primary' : 'text'}
+                        display={activeMode === mode.id ? 'fill' : 'empty'}
+                        onClick={() => handleModeChange(mode.id)}
+                      />
+                    </EuiToolTip>
+                  </EuiFlexItem>
+                ))}
+              </EuiFlexGroup>
+              <EuiSpacer size="s" />
+            </>
+          )}
+
           {/* Search Bar */}
           <EuiFlexGroup>
             <EuiFlexItem>
               <EuiFieldSearch
-                placeholder="Search..."
+                placeholder={activeModeConfig?.placeholder ?? 'Search...'}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -393,22 +513,63 @@ export function SearchPageSimple() {
             </EuiFlexItem>
           </EuiFlexGroup>
 
+          {/* Demo pills */}
+          {activePills.length > 0 && (
+            <>
+              <EuiSpacer size="s" />
+              <EuiFlexGroup gutterSize="xs" wrap>
+                {activePills.map((pill) => (
+                  <EuiFlexItem key={pill.label} grow={false}>
+                    <EuiBadge
+                      color="hollow"
+                      onClick={() => handlePillClick(pill)}
+                      onClickAriaLabel={`Search: ${pill.query}`}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {pill.label}
+                    </EuiBadge>
+                  </EuiFlexItem>
+                ))}
+              </EuiFlexGroup>
+            </>
+          )}
+
           <EuiSpacer size="l" />
 
           {/* Results Header */}
           {hasSearched && !loading && !error && (
             <>
-              <EuiText size="s" color="subdued">
-                {total > 0 ? (
-                  <p>
-                    Found <strong>{total.toLocaleString()}</strong> results
-                    {tookMs !== null && <> in {tookMs}ms</>}
-                    {!isConfigured && <> (showing raw JSON)</>}
-                  </p>
-                ) : (
-                  <p>No results found</p>
+              <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
+                <EuiFlexItem grow={false}>
+                  <EuiText size="s" color="subdued">
+                    {total > 0 ? (
+                      <p>
+                        Found <strong>{total.toLocaleString()}</strong> results
+                        {tookMs !== null && <> in {tookMs}ms</>}
+                        {!isConfigured && <> (showing raw JSON)</>}
+                      </p>
+                    ) : (
+                      <p>No results found</p>
+                    )}
+                  </EuiText>
+                </EuiFlexItem>
+                {sortOptions.length > 0 && (
+                  <EuiFlexItem grow={false}>
+                    <EuiSelect
+                      compressed
+                      value={selectedSort}
+                      onChange={handleSortChange}
+                      options={[
+                        ...sortOptions.map((opt) => ({
+                          value: `${opt.field}:${opt.direction}`,
+                          text: opt.label,
+                        })),
+                      ]}
+                      aria-label="Sort results"
+                    />
+                  </EuiFlexItem>
                 )}
-              </EuiText>
+              </EuiFlexGroup>
               <EuiSpacer size="m" />
             </>
           )}
@@ -431,6 +592,9 @@ export function SearchPageSimple() {
           </EuiFlexGroup>
         </EuiPageTemplate.Section>
       </EuiPageTemplate>
+
+      {/* Detail overlay */}
+      {detailHit && renderDetail && renderDetail(detailHit, () => setDetailHit(null))}
     </>
   );
 }

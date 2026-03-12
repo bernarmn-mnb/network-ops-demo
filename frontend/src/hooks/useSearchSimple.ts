@@ -39,6 +39,19 @@ export interface SearchFilters {
   [key: string]: unknown;
 }
 
+/** Overrides for search() to avoid stale-closure issues when called right after state setters */
+export interface SearchOverrides {
+  query?: string;
+  filters?: SearchFilters;
+  page?: number;
+  /** Override search type (e.g. when switching modes) */
+  searchType?: string;
+  /** Override sort field */
+  sortBy?: string | null;
+  /** Override sort direction */
+  sortDir?: 'asc' | 'desc';
+}
+
 export interface UseSearchOptions {
   /** Initial search query */
   initialQuery?: string;
@@ -50,6 +63,8 @@ export interface UseSearchOptions {
   apiUrl?: string;
   /** Facet configs to request from backend. Defaults to searchConfig.facets */
   facets?: Array<{ field: string; size?: number }>;
+  /** Search type sent to backend: 'keyword', 'semantic', or 'auto' (default: 'keyword') */
+  searchType?: string;
 }
 
 export interface UseSearchResult {
@@ -71,7 +86,7 @@ export interface UseSearchResult {
   
   // Actions
   setQuery: (query: string) => void;
-  search: () => Promise<void>;
+  search: (overrides?: SearchOverrides) => Promise<void>;
   setPage: (page: number) => void;
   setFilter: (field: string, value: unknown) => void;
   setSort: (field: string | null, dir?: 'asc' | 'desc') => void;
@@ -86,6 +101,7 @@ export function useSearchSimple(options: UseSearchOptions = {}): UseSearchResult
     autoSearch = false,
     apiUrl = '',
     facets: facetsProp,
+    searchType = 'keyword',
   } = options;
 
   // Resolve facets: explicit prop > searchConfig > empty
@@ -111,21 +127,31 @@ export function useSearchSimple(options: UseSearchOptions = {}): UseSearchResult
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   // Search function
-  const search = useCallback(async () => {
+  const search = useCallback(async (overrides?: SearchOverrides) => {
+    const effectiveQuery = overrides?.query ?? query;
+    const effectiveFilters = overrides?.filters ?? filters;
+    const effectivePage = overrides?.page ?? page;
+    const effectiveSearchType = overrides?.searchType ?? searchType;
+    const effectiveSortBy = overrides?.sortBy !== undefined ? overrides.sortBy : sortBy;
+    const effectiveSortDir = overrides?.sortDir ?? sortDir;
+
     setLoading(true);
     setError(null);
 
     try {
+      const activeFilters = Object.keys(effectiveFilters).length > 0 ? effectiveFilters : undefined;
+
       const response = await fetch(`${apiUrl}/api/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query,
-          page,
+          query: effectiveQuery,
+          page: effectivePage,
           page_size: pageSize,
-          filters: Object.keys(filters).length > 0 ? filters : undefined,
-          sort_by: sortBy || undefined,
-          sort_dir: sortDir,
+          filters: activeFilters,
+          sort_by: effectiveSortBy || undefined,
+          sort_dir: effectiveSortDir,
+          search_type: effectiveSearchType,
           facets: resolvedFacets.length > 0 ? resolvedFacets : undefined,
         }),
       });
@@ -135,7 +161,7 @@ export function useSearchSimple(options: UseSearchOptions = {}): UseSearchResult
       }
 
       const data = await response.json();
-      
+
       setResults(data.hits || []);
       setTotal(data.total || 0);
       setTotalPages(data.total_pages || 0);
@@ -152,7 +178,7 @@ export function useSearchSimple(options: UseSearchOptions = {}): UseSearchResult
     } finally {
       setLoading(false);
     }
-  }, [query, page, pageSize, filters, sortBy, sortDir, apiUrl, resolvedFacets]);
+  }, [query, page, pageSize, filters, sortBy, sortDir, apiUrl, resolvedFacets, searchType]);
 
   // Page change triggers search
   const setPage = useCallback((newPage: number) => {
