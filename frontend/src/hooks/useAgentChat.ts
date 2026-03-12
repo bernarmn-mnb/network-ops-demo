@@ -7,6 +7,8 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { streamAgentMessage, getErrorMessage, NormalizedEvent } from '../services/agentApi'
+import type { BrowserToolInvocation, BrowserApiTool } from '../types/browserTools'
+import { normalizeToolId, getBrowserToolParams } from '../config/browserToolDispatch'
 
 export interface ToolCall {
   id: string
@@ -27,6 +29,10 @@ export interface Message {
 
 interface UseAgentChatOptions {
   initialGreeting?: string
+  /** Browser API tool definitions to register with Agent Builder */
+  browserApiTools?: BrowserApiTool[]
+  /** Callback when a browser tool call is received from the agent */
+  onBrowserToolCall?: (invocation: BrowserToolInvocation) => void | Promise<void>
 }
 
 interface UseAgentChatReturn {
@@ -43,6 +49,8 @@ interface UseAgentChatReturn {
  */
 export function useAgentChat({
   initialGreeting,
+  browserApiTools,
+  onBrowserToolCall,
 }: UseAgentChatOptions = {}): UseAgentChatReturn {
   // Initialize with optional greeting message
   const [messages, setMessages] = useState<Message[]>(() =>
@@ -116,18 +124,33 @@ export function useAgentChat({
                   ],
                 }
 
-              case 'tool_call':
+              case 'tool_call': {
+                const toolId = (event.data.tool_id || event.data.tool_call_id) as string
+                const rawParams = (event.data.params || event.data.arguments || {}) as Record<string, unknown>
+
+                // Detect browser tool calls and emit to callback
+                if (toolId && onBrowserToolCall && (toolId.startsWith('browser_') || toolId.startsWith('browser.'))) {
+                  const invocation: BrowserToolInvocation = {
+                    toolId: normalizeToolId(toolId),
+                    toolCallId: toolId,
+                    payload: getBrowserToolParams(rawParams),
+                    timestamp: Date.now(),
+                  }
+                  try { onBrowserToolCall(invocation) } catch { /* fire-and-forget */ }
+                }
+
                 return {
                   ...msg,
                   toolCalls: [
                     ...(msg.toolCalls || []),
                     {
-                      id: (event.data.tool_id || event.data.tool_call_id) as string,
-                      params: (event.data.params || event.data.arguments || {}) as Record<string, unknown>,
+                      id: toolId,
+                      params: rawParams,
                       status: 'pending' as const,
                     },
                   ],
                 }
+              }
 
               case 'tool_result': {
                 const tools = [...(msg.toolCalls || [])]
@@ -166,7 +189,8 @@ export function useAgentChat({
             }
           }))
         },
-        abortController.signal
+        abortController.signal,
+        browserApiTools,
       )
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
@@ -189,7 +213,7 @@ export function useAgentChat({
         msg.id === assistantId ? { ...msg, isComplete: true } : msg
       ))
     }
-  }, [conversationId])
+  }, [conversationId, browserApiTools, onBrowserToolCall])
 
   /**
    * Cancel the current streaming response.
