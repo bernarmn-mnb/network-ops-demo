@@ -19,6 +19,7 @@ import {
   EuiIcon,
   EuiText,
 } from '@elastic/eui'
+import type { BrowserApiTool, BrowserToolInvocation } from '../../types/browserTools'
 import { useAgentChat, Message } from '../../hooks/useAgentChat'
 import { MessageBubble } from './MessageBubble'
 import { ChatInput } from './ChatInput'
@@ -31,6 +32,10 @@ export interface ChatContainerProps {
   placeholder?: string
   /** Quick prompt suggestions to show when conversation is fresh */
   suggestions?: Suggestion[]
+  /** Browser API tool definitions to register with Agent Builder */
+  browserApiTools?: BrowserApiTool[]
+  /** Callback when a browser tool call is received from the agent */
+  onBrowserToolCall?: (invocation: BrowserToolInvocation) => void | Promise<void>
 }
 
 /** Ref handle for external control of the chat */
@@ -48,6 +53,8 @@ export const ChatContainer = forwardRef<ChatContainerRef, ChatContainerProps>(fu
   greeting = "Hello! I'm your AI assistant. How can I help you today?",
   placeholder = "Type your message...",
   suggestions = [],
+  browserApiTools,
+  onBrowserToolCall,
 }, ref) {
   const {
     messages,
@@ -55,7 +62,11 @@ export const ChatContainer = forwardRef<ChatContainerRef, ChatContainerProps>(fu
     sendMessage,
     cancelStream,
     resetConversation,
-  } = useAgentChat({ initialGreeting: greeting })
+  } = useAgentChat({
+    initialGreeting: greeting,
+    browserApiTools,
+    onBrowserToolCall,
+  })
 
   // Expose methods via ref for external control
   useImperativeHandle(ref, () => ({

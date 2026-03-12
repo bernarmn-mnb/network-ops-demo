@@ -10,6 +10,8 @@
  * - Support AbortController for cancellation
  */
 
+import type { BrowserApiTool } from '../types/browserTools'
+
 // Event types from Agent Builder
 export type EventType =
   | 'conversation_created'
@@ -85,12 +87,14 @@ function normalizeEvent(
  * @param conversationId - Optional conversation ID for multi-turn
  * @param onEvent - Callback for each normalized event
  * @param signal - AbortSignal for cancellation
+ * @param browserApiTools - Optional browser tool definitions to register with Agent Builder
  */
 export async function streamAgentMessage(
   message: string,
   conversationId: string | undefined,
   onEvent: (event: NormalizedEvent) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  browserApiTools?: BrowserApiTool[],
 ): Promise<void> {
   // Use relative path - Vite proxy handles routing to backend
   const response = await fetch('/api/agent/chat', {
@@ -99,6 +103,7 @@ export async function streamAgentMessage(
     body: JSON.stringify({
       input: message,
       conversation_id: conversationId,
+      ...(browserApiTools?.length ? { browser_api_tools: browserApiTools } : {}),
     }),
     signal,
   })
