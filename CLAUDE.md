@@ -589,6 +589,7 @@ Route tasks through domain skills in `hive-mind/skills/`:
 - Brand extraction, theming -> hive-demo-branding
 - Cart tracking, e-commerce -> hive-ecommerce
 - Dataset registry, generation -> hive-demo-data
+- SA coaching, demo ideation, hackathon brainstorming -> hive-sa-coaching
 - Composite demo guides -> hive-demo-recipes
 - AI personas, prompts -> hive-meta
 - Team beads conventions -> hive-beads
