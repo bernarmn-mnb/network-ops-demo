@@ -164,7 +164,7 @@ export function dispatchBrowserTool(
   handlers: BrowserToolHandlerMap,
   options?: DispatchOptions,
 ): boolean {
-  const { context, knownToolIds, log = true } = options ?? {}
+  const { context, knownToolIds, log = true, summarize } = options ?? {}
   const normalizedId = normalizeToolId(invocation.toolId)
   const now = Date.now()
 
@@ -204,12 +204,13 @@ export function dispatchBrowserTool(
       result.then(
         () => {
           if (log) {
+            const summary = summarize ? summarize(normalizedId, params) : {}
             logDispatch({
               toolId: invocation.toolId,
               normalizedId,
               timestamp: now,
               success: true,
-              summary: {},
+              summary,
             })
           }
         },
@@ -228,12 +229,13 @@ export function dispatchBrowserTool(
         },
       )
     } else if (log) {
+      const summary = summarize ? summarize(normalizedId, params) : {}
       logDispatch({
         toolId: invocation.toolId,
         normalizedId,
         timestamp: now,
         success: true,
-        summary: {},
+        summary,
       })
     }
 

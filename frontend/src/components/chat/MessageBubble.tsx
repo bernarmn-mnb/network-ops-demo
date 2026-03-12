@@ -25,9 +25,19 @@ import { MarkdownContent } from './MarkdownContent'
 
 interface MessageBubbleProps {
   message: Message
+  /** Custom avatar URL for assistant messages */
+  assistantAvatarUrl?: string
+  /** Custom assistant name (for initial-based fallback) */
+  assistantName?: string
+  /** Custom avatar background colour (hex) */
+  assistantAvatarColor?: string
+  /** Profile photo URL for user messages */
+  userAvatarUrl?: string
+  /** Display name for the user */
+  userName?: string
 }
 
-function MessageBubbleComponent({ message }: MessageBubbleProps) {
+function MessageBubbleComponent({ message, assistantAvatarUrl, assistantName, assistantAvatarColor, userAvatarUrl, userName }: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const isStreaming = !message.isComplete && message.role === 'assistant'
 
@@ -40,12 +50,48 @@ function MessageBubbleComponent({ message }: MessageBubbleProps) {
     >
       {/* Avatar */}
       <EuiFlexItem grow={false}>
-        <EuiAvatar
-          name={isUser ? 'You' : 'Assistant'}
-          iconType={isUser ? 'user' : 'sparkles'}
-          color={isUser ? '#0077CC' : '#00BFB3'}
-          size="m"
-        />
+        {!isUser && (
+          assistantAvatarUrl ? (
+            <img
+              src={assistantAvatarUrl}
+              alt={assistantName || 'Assistant'}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+              }}
+            />
+          ) : (
+            <EuiAvatar
+              name={assistantName || 'Assistant'}
+              iconType="sparkles"
+              size="m"
+              color={assistantAvatarColor || '#00BFB3'}
+            />
+          )
+        )}
+        {isUser && (
+          userAvatarUrl ? (
+            <img
+              src={userAvatarUrl}
+              alt={userName || 'You'}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+              }}
+            />
+          ) : (
+            <EuiAvatar
+              name={userName || 'You'}
+              iconType="user"
+              size="m"
+              color="#0077CC"
+            />
+          )
+        )}
       </EuiFlexItem>
 
       {/* Message Content */}
@@ -234,6 +280,11 @@ export const MessageBubble = memo(MessageBubbleComponent, (prev, next) => {
     prev.message.error === next.message.error &&
     prev.message.reasoning?.length === next.message.reasoning?.length &&
     prev.message.toolCalls?.length === next.message.toolCalls?.length &&
-    JSON.stringify(prev.message.toolCalls) === JSON.stringify(next.message.toolCalls)
+    JSON.stringify(prev.message.toolCalls) === JSON.stringify(next.message.toolCalls) &&
+    prev.assistantAvatarUrl === next.assistantAvatarUrl &&
+    prev.assistantName === next.assistantName &&
+    prev.assistantAvatarColor === next.assistantAvatarColor &&
+    prev.userAvatarUrl === next.userAvatarUrl &&
+    prev.userName === next.userName
   )
 })

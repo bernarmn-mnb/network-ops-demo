@@ -88,6 +88,9 @@ function normalizeEvent(
  * @param onEvent - Callback for each normalized event
  * @param signal - AbortSignal for cancellation
  * @param browserApiTools - Optional browser tool definitions to register with Agent Builder
+ * @param profileContext - Optional rich profile context injected on first message
+ * @param modeContext - Optional mode context prefix for multi-mode agents
+ * @param agentId - Optional agent ID override for mode-specific routing
  */
 export async function streamAgentMessage(
   message: string,
@@ -95,6 +98,9 @@ export async function streamAgentMessage(
   onEvent: (event: NormalizedEvent) => void,
   signal?: AbortSignal,
   browserApiTools?: BrowserApiTool[],
+  profileContext?: string | null,
+  modeContext?: string | null,
+  agentId?: string | null,
 ): Promise<void> {
   // Use relative path - Vite proxy handles routing to backend
   const response = await fetch('/api/agent/chat', {
@@ -104,6 +110,9 @@ export async function streamAgentMessage(
       input: message,
       conversation_id: conversationId,
       ...(browserApiTools?.length ? { browser_api_tools: browserApiTools } : {}),
+      ...(profileContext ? { profile_context: profileContext } : {}),
+      ...(modeContext ? { mode_context: modeContext } : {}),
+      ...(agentId ? { agent_id: agentId } : {}),
     }),
     signal,
   })

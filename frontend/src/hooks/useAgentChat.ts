@@ -33,6 +33,12 @@ interface UseAgentChatOptions {
   browserApiTools?: BrowserApiTool[]
   /** Callback when a browser tool call is received from the agent */
   onBrowserToolCall?: (invocation: BrowserToolInvocation) => void | Promise<void>
+  /** Rich profile context string — injected on the first message of each conversation */
+  profileContext?: string | null
+  /** Active mode context prefix (e.g. "[Mode: Planner — Help the user plan...]") */
+  modeContext?: string | null
+  /** Override agent ID for mode-specific routing */
+  agentId?: string | null
 }
 
 interface UseAgentChatReturn {
@@ -51,6 +57,9 @@ export function useAgentChat({
   initialGreeting,
   browserApiTools,
   onBrowserToolCall,
+  profileContext,
+  modeContext,
+  agentId,
 }: UseAgentChatOptions = {}): UseAgentChatReturn {
   // Initialize with optional greeting message
   const [messages, setMessages] = useState<Message[]>(() =>
@@ -67,6 +76,7 @@ export function useAgentChat({
   const [isLoading, setIsLoading] = useState(false)
   const [conversationId, setConversationId] = useState<string>()
   const abortRef = useRef<AbortController | null>(null)
+  const profileSentRef = useRef(false)
 
   /**
    * Send a message and stream the response.
@@ -99,6 +109,8 @@ export function useAgentChat({
     // Set up abort controller for cancellation
     const abortController = new AbortController()
     abortRef.current = abortController
+
+    const shouldSendProfile = !profileSentRef.current && !!profileContext
 
     try {
       await streamAgentMessage(
@@ -194,7 +206,14 @@ export function useAgentChat({
         },
         abortController.signal,
         browserApiTools,
+        shouldSendProfile ? profileContext : null,
+        modeContext || null,
+        agentId || null,
       )
+
+      if (shouldSendProfile) {
+        profileSentRef.current = true
+      }
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
         setMessages(prev => prev.map(msg =>
@@ -216,7 +235,7 @@ export function useAgentChat({
         msg.id === assistantId ? { ...msg, isComplete: true } : msg
       ))
     }
-  }, [conversationId, browserApiTools, onBrowserToolCall])
+  }, [conversationId, browserApiTools, onBrowserToolCall, profileContext, modeContext, agentId])
 
   /**
    * Cancel the current streaming response.
@@ -230,6 +249,7 @@ export function useAgentChat({
    */
   const resetConversation = useCallback(() => {
     setConversationId(undefined)
+    profileSentRef.current = false
     setMessages(
       initialGreeting
         ? [{

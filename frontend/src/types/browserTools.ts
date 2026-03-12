@@ -86,6 +86,8 @@ export interface DispatchOptions {
   knownToolIds?: Set<string>
   /** Enable dispatch logging (default: true) */
   log?: boolean
+  /** Custom payload summarizer for logging. Receives (toolId, payload) and returns summary fields. */
+  summarize?: (toolId: string, payload: unknown) => Record<string, unknown>
 }
 
 // ---------------------------------------------------------------------------

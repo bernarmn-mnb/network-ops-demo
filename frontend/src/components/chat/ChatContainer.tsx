@@ -36,6 +36,24 @@ export interface ChatContainerProps {
   browserApiTools?: BrowserApiTool[]
   /** Callback when a browser tool call is received from the agent */
   onBrowserToolCall?: (invocation: BrowserToolInvocation) => void | Promise<void>
+  /** Custom avatar URL for the assistant */
+  assistantAvatarUrl?: string
+  /** Custom assistant name (shown in avatar tooltip) */
+  assistantName?: string
+  /** Custom avatar background colour (hex) */
+  assistantAvatarColor?: string
+  /** Avatar URL for the logged-in user (shown on user messages) */
+  userAvatarUrl?: string
+  /** Display name for the logged-in user */
+  userName?: string
+  /** Rich profile context for personalisation */
+  profileContext?: string | null
+  /** Active mode context prefix */
+  modeContext?: string | null
+  /** Override agent ID for mode-specific routing */
+  agentId?: string | null
+  /** Custom empty state component (replaces default AgentEmptyState) */
+  emptyState?: React.ReactNode
 }
 
 /** Ref handle for external control of the chat */
@@ -55,6 +73,15 @@ export const ChatContainer = forwardRef<ChatContainerRef, ChatContainerProps>(fu
   suggestions = [],
   browserApiTools,
   onBrowserToolCall,
+  assistantAvatarUrl,
+  assistantName,
+  assistantAvatarColor,
+  userAvatarUrl,
+  userName,
+  profileContext,
+  modeContext,
+  agentId,
+  emptyState,
 }, ref) {
   const {
     messages,
@@ -66,6 +93,9 @@ export const ChatContainer = forwardRef<ChatContainerRef, ChatContainerProps>(fu
     initialGreeting: greeting,
     browserApiTools,
     onBrowserToolCall,
+    profileContext,
+    modeContext,
+    agentId,
   })
 
   // Expose methods via ref for external control
@@ -135,18 +165,35 @@ export const ChatContainer = forwardRef<ChatContainerRef, ChatContainerProps>(fu
           <EuiFlexItem grow={false}>
             <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
               <EuiFlexItem grow={false}>
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  background: 'linear-gradient(135deg, var(--euiColorAccent), var(--euiColorPrimary))',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 8px rgba(0, 191, 179, 0.3)',
-                }}>
-                  <EuiIcon type="sparkles" size="m" color="ghost" />
-                </div>
+                {assistantAvatarUrl ? (
+                  <img
+                    src={assistantAvatarUrl}
+                    alt={assistantName || title}
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
+                      objectFit: 'cover',
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    background: assistantAvatarColor
+                      ? `linear-gradient(135deg, ${assistantAvatarColor}, ${assistantAvatarColor}BB)`
+                      : 'linear-gradient(135deg, var(--euiColorAccent), var(--euiColorPrimary))',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: assistantAvatarColor
+                      ? `0 2px 8px ${assistantAvatarColor}40`
+                      : '0 2px 8px rgba(0, 191, 179, 0.3)',
+                  }}>
+                    <EuiIcon type="sparkles" size="m" color="ghost" />
+                  </div>
+                )}
               </EuiFlexItem>
               <EuiFlexItem>
                 <EuiText>
@@ -194,11 +241,18 @@ export const ChatContainer = forwardRef<ChatContainerRef, ChatContainerProps>(fu
         }}
       >
         {messages.length === 0 ? (
-          <AgentEmptyState onSelect={sendMessage} />
+          emptyState || <AgentEmptyState onSelect={sendMessage} />
         ) : (
           messages.map((message: Message) => (
             <React.Fragment key={message.id}>
-              <MessageBubble message={message} />
+              <MessageBubble
+                message={message}
+                assistantAvatarUrl={assistantAvatarUrl}
+                assistantName={assistantName}
+                assistantAvatarColor={assistantAvatarColor}
+                userAvatarUrl={userAvatarUrl}
+                userName={userName}
+              />
               <EuiSpacer size="m" />
             </React.Fragment>
           ))
