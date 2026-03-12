@@ -20,14 +20,20 @@ import {
   EuiIcon,
   EuiText,
   EuiTitle,
+  EuiSpacer,
 } from '@elastic/eui'
 import type { ReactNode } from 'react'
+import { PhotoStrip, type PhotoStripImage } from './PhotoStrip'
 
 interface BrandedEmptyStateProps {
   /** EUI icon name for the empty state visual */
   iconType?: string
   /** Image URL — overrides iconType when provided */
   imageUrl?: string
+  /** Photo strip images — renders a row of photos above the text for visual richness */
+  photoStrip?: PhotoStripImage[]
+  /** Photo strip shape (default: 'rounded') */
+  photoStripShape?: 'circle' | 'rounded' | 'square'
   /** Primary heading text */
   title: string
   /** Secondary body text */
@@ -53,12 +59,21 @@ const IMAGE_SIZES: Record<string, number> = {
 export function BrandedEmptyState({
   iconType = 'package',
   imageUrl,
+  photoStrip,
+  photoStripShape,
   title,
   body,
   actions,
   size = 'm',
 }: BrandedEmptyStateProps) {
-  const icon = imageUrl ? (
+  const stripSize = size === 's' ? 60 : size === 'l' ? 100 : 80
+
+  const icon = photoStrip && photoStrip.length > 0 ? (
+    <>
+      <PhotoStrip images={photoStrip} shape={photoStripShape} size={stripSize} />
+      <EuiSpacer size="m" />
+    </>
+  ) : imageUrl ? (
     <img
       src={imageUrl}
       alt=""

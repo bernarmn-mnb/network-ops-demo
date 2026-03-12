@@ -2,7 +2,7 @@
  * Visual Search Page Configuration
  *
  * Override these defaults to customise the visual search experience per demo.
- * Demo branches should create their own config file (e.g., mnsVisualSearchConfig.ts)
+ * Demo branches should create their own config file (e.g., myDemoVisualSearchConfig.ts)
  * and pass it to VisualSearchPage via props — never modify this file directly.
  */
 
@@ -11,6 +11,8 @@ export interface VisualSearchConfig {
   title: string
   /** Placeholder text in the search input */
   placeholder: string
+  /** Background image URL for the hero header (layered behind content with low opacity) */
+  heroImageUrl?: string
   /** Suggestions shown as pills in text mode */
   textSuggestions: Array<{ label: string; query: string }>
   /** Image suggestions shown as thumbnail pills in image mode */

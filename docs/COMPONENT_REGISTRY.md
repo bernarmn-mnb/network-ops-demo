@@ -92,7 +92,9 @@
 
 | Component | Path | Status | Notes |
 |-----------|------|--------|-------|
-| BrandedEmptyState | `components/common/BrandedEmptyState.tsx` | Production | Brand-themed empty state with icon/image, falls back to EUI when no brand vars |
+| BrandedEmptyState | `components/common/BrandedEmptyState.tsx` | Production | Brand-themed empty state with icon/image/photo strip, falls back to EUI when no brand vars |
+| HeroSection | `components/common/HeroSection.tsx` | Working | Reusable hero banner with background image, overlay, and centered content; auto-reads brand heroImage |
+| PhotoStrip | `components/common/PhotoStrip.tsx` | Working | Horizontal row of images with shape variants (circle, rounded, square) for visual richness |
 
 ### Search (`components/search/`)
 
@@ -155,6 +157,12 @@
 | useVoiceChat | `hooks/useVoiceChat.ts` | Working | Wraps `useAgentChat` with browser STT and chunked TTS playback |
 | useTTSPlayback | `hooks/useTTSPlayback.ts` | Working | Queue-based TTS synthesis/playback with abort + cleanup handling |
 | workflowsApi | `services/workflowsApi.ts` | Working | Workflows API client (search, deploy, run, poll, cancel) |
+
+## Frontend Utilities
+
+| Utility | Path | Status | Notes |
+|---------|------|--------|-------|
+| unsplash / STOCK_IMAGES | `utils/images.ts` | Working | Unsplash URL builder and curated stock image registry (35 photos, 8 categories) |
 
 ## Backend Routes
 

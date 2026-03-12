@@ -216,6 +216,20 @@ export function VisualSearchPage({ config, productDetailConfig }: VisualSearchPa
           overflow: 'hidden',
         }}
       >
+        {cfg.heroImageUrl && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `url(${cfg.heroImageUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: 0.15,
+              mixBlendMode: 'overlay',
+            }}
+            aria-hidden
+          />
+        )}
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '16px 24px', position: 'relative' }}>
           <EuiFlexGroup alignItems="center" gutterSize="l" responsive={false}>
             <EuiFlexItem grow={false}>
