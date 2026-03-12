@@ -48,6 +48,13 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'training',
     description: 'Demo guide with presenter notes',
   },
+  {
+    path: '/home',
+    label: 'Store Home',
+    icon: 'tag',
+    description: 'Config-driven branded homepage',
+    category: 'demo',
+  },
   
   // Demo Building Features
   {

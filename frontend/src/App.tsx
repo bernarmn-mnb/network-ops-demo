@@ -14,6 +14,7 @@ import { WorkflowsPage } from './pages/WorkflowsPage'
 import { GeoSearchPage } from './pages/GeoSearchPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { VoiceChatPage } from './pages/VoiceChatPage'
+import { BrandedHomePage } from './pages/BrandedHomePage'
 
 /**
  * Main App Component
@@ -37,6 +38,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<WelcomePage />} />
+      <Route path="/home" element={<BrandedHomePage />} />
       <Route path="/guide" element={<DemoGuidePage />} />
       <Route path="/chat" element={<ChatPage />} />
       <Route path="/a2a-chat" element={<A2AChatPage />} />

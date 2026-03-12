@@ -25,6 +25,7 @@
 | VoiceChatPage | `pages/VoiceChatPage.tsx` | Working | Voice-first chat UX with STT controls and TTS availability fallback |
 | WorkflowsPage | `pages/WorkflowsPage.tsx` | Working | Workflow management: health, deploy, run, poll, recipe library |
 | WelcomePage | `pages/WelcomePage.tsx` | Production | Landing page with feature cards and connection status |
+| BrandedHomePage | `pages/BrandedHomePage.tsx` | Production | Config-driven branded homepage with hero, categories, featured items, assistant CTA |
 
 ## Frontend Components
 
@@ -85,6 +86,12 @@
 | HeatmapLayer | `components/geo/HeatmapLayer.tsx` | Working | Heatmap data preparation utilities |
 | DeliveryZoneLayer | `components/geo/DeliveryZoneLayer.tsx` | Working | Delivery zone polygon data extraction |
 | VectorTileLayer | `components/geo/VectorTileLayer.tsx` | Working | Info badge for Mapbox-only vector tile mode |
+
+### Common (`components/common/`)
+
+| Component | Path | Status | Notes |
+|-----------|------|--------|-------|
+| BrandedEmptyState | `components/common/BrandedEmptyState.tsx` | Production | Brand-themed empty state with icon/image, falls back to EUI when no brand vars |
 
 ### Search (`components/search/`)
 
