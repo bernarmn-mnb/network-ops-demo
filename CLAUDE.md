@@ -567,6 +567,8 @@ bd blocked                       # Shows all blocked issues and why
 
 
 
+
+
 ## hive-mind-start
 # Hive Mind
 
@@ -581,19 +583,19 @@ This project uses hive-mind for Elastic integration patterns and AI skills.
 ## Skills Routing
 Route tasks through domain skills in `hive-mind/skills/`:
 - Agent chat, MCP, orchestration -> hive-agent-builder
-- OpenTelemetry, tracing, analytics -> hive-otel-tracing
-- Retrievers, indexing, query templates -> hive-search-retrievers
-- EUI, Vite, Next.js, theming -> hive-eui-frontend
-- Open Crawler setup -> hive-open-crawler
-- Docker, Cloud Run, dev scripts -> hive-deployment
-- Brand extraction, theming -> hive-demo-branding
-- Cart tracking, e-commerce -> hive-ecommerce
-- Dataset registry, generation -> hive-demo-data
-- SA coaching, demo ideation, hackathon brainstorming -> hive-sa-coaching
-- Composite demo guides -> hive-demo-recipes
-- AI personas, prompts -> hive-meta
 - Team beads conventions -> hive-beads
+- Brand extraction, theming -> hive-demo-branding
+- Dataset registry, generation -> hive-demo-data
+- Composite demo guides -> hive-demo-recipes
+- Docker, Cloud Run, dev scripts -> hive-deployment
+- Cart tracking, e-commerce -> hive-ecommerce
+- EUI, Vite, Next.js, theming -> hive-eui-frontend
 - MCP server configs -> hive-mcp
+- AI personas, prompts -> hive-meta
+- Open Crawler setup -> hive-open-crawler
+- OpenTelemetry, tracing, analytics -> hive-otel-tracing
+- SA coaching, demo ideation, hackathon brainstorming -> hive-sa-coaching
+- Retrievers, indexing, query templates -> hive-search-retrievers
 
 ## Recipe Shortcuts
 - /hive-demo-recipes search -> recipes/SEARCH_DEMO.md
