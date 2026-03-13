@@ -315,12 +315,14 @@ Both endpoints run on Elastic Inference Service - no ML nodes required.
 
 ### Read-Only API Key
 
-The shared API key provides **read access** to indices and Agent Builder:
+The shared API key provides **read access** to all indices, Agent Builder, and cluster monitoring:
 
-- ✅ Search indices (`ootb-*`)
+- ✅ Search any index (`*`) including custom indices
 - ✅ Run semantic queries (ELSER + jina-v3)
 - ✅ Chat with pre-built agents
 - ✅ List available agents and tools
+- ✅ Cluster monitoring (`es.info()`, `_cluster/health`, etc.)
+- ✅ Inference endpoint monitoring
 - ❌ Write to indices
 - ❌ Create/modify/delete agents
 - ❌ Create/modify mappings
@@ -330,10 +332,10 @@ The shared API key provides **read access** to indices and Agent Builder:
 ```json
 {
   "ootb-readonly": {
-    "cluster": ["monitor_inference"],
+    "cluster": ["monitor", "monitor_inference"],
     "indices": [
       {
-        "names": ["ootb-*"],
+        "names": ["*"],
         "privileges": ["read", "view_index_metadata"]
       }
     ],
@@ -420,10 +422,13 @@ The API key is read-only. Use your own cluster for write operations.
 
 ### "Index not found" errors
 
-Verify the index name matches exactly:
+Verify the index name matches exactly (uses `_resolve/index` which works with the read-only key):
 ```bash
-curl -X GET "$ELASTICSEARCH_URL/_cat/indices/ootb-*?v"
+curl -X GET "$ELASTICSEARCH_URL/_resolve/index/ootb-*" \
+  -H "Authorization: ApiKey $ELASTIC_API_KEY"
 ```
+
+> **Note**: `_cat/indices` requires the `monitor` index privilege which the read-only key does not have. Use `_resolve/index` or `_count` instead.
 
 ### Semantic search returns no results
 

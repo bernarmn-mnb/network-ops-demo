@@ -185,19 +185,24 @@ async def list_indices() -> list[dict]:
     """List available indices with document counts.
 
     Useful for LLM agents to discover what data is available.
+    Uses _resolve/index + _count instead of _cat/indices to work
+    with read-only API keys (no index monitor privilege required).
     """
     try:
         es = get_es_client()
-        indices = es.cat.indices(format="json")
-        return [
-            {
-                "index": idx["index"],
-                "docs": int(idx.get("docs.count", 0)),
-                "size": idx.get("store.size", "0b"),
-            }
-            for idx in indices
-            if not idx["index"].startswith(".")
-        ]
+        resolved = es.indices.resolve_index(name="*")
+        results = []
+        for idx_info in resolved.get("indices", []):
+            name = idx_info["name"]
+            if name.startswith("."):
+                continue
+            try:
+                count_resp = es.count(index=name)
+                doc_count = count_resp.get("count", 0)
+            except Exception:
+                doc_count = 0
+            results.append({"index": name, "docs": doc_count})
+        return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list indices: {e!s}")
 
