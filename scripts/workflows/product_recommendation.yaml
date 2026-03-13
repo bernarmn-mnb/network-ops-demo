@@ -1,0 +1,33 @@
+name: Product Recommendation
+enabled: true
+description: Search products by query and generate an AI recommendation comparing top results.
+tags: ["ootb", "products", "recommendation"]
+
+triggers:
+  - type: manual
+
+inputs:
+  - name: query
+    type: string
+    required: true
+
+steps:
+  - name: search_products
+    type: elasticsearch.search
+    with:
+      index: ootb-products
+      query:
+        match:
+          title: "{{ inputs.query }}"
+      size: 5
+
+  - name: ai_recommendation
+    type: ai.agent
+    with:
+      agent_id: ootb-product-search
+      message: "A customer is looking for '{{ inputs.query }}'. I found {{ steps.search_products.output.hits.total.value }} products. Compare the top results and provide a recommendation considering rating, price, and brand."
+
+  - name: log_recommendation
+    type: console
+    with:
+      message: "RECOMMENDATION for '{{ inputs.query }}': {{ steps.search_products.output.hits.total.value }} products found. AI: {{ steps.ai_recommendation.output }}"

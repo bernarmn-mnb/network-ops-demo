@@ -1,0 +1,45 @@
+name: Support Ticket Escalation
+enabled: true
+description: Search for support tickets by keyword, triage with AI, and log escalation for urgent cases.
+tags: ["ootb", "support", "escalation"]
+
+triggers:
+  - type: manual
+
+inputs:
+  - name: query
+    type: string
+    required: true
+  - name: priority_filter
+    type: string
+    required: false
+
+steps:
+  - name: find_tickets
+    type: elasticsearch.search
+    with:
+      index: ootb-support
+      query:
+        bool:
+          must:
+            - match:
+                subject: "{{ inputs.query }}"
+          filter:
+            - terms:
+                status: ["open", "in_progress"]
+      size: 5
+
+  - name: ai_triage
+    type: ai.agent
+    with:
+      agent_id: ootb-support-analyst
+      message: "Triage support tickets matching '{{ inputs.query }}'. Found {{ steps.find_tickets.output.hits.total.value }} tickets. Summarise the top issues, flag any critical or frustrated-sentiment tickets, and recommend which need immediate escalation."
+
+  - name: check_results
+    type: if
+    condition: "steps.find_tickets.output.hits.total.value > 0"
+    steps:
+      - name: log_escalation
+        type: console
+        with:
+          message: "ESCALATION: {{ steps.find_tickets.output.hits.total.value }} tickets matched '{{ inputs.query }}'. AI triage: {{ steps.ai_triage.output }}"

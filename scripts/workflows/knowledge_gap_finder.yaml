@@ -1,0 +1,42 @@
+name: Knowledge Base Gap Finder
+enabled: true
+description: Search the knowledge base for a topic, assess coverage with AI, and identify documentation gaps.
+tags: ["ootb", "knowledge", "quality"]
+
+triggers:
+  - type: manual
+
+inputs:
+  - name: topic
+    type: string
+    required: true
+
+steps:
+  - name: search_docs
+    type: elasticsearch.search
+    with:
+      index: ootb-knowledge
+      query:
+        bool:
+          must:
+            - match:
+                content: "{{ inputs.topic }}"
+          should:
+            - match:
+                title: "{{ inputs.topic }}"
+      size: 10
+
+  - name: ai_gap_analysis
+    type: ai.agent
+    with:
+      agent_id: ootb-knowledge-base
+      message: "Analyse our knowledge base coverage for '{{ inputs.topic }}'. Found {{ steps.search_docs.output.hits.total.value }} articles. Identify: 1) Is the topic well-covered or are there gaps? 2) What subtopics are missing? 3) Rate overall coverage as comprehensive, adequate, sparse, or missing."
+
+  - name: check_sparse
+    type: if
+    condition: "steps.search_docs.output.hits.total.value < 3"
+    steps:
+      - name: log_gap
+        type: console
+        with:
+          message: "KNOWLEDGE GAP: Topic '{{ inputs.topic }}' has only {{ steps.search_docs.output.hits.total.value }} articles. AI analysis: {{ steps.ai_gap_analysis.output }}"

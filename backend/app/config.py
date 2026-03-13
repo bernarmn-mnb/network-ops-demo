@@ -2,14 +2,25 @@
 
 Loads configuration from environment variables using python-decouple.
 All Elastic credentials should be stored in .env file.
+Privileged keys (admin, workflows) are loaded from .secrets/ at runtime.
 """
 
+import os
 from pathlib import Path
 
 from decouple import AutoConfig
+from dotenv import dotenv_values
 
 
 _config = AutoConfig(search_path=Path(__file__).resolve().parents[1])
+
+_SECRETS_PATH = Path(__file__).resolve().parents[2] / ".secrets" / "ootb-admin.env"
+_secrets = dotenv_values(_SECRETS_PATH) if _SECRETS_PATH.exists() else {}
+
+
+def _secret(key: str) -> str:
+    """Load a value from .secrets/ without polluting os.environ."""
+    return _secrets.get(key, "")
 
 
 class Settings:
@@ -23,9 +34,11 @@ class Settings:
     AGENT_ID: str = _config("AGENT_ID", default="")
     CONNECTOR_ID: str = _config("CONNECTOR_ID", default="")
 
-    # Workflows API Key (needs workflowsManagement Kibana privilege)
-    # Falls back to ELASTIC_API_KEY if not set
-    WORKFLOWS_API_KEY: str = _config("WORKFLOWS_API_KEY", default="")
+    # Workflows API Key (needs workflowsManagement Kibana privilege).
+    # Checked in order: backend/.env -> .secrets/ootb-admin.env (ADMIN_API_KEY)
+    WORKFLOWS_API_KEY: str = (
+        _config("WORKFLOWS_API_KEY", default="") or _secret("ADMIN_API_KEY")
+    )
 
     # Monitoring Cluster Configuration
     MONITORING_ELASTICSEARCH_URL: str = _config(
