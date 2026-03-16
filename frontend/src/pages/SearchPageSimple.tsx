@@ -85,6 +85,15 @@ export function SearchPageSimple({
   renderEmptyState,
   headerActions,
 }: SearchPageSimpleProps = {}) {
+  const inferResultEntityPlural = (): string => {
+    if (searchConfig.copy?.resultEntityPlural) return searchConfig.copy.resultEntityPlural;
+    const idx = searchConfig.index.toLowerCase();
+    if (idx.includes('support') || idx.includes('ticket')) return 'tickets';
+    if (idx.includes('fault') || idx.includes('incident')) return 'incidents';
+    if (idx.includes('knowledge') || idx.includes('docs')) return 'documents';
+    return 'products';
+  };
+
   // Search mode state
   const searchModes = searchConfig.searchModes ?? [];
   const hasMultipleModes = searchModes.length > 1;
@@ -93,6 +102,13 @@ export function SearchPageSimple({
 
   // Active pills
   const activePills: DemoPill[] = searchConfig.demoPills?.[activeMode] ?? [];
+  const resultEntityPlural = inferResultEntityPlural();
+  const startSearchHint =
+    searchConfig.copy?.startSearchHint ??
+    `Enter a search term to find ${resultEntityPlural}`;
+  const noResultsHint =
+    searchConfig.copy?.noResultsHint ??
+    'Try a different search term or clear filters';
 
   // Sort state (derive from config)
   const sortOptions = searchConfig.sortOptions ?? [];
@@ -370,7 +386,7 @@ export function SearchPageSimple({
         <EuiEmptyPrompt
           iconType="search"
           title={<h2>Start Searching</h2>}
-          body={<p>Enter a search term to find products</p>}
+          body={<p>{startSearchHint}</p>}
         />
       );
     }
@@ -380,7 +396,7 @@ export function SearchPageSimple({
         <EuiEmptyPrompt
           iconType="search"
           title={<h2>No Results</h2>}
-          body={<p>Try a different search term or clear filters</p>}
+          body={<p>{noResultsHint}</p>}
           actions={
             <EuiButton onClick={clearFilters}>Clear Filters</EuiButton>
           }
@@ -547,7 +563,7 @@ export function SearchPageSimple({
                         {!isConfigured && <> (showing raw JSON)</>}
                       </p>
                     ) : (
-                      <p>No results found</p>
+                      <p>No {resultEntityPlural} found</p>
                     )}
                   </EuiText>
                 </EuiFlexItem>

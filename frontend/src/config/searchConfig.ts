@@ -219,6 +219,19 @@ export interface SearchConfig {
 
   /** Custom page title (default: "Search") */
   pageTitle?: string
+
+  /**
+   * UI copy shown on the search page.
+   * Use this to keep page language aligned to the current demo domain.
+   */
+  copy?: {
+    /** Generic plural noun for the searched entity (e.g., products, incidents, tickets). */
+    resultEntityPlural?: string
+    /** Empty-state hint shown before first search. */
+    startSearchHint?: string
+    /** Empty-state hint shown when no results are returned. */
+    noResultsHint?: string
+  }
 }
 
 // ============================================================================
@@ -260,7 +273,7 @@ export const searchConfig: SearchConfig = {
   // -------------------------------------------------------------------------
   // Index & Query Settings
   // -------------------------------------------------------------------------
-  index: "search-ecommerce",
+  index: "ifs-maintenance-faults",
   queryTemplate: "simple",
   
   // For advanced relevancy, uncomment:
@@ -278,11 +291,13 @@ export const searchConfig: SearchConfig = {
   // -------------------------------------------------------------------------
   fields: {
     search: [
-      { field: "title", boost: 3 },
-      { field: "description", boost: 1 },
-      { field: "brand", boost: 2 },
-      { field: "category", boost: 1.5 },
-      { field: "tags", boost: 1 },
+      { field: "fault_description", boost: 4 },
+      { field: "resolution_procedure", boost: 2.5 },
+      { field: "equipment_type", boost: 2 },
+      { field: "equipment_model", boost: 1.5 },
+      { field: "part_number", boost: 1.5 },
+      { field: "fault_id", boost: 2 },
+      { field: "technician", boost: 1 },
     ],
   },
   
@@ -290,35 +305,28 @@ export const searchConfig: SearchConfig = {
   // Display Mapping
   // -------------------------------------------------------------------------
   display: {
-    title: "title",
-    subtitle: "brand",
-    description: "description",
-    image: "image_url",
-    price: "price",
-    rating: "rating",
-    reviewCount: "review_count",
-    badges: ["category", "subcategory"],
-    inStock: "in_stock",
-    popularity: "rank_features.popularity",
-    discountPercentage: "discount_percentage",
-    stockQuantity: "stock",
+    title: "fault_id",
+    subtitle: "equipment_model",
+    description: "fault_description",
+    badges: ["severity", "equipment_type", "status", "factory_location"],
   },
   
   // -------------------------------------------------------------------------
   // Facet Filters
   // -------------------------------------------------------------------------
   facets: [
-    { field: "category", label: "Category", size: 20 },
-    { field: "brand", label: "Brand", size: 20 },
-    { field: "subcategory", label: "Subcategory", size: 10 },
+    { field: "severity", label: "Severity", size: 10 },
+    { field: "equipment_type", label: "Equipment Type", size: 20 },
+    { field: "status", label: "Status", size: 10 },
+    { field: "factory_location", label: "Factory", size: 20 },
   ],
   
   // -------------------------------------------------------------------------
   // Range Filters
   // -------------------------------------------------------------------------
   rangeFilters: [
-    { field: "price", label: "Price", unit: "$", min: 0, max: 2500, step: 10 },
-    { field: "rating", label: "Min Rating", min: 0, max: 5, step: 0.5 },
+    { field: "estimated_repair_hours", label: "Repair Time", unit: "hrs", min: 0, max: 16, step: 1 },
+    { field: "flight_hours_at_fault", label: "Flight Hours", min: 0, max: 25000, step: 500 },
   ],
   
   // -------------------------------------------------------------------------
@@ -328,10 +336,46 @@ export const searchConfig: SearchConfig = {
   
   sortOptions: [
     { field: "_score", direction: "desc", label: "Relevance" },
-    { field: "price", direction: "asc", label: "Price: Low to High" },
-    { field: "price", direction: "desc", label: "Price: High to Low" },
-    { field: "rating", direction: "desc", label: "Rating" },
+    { field: "timestamp", direction: "desc", label: "Most Recent Faults" },
+    { field: "estimated_repair_hours", direction: "asc", label: "Shortest Repair First" },
+    { field: "estimated_repair_hours", direction: "desc", label: "Longest Repair First" },
   ],
+
+  searchModes: [
+    {
+      id: "keyword",
+      icon: "search",
+      label: "Keyword",
+      tooltip: "Exact matching for IDs, parts, and technicians",
+      placeholder: "Search by fault ID, part number, technician, or model",
+    },
+    {
+      id: "semantic",
+      icon: "sparkles",
+      label: "Semantic",
+      tooltip: "Natural-language symptom matching",
+      placeholder: "Describe symptoms in plain language",
+    },
+  ],
+
+  demoPills: {
+    keyword: [
+      { label: "Critical faults", query: "severity critical" },
+      { label: "Open incidents", query: "status open" },
+      { label: "Hydraulic issues", query: "hydraulic leak" },
+    ],
+    semantic: [
+      { label: "Vibration at high RPM", query: "equipment has severe vibration at high RPM" },
+      { label: "Recurring sensor fault", query: "sensor keeps failing after reset" },
+      { label: "Fastest repair guidance", query: "show faults that can be resolved quickly" },
+    ],
+  },
+  pageTitle: "EE Support Knowledge Search",
+  copy: {
+    resultEntityPlural: "incidents",
+    startSearchHint: "Enter a symptom, fault ID, or part number to find incidents",
+    noResultsHint: "Try a different symptom, broader wording, or clear filters",
+  },
 }
 
 // ============================================================================

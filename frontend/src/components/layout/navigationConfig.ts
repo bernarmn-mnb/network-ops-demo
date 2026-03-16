@@ -117,6 +117,14 @@ export const NAV_ITEMS: NavItem[] = [
     category: 'demo',
   },
   {
+    path: '/support-console',
+    label: 'Support Console',
+    icon: 'documentation',
+    description: 'EE support knowledge copilot with incident context',
+    category: 'demo',
+    requiresAgent: true,
+  },
+  {
     path: '/visual-search',
     label: 'Visual Search',
     icon: 'image',

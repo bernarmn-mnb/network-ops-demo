@@ -17,7 +17,7 @@ import { ProfilePage } from './pages/ProfilePage'
 import { VoiceChatPage } from './pages/VoiceChatPage'
 import { BrandedHomePage } from './pages/BrandedHomePage'
 import { VisualSearchPage } from './pages/VisualSearchPage'
-import { OpsCommandCentrePage } from './pages/OpsCommandCentrePage'
+import { SupportKnowledgeConsolePage } from './pages/SupportKnowledgeConsolePage'
 
 /**
  * Main App Component
@@ -46,8 +46,8 @@ function App() {
         <Route path="/geo" element={<GeoSearchPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/visual-search" element={<VisualSearchPage />} />
+        <Route path="/support-console" element={<SupportKnowledgeConsolePage />} />
         <Route path="/voice" element={<VoiceChatPage />} />
-        <Route path="/ops" element={<OpsCommandCentrePage />} />
         <Route path="/overlay" element={<OverlayDemoPage />} />
         <Route path="/overlay-guide" element={<OverlayGuidePage />} />
       </Route>
