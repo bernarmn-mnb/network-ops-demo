@@ -866,9 +866,26 @@ cmd_session() {
         echo -e "  Kibana:         ${kibana_url:-(not set)}"
         echo -e "  Search Index:   ${search_index:-products}"
         if [ -n "$agent_id" ]; then
+            echo -e "  Agent Mode:     ${GREEN}Configured default${NC}"
             echo -e "  Agent ID:       ${GREEN}$agent_id${NC}"
         else
-            echo -e "  Agent ID:       ${YELLOW}(not set)${NC}"
+            local explicit_agent_mode=false
+            if [ "$backend_running" = true ]; then
+                local agents_response
+                agents_response=$(curl -s --max-time 4 "http://localhost:$actual_backend_port/api/agent/agents" 2>/dev/null || true)
+                local available_agents=0
+                available_agents=$(echo "$agents_response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('results', [])) if isinstance(d, dict) else 0)" 2>/dev/null || echo 0)
+                if [ -n "$available_agents" ] && [ "$available_agents" -gt 0 ]; then
+                    explicit_agent_mode=true
+                fi
+            fi
+            if [ "$explicit_agent_mode" = true ]; then
+                echo -e "  Agent Mode:     ${YELLOW}Explicit agent_id required${NC}"
+                echo -e "  Agent ID:       ${YELLOW}(not set in .env)${NC}"
+            else
+                echo -e "  Agent Mode:     ${YELLOW}Not ready${NC}"
+                echo -e "  Agent ID:       ${YELLOW}(not set)${NC}"
+            fi
         fi
         if [ -n "$api_key" ]; then
             echo -e "  API Key:        ${GREEN}✅ Set${NC} ${DIM}(${api_key:0:8}...)${NC}"
