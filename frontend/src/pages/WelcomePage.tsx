@@ -20,7 +20,6 @@ import {
   EuiImage,
   EuiToolTip,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { useBrand } from '../components/providers/BrandedThemeProvider'
 
 /**
@@ -265,7 +264,6 @@ export function WelcomePage() {
 
   return (
     <>
-      <AppHeader />
       <EuiSpacer size="xxl" />
       <EuiSpacer size="l" />
       

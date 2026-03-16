@@ -1,0 +1,86 @@
+---
+description: Enforces branding extraction when creating or editing brand theme files
+globs:
+  - "frontend/src/branding/*Theme.ts"
+  - "frontend/src/branding/*Theme.tsx"
+---
+
+# Branding Extraction Rules
+
+"Guessing" colors or using placeholder logos is NEVER acceptable.
+You MUST extract branding from the customer's actual website.
+
+## Step 0: Discover your browser tools
+
+Before attempting extraction, test what tools you have. Try each and record which work:
+
+| Tool | How to test | Capabilities if available |
+|------|-------------|--------------------------|
+| **Firecrawl** | Call `firecrawl_scrape` on a test URL | Full extraction in one API call (colors, fonts, logos, components) |
+| **Cursor IDE browser** | Call `browser_navigate` to visit a URL, then `browser_take_screenshot` | Navigation, screenshots, snapshot (accessibility tree), click, download via URL. NO JS evaluation. |
+| **Playwright MCP** | Call `mcp__playwright__browser_navigate` | Navigation, screenshots, `evaluate()` for JS extraction (CSS vars, computed styles, logo heuristics) |
+| **WebFetch** | Fetch the customer URL | HTML source only (can extract meta tags, og:image, favicon links, inline SVGs) |
+
+Record which tools are available. You need at least ONE to proceed.
+If none work, ask the user for brand assets.
+
+## Step 1: Visit the customer's website
+
+Using whatever browser tool is available, navigate to the customer's homepage.
+Take a screenshot immediately -- this is your reference image and evidence.
+
+## Step 2: Extract using the best available method
+
+**If Firecrawl works**: Use `firecrawl_scrape` with `formats: ["branding"]`.
+This gives you everything in one call. Skip to Step 3.
+
+**If Playwright MCP works** (has `evaluate`): Run the JS extraction pipeline from
+`hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md`:
+- Layer 1: CSS Variables (page.evaluate)
+- Layer 2: Computed Styles (page.evaluate)
+- Layer 3: Logo Detection (page.evaluate)
+- Take a screenshot for verification
+
+**If Cursor IDE browser works** (no JS eval):
+- Take a screenshot of the homepage
+- Use `browser_snapshot` to get the accessibility tree -- find logo img src, favicon link
+- Navigate to logo/favicon URLs directly to verify they load
+- Use the screenshot + your visual analysis to identify primary, accent, background colors
+- Look at the page source (WebFetch) to find CSS variables, og:image, and font references
+- Download assets by navigating to their direct URLs and taking screenshots, or use
+  Shell to `curl` them to `frontend/public/brands/{brand}/`
+
+**If only WebFetch works**:
+- Fetch the homepage HTML
+- Parse for: meta theme-color, og:image, favicon link, inline SVGs in header/nav,
+  CSS variable declarations, Google Fonts links, @font-face declarations
+- This won't get computed styles but will get declared values
+
+**If nothing works**: Ask the user to provide brand assets (logo file, hex codes,
+brand guidelines PDF, or a screenshot of their website). NEVER guess.
+
+## Step 3: Download required assets
+
+Using Shell (`curl`), browser navigation, or whatever tool works:
+
+- [ ] Logo (SVG preferred, PNG acceptable) -> `frontend/public/brands/{brand}/logo.svg`
+- [ ] Favicon -> `frontend/public/brands/{brand}/favicon.ico`
+- [ ] Hero/banner image -> `frontend/public/brands/{brand}/images/hero.jpg`
+- [ ] Reference screenshot of source website -> save as evidence
+
+## Step 4: Create theme file
+
+Use `frontend/src/branding/exampleTheme.ts` as the template.
+Fill in extracted values -- never placeholder or guessed values.
+
+## Step 5: Verify
+
+Apply the theme in the browser and take a screenshot.
+Compare visually with the customer's actual website.
+The color palette should be recognizably the same brand.
+
+## Reference
+
+- Full extraction patterns: `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md`
+- Theme template: `frontend/src/branding/exampleTheme.ts`
+- Complete example: `frontend/src/branding/govukTheme.ts`

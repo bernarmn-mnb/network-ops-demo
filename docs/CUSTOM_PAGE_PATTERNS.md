@@ -331,6 +331,10 @@ import { EuiPageTemplate, EuiTitle } from '@elastic/eui'
 import { useAgentChat } from '../hooks/useAgentChat'
 import { useSearchSimple } from '../hooks/useSearchSimple'
 
+/**
+ * AppHeader is rendered automatically by the Layout wrapper in App.tsx.
+ * Do NOT import or render AppHeader in page components.
+ */
 export function MyCustomPage() {
   const chat = useAgentChat({ initialGreeting: "How can I help?" })
   const search = useSearchSimple({ autoSearch: true })
@@ -350,12 +354,17 @@ export function MyCustomPage() {
 
 ### 2. Add the route in `App.tsx`
 
+All standard routes are nested inside `<Route element={<Layout />}>`, which renders `AppHeader` automatically. Just add your route inside that group:
+
 ```typescript
 import { MyCustomPage } from './pages/MyCustomPage'
 
-// Inside <Routes>:
+// Inside <Route element={<Layout />}>:
 <Route path="/my-custom" element={<MyCustomPage />} />
 ```
+
+> **Headerless routes**: If a page genuinely needs no header (e.g. an embedded widget),
+> place its `<Route>` outside the `<Route element={<Layout />}>` group.
 
 ### 3. Add to navigation
 
@@ -438,12 +447,14 @@ Demo pages should include domain-relevant imagery from the start — not as a po
 
 ### Fixed header layout
 
-The app header is `position: fixed` at ~56px. Content that doesn't account for this will be hidden behind it.
+The app header is rendered by the `Layout` wrapper and is `position: fixed` at ~56px. Pages do NOT render `AppHeader` themselves — it's structural.
+
+Content that doesn't account for the header height will be hidden behind it.
 
 **For full-viewport layouts** (e.g. chat + sidebar pages): Use separate `position: fixed` containers with explicit `top` values. Don't rely on EUI generating spacer divs — in React fragment structures the spacer may not render.
 
 ```tsx
-<AppHeader />  {/* 56px fixed header */}
+{/* AppHeader is already rendered by Layout — do NOT add it here */}
 <div style={{ position: 'fixed', top: 56, left: 0, right: 0, /* secondary bar */ }}>
 <div style={{ position: 'fixed', top: 96, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
   {/* Main content */}
@@ -469,7 +480,8 @@ Test at three breakpoints: mobile (< 768px), tablet (768-1024px), desktop (> 102
 ## Checklist for Custom Pages
 
 - [ ] Page component created in `frontend/src/pages/`
-- [ ] Route added in `App.tsx`
+- [ ] Route added inside `<Route element={<Layout />}>` in `App.tsx`
+- [ ] Page does NOT import or render `AppHeader` (Layout handles this)
 - [ ] Page path added to `NAV_PAGES` in `demoConfig.ts`
 - [ ] Hooks connected and data flowing
 - [ ] Brand CSS variables used (not hardcoded colours)

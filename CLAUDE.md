@@ -76,6 +76,27 @@ This project uses a shared knowledge base at `./hive-mind` (git submodule).
 
 ---
 
+## Session Architecture
+
+Demo builds should be split across multiple sessions to prevent context exhaustion and corner-cutting.
+
+### Session 1: Planning
+- Coaching conversation (Opening -> Ideation/Discovery -> Strategy -> UX Design)
+- Create beads epic and tasks with acceptance criteria from `docs/templates/BEADS_UI_TASKS.md`
+- Save `DEMO_PLAN.md`
+- **Strongly recommend ending the session here** (see `docs/prompts/WELCOME_PROMPT.md` → Session boundary)
+
+### Session 2+: Execution
+- Agent reads `DEMO_PLAN.md`, runs `bd ready`
+- Works through beads tasks one at a time, updating status and writing close reasons
+- Each task has acceptance criteria that define "done" — no marking complete without meeting them
+- Child agents (via Task tool) can work on independent tasks in parallel
+
+### Why This Matters
+A single session that does coaching + branding + page building + agent setup + verification will exhaust context and start cutting corners — skipping fallback chains, guessing values, forgetting quality gates. Splitting sessions keeps each execution task focused with full context headroom.
+
+---
+
 ## Pattern & Component Discovery
 
 ### BEFORE WRITING ANY NEW CODE

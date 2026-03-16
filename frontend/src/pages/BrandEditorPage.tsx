@@ -23,7 +23,6 @@ import {
   EuiModalFooter,
   EuiLoadingSpinner,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { PageInfoButton, PAGE_INFO } from '../components/layout/PageInfoButton'
 import { useNavigate } from 'react-router-dom'
 import { useBrand } from '../components/providers/BrandedThemeProvider'
@@ -474,7 +473,6 @@ export function BrandEditorPage() {
 
   return (
     <>
-      <AppHeader />
       <EuiSpacer size="xxl" />
       <EuiSpacer size="l" />
 

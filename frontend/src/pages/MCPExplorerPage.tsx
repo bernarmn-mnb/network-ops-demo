@@ -51,7 +51,6 @@ import {
   EuiHorizontalRule,
   EuiTextArea,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { PageInfoButton, PAGE_INFO } from '../components/layout/PageInfoButton'
 
 // Types
@@ -232,7 +231,6 @@ export function MCPExplorerPage() {
   if (loading) {
     return (
       <div style={{ paddingTop: '48px', minHeight: '100vh' }}>
-        <AppHeader />
         <EuiPage paddingSize="l">
           <EuiPageBody>
             <EuiFlexGroup justifyContent="center" alignItems="center" style={{ minHeight: '50vh' }}>
@@ -250,7 +248,6 @@ export function MCPExplorerPage() {
 
   return (
     <div style={{ paddingTop: '48px', minHeight: '100vh' }}>
-      <AppHeader />
       <EuiPage paddingSize="l">
         <EuiPageBody>
           <EuiPageHeader

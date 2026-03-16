@@ -15,7 +15,6 @@ import {
   EuiSplitPanel,
   EuiCallOut,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { PageInfoButton, PAGE_INFO } from '../components/layout/PageInfoButton'
 import { ConversationList, ConversationDetail } from '../components/audit'
 import {
@@ -98,7 +97,6 @@ export function AuditPage() {
   
   return (
     <>
-      <AppHeader />
       <EuiSpacer size="xxl" />
       <EuiSpacer size="l" />
       

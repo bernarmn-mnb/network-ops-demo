@@ -14,7 +14,6 @@ import {
   EuiIcon,
 } from '@elastic/eui'
 import { useBrand } from '../components/providers/BrandedThemeProvider'
-import { AppHeader } from '../components/layout/AppHeader'
 
 /**
  * Branded Demo Page
@@ -42,7 +41,6 @@ export function BrandedDemoPage() {
 
   return (
     <div style={{ backgroundColor: 'var(--brand-background)', minHeight: '100vh' }}>
-      <AppHeader />
       <EuiSpacer size="xxl" />
       <EuiSpacer size="xxl" />
 

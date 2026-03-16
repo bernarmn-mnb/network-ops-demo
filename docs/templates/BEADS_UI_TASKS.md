@@ -49,6 +49,38 @@ bd create "Capture interview output contract for {domain}" \
 
 ---
 
+## Extract and apply branding for {customer}
+
+> Branding extraction must follow the tool-discovery-first approach.
+> See `.cursor/rules/branding-extraction.mdc` for the full process.
+
+```
+bd create "Extract and apply branding for {customer}" \
+  --type task \
+  --priority 1 \
+  --acceptance "TOOL DISCOVERY (Step 0 — record what is available):
+- [ ] Tested Firecrawl availability (record: available / unavailable / credits exhausted)
+- [ ] Tested browser tools: Cursor IDE browser, Playwright MCP, or other (record which work)
+- [ ] Tested WebFetch on customer URL (record: works / blocked)
+- [ ] At least one extraction method confirmed working before proceeding
+EXTRACTION (use best available tool — see .cursor/rules/branding-extraction.mdc):
+- [ ] Navigated to customer website and took reference screenshot
+- [ ] Primary, accent, background colors extracted from actual website (not guessed)
+- [ ] Logo file downloaded to frontend/public/brands/{brand}/logo.svg (or .png)
+- [ ] Favicon downloaded to frontend/public/brands/{brand}/favicon.ico
+- [ ] At least one hero/banner image downloaded for page backgrounds
+- [ ] Font family identified and documented
+- [ ] If all automated extraction failed: asked user for brand assets (do NOT guess)
+APPLICATION:
+- [ ] Theme file created at frontend/src/branding/{brand}Theme.ts using exampleTheme.ts template
+- [ ] Dark mode colors derived from extracted values
+- [ ] Theme applied in browser and screenshot taken
+- [ ] Side-by-side comparison with customer website confirms recognizable brand match
+- [ ] Logo renders correctly in AppHeader at both light and dark themes"
+```
+
+---
+
 ## Build custom page: {PageName}
 
 ```
@@ -56,7 +88,8 @@ bd create "Build custom page: {PageName}" \
   --type feature \
   --priority 2 \
   --acceptance "- [ ] Page component created in frontend/src/pages/{PageName}Page.tsx
-- [ ] Route added in App.tsx at /{page-path}
+- [ ] Route added inside <Route element={<Layout />}> in App.tsx at /{page-path}
+- [ ] Page does NOT import or render AppHeader (Layout wrapper handles this)
 - [ ] Page path added to NAV_PAGES in demoConfig.ts
 - [ ] Hooks connected: {list hooks — useAgentChat, useSearchSimple, useA2AChat}
 - [ ] Data flows end-to-end (search returns results, chat responds, etc.)

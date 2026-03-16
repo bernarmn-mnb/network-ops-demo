@@ -12,7 +12,6 @@ import {
   EuiText,
   EuiToolTip,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { A2AChatContainer } from '../components/a2a/A2AChatContainer'
 import { AgentArchitectureGraph } from '../components/a2a/AgentArchitectureGraph'
 import { PageInfoButton, PAGE_INFO } from '../components/layout/PageInfoButton'
@@ -119,7 +118,6 @@ export function A2AChatPage() {
 
   return (
     <>
-      <AppHeader />
       <EuiSpacer size="xxl" />
       <EuiSpacer size="l" />
       

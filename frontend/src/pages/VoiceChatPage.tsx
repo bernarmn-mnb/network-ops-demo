@@ -27,7 +27,6 @@ import {
   EuiTitle,
   EuiHorizontalRule,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { VoiceChatControls } from '../components/voice/VoiceChatControls'
 import { MessageBubble } from '../components/chat/MessageBubble'
 import { useVoiceChat } from '../hooks/useVoiceChat'
@@ -81,7 +80,6 @@ export function VoiceChatPage() {
 
   return (
     <>
-      <AppHeader />
       <div style={{ height: topOffset }} />
 
       <EuiPageTemplate

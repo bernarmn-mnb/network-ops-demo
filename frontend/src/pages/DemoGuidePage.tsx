@@ -18,7 +18,6 @@ import {
   EuiAccordion,
   EuiButtonGroup,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { DEMO_TRACKS, type DemoScenario } from '../config/demoTracks'
 import { NAV_PAGES, DEMO_TITLE, DEMO_SUBTITLE } from '../config/demoConfig'
 import { NAV_ITEMS } from '../components/layout/navigationConfig'
@@ -240,7 +239,6 @@ export function DemoGuidePage() {
 
   return (
     <>
-      <AppHeader />
       <EuiSpacer size="xxl" />
       <EuiSpacer size="l" />
       

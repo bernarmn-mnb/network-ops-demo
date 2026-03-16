@@ -26,7 +26,6 @@ import {
   EuiDescriptionList,
   EuiLoadingSpinner,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { useBrand } from '../components/providers/BrandedThemeProvider'
 import { useProfile } from '../profiles'
 import type {
@@ -268,7 +267,6 @@ export function ProfilePage() {
 
   return (
     <>
-      <AppHeader />
       <EuiPageTemplate
         paddingSize="l"
         style={{ paddingTop: 'calc(var(--brand-header-height, 48px) + 24px)' }}

@@ -6,7 +6,6 @@ import {
   EuiFlexItem,
   EuiPanel,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { ChatContainer, ChatContainerRef } from '../components/chat/ChatContainer'
 import { PageInfoButton, PAGE_INFO } from '../components/layout/PageInfoButton'
 import { DEFAULT_PERSONA, buildPersonalisedGreeting } from '../config/agentPersona'
@@ -33,7 +32,6 @@ export function ChatPage() {
 
   return (
     <>
-      <AppHeader />
       <EuiSpacer size="xxl" />
       <EuiSpacer size="l" />
       

@@ -29,7 +29,6 @@ import {
   EuiLoadingSpinner,
   EuiTitle,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { useBrand } from '../components/providers/BrandedThemeProvider'
 import { SearchResultCard } from '../components/search/SearchResultCard'
 import { BrandedEmptyState } from '../components/common/BrandedEmptyState'
@@ -119,7 +118,6 @@ export function BrandedHomePage({ config }: BrandedHomePageProps) {
 
   return (
     <>
-      <AppHeader />
       <div style={{ paddingTop: headerHeight }}>
         {/* --- Hero Banner --- */}
         <section

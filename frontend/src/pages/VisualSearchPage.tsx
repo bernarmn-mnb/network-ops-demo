@@ -34,7 +34,6 @@ import {
   EuiPageTemplate,
   EuiEmptyPrompt,
 } from '@elastic/eui';
-import { AppHeader } from '../components/layout/AppHeader';
 import { SearchResultCard } from '../components/search/SearchResultCard';
 import { ProductDetailModal, type ProductDetailConfig } from '../components/search/ProductDetailModal';
 import { defaultVisualSearchConfig, type VisualSearchConfig } from '../config/visualSearchConfig';
@@ -205,7 +204,6 @@ export function VisualSearchPage({ config, productDetailConfig }: VisualSearchPa
 
   return (
     <>
-      <AppHeader />
       <EuiSpacer size="xxl" />
 
       {/* Hero header */}

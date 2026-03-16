@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { Layout } from './components/layout/Layout'
 import { WelcomePage } from './pages/WelcomePage'
 import { ChatPage } from './pages/ChatPage'
 import { A2AChatPage } from './pages/A2AChatPage'
@@ -16,46 +17,40 @@ import { ProfilePage } from './pages/ProfilePage'
 import { VoiceChatPage } from './pages/VoiceChatPage'
 import { BrandedHomePage } from './pages/BrandedHomePage'
 import { VisualSearchPage } from './pages/VisualSearchPage'
+import { OpsCommandCentrePage } from './pages/OpsCommandCentrePage'
 
 /**
  * Main App Component
- * 
- * Routes:
- * - / : Welcome page with onboarding for new users
- * - /guide : Demo guide with presenter notes and demo flow
- * - /chat : Streaming chat interface with Agent Builder
- * - /a2a-chat : A2A coordinator chat (multi-agent orchestration)
- * - /branded : Branded demo with customizable brand theme
- * - /brands : Brand editor for creating/managing themes
- * - /audit : Conversation history and audit display
- * - /mcp : MCP Explorer for testing Agent Builder tools
- * - /search : Product search with faceted filtering
- * - /voice : Voice-first chat with STT and TTS
- * - /geo : Geo search with Mapbox/Leaflet maps & delivery zones
- * - /visual-search : Text-to-image and image-to-image kNN visual search
- * - /overlay : Overlay chat demo (floating widget)
- * - /overlay-guide : Guide for injecting chat onto external sites
+ *
+ * All routes are wrapped in <Layout /> which renders AppHeader automatically.
+ * Pages do NOT need to import or render AppHeader themselves.
+ *
+ * To add a headerless route (e.g. an embedded widget), place it outside
+ * the <Route element={<Layout />}> group.
  */
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<WelcomePage />} />
-      <Route path="/home" element={<BrandedHomePage />} />
-      <Route path="/guide" element={<DemoGuidePage />} />
-      <Route path="/chat" element={<ChatPage />} />
-      <Route path="/a2a-chat" element={<A2AChatPage />} />
-      <Route path="/branded" element={<BrandedDemoPage />} />
-      <Route path="/brands" element={<BrandEditorPage />} />
-      <Route path="/audit" element={<AuditPage />} />
-      <Route path="/mcp" element={<MCPExplorerPage />} />
-      <Route path="/search" element={<SearchPageSimple />} />
-      <Route path="/workflows" element={<WorkflowsPage />} />
-      <Route path="/geo" element={<GeoSearchPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/visual-search" element={<VisualSearchPage />} />
-      <Route path="/voice" element={<VoiceChatPage />} />
-      <Route path="/overlay" element={<OverlayDemoPage />} />
-      <Route path="/overlay-guide" element={<OverlayGuidePage />} />
+      <Route element={<Layout />}>
+        <Route path="/" element={<WelcomePage />} />
+        <Route path="/home" element={<BrandedHomePage />} />
+        <Route path="/guide" element={<DemoGuidePage />} />
+        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/a2a-chat" element={<A2AChatPage />} />
+        <Route path="/branded" element={<BrandedDemoPage />} />
+        <Route path="/brands" element={<BrandEditorPage />} />
+        <Route path="/audit" element={<AuditPage />} />
+        <Route path="/mcp" element={<MCPExplorerPage />} />
+        <Route path="/search" element={<SearchPageSimple />} />
+        <Route path="/workflows" element={<WorkflowsPage />} />
+        <Route path="/geo" element={<GeoSearchPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/visual-search" element={<VisualSearchPage />} />
+        <Route path="/voice" element={<VoiceChatPage />} />
+        <Route path="/ops" element={<OpsCommandCentrePage />} />
+        <Route path="/overlay" element={<OverlayDemoPage />} />
+        <Route path="/overlay-guide" element={<OverlayGuidePage />} />
+      </Route>
     </Routes>
   )
 }

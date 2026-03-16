@@ -520,7 +520,7 @@ fi
 # =============================================================================
 
 if [ -f "hive-mind/install.sh" ]; then
-    bash hive-mind/install.sh --no-skills --no-beads --no-rules --no-mcp --no-hooks
+    bash hive-mind/install.sh --no-skills --no-rules --no-mcp --no-hooks
 else
     log_info "hive-mind/install.sh not found — skipping global AI awareness"
 fi

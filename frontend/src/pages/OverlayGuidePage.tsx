@@ -30,7 +30,6 @@ import {
   EuiFieldText,
   EuiFormRow,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { useBrand } from '../components/providers/BrandedThemeProvider'
 
 // Import the userscript source
@@ -465,7 +464,6 @@ export function OverlayGuidePage() {
 
   return (
     <>
-      <AppHeader />
       <EuiSpacer size="xxl" />
       <EuiSpacer size="l" />
 

@@ -74,7 +74,7 @@ When the coaching framework reaches "match to a build path", use these demo-star
 
 ### Strategy overlay: Implementation specifics
 
-**Branding**: If browser tools are available, extract branding using `hive-mind/patterns/branding/BRANDING_EXTRACTION_PATTERNS.md`. Otherwise, point the SA to the manual Brand Editor at `/brands`.
+**Branding**: Branding extraction is a beads task with its own acceptance criteria (see `docs/templates/BEADS_UI_TASKS.md`). During planning, note which browser tools are available (Firecrawl, Cursor browser, Playwright MCP, WebFetch) — the extraction task starts with tool discovery and uses whatever works. Never guess colors — if all automated tools fail, ask the SA for brand assets. See `.cursor/rules/branding-extraction.mdc` for the full process. The manual Brand Editor at `/brands` is a fallback for basic color-only customization.
 
 **Workflows**: Elastic Workflows (Technical Preview, 9.3+) chain ES queries, AI agent calls, and connectors. See `hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md` for the pattern and `frontend/src/config/workflowRecipes.ts` for recipe examples.
 
@@ -140,3 +140,18 @@ Use the portable template from `hive-mind/skills/hive-sa-coaching/references/DEM
 **Handoff:**
 
 > "The plan is saved. Next time you open a session, I'll pick up where we left off — just run `bd ready` or I'll read the demo plan automatically."
+
+### Session boundary (IMPORTANT)
+
+After creating the beads plan, **strongly recommend ending this session**. A single session that does coaching + branding + page building + agent setup + verification will exhaust context and start cutting corners. Splitting sessions keeps each execution task focused with full context headroom.
+
+Say something like:
+
+> "The plan is saved with {N} tasks in beads. I recommend starting a fresh session for execution — that gives me full context headroom for each task instead of rushing through everything in one go. When you open the next session, I'll automatically detect the plan and run `bd ready` to pick up where we left off."
+>
+> "Want to stop here, or would you prefer I start executing now?"
+
+If the user chooses to continue:
+- Treat this as a new execution phase — run `bd ready` and work task-by-task
+- Do NOT skip beads workflow (update status, comment progress, write close reasons)
+- If you catch yourself rushing or cutting corners, pause and tell the user

@@ -26,7 +26,6 @@ import {
   EuiHorizontalRule,
   EuiIcon,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import {
   searchWorkflows,
   createWorkflow,
@@ -158,7 +157,6 @@ export function WorkflowsPage() {
   // ------ Render ------
   return (
     <>
-      <AppHeader />
       <EuiSpacer size="xxl" />
       <EuiSpacer size="l" />
 

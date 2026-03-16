@@ -21,7 +21,6 @@ import {
   EuiLink,
 } from '@elastic/eui'
 import { FloatingChatWidget } from '../components/chat'
-import { AppHeader } from '../components/layout/AppHeader'
 import { useBrand } from '../components/providers/BrandedThemeProvider'
 
 /**
@@ -116,7 +115,6 @@ export function OverlayDemoPage() {
 
   return (
     <>
-      <AppHeader />
       <EuiSpacer size="xxl" />
       <EuiSpacer size="l" />
 

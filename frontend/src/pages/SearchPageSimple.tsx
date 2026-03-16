@@ -45,7 +45,6 @@ import {
   EuiBadge,
   EuiToolTip,
 } from '@elastic/eui';
-import { AppHeader } from '../components/layout/AppHeader';
 import { SearchResultCard } from '../components/search/SearchResultCard';
 import { useSearchSimple } from '../hooks/useSearchSimple';
 import type { SearchHit } from '../hooks/useSearchSimple';
@@ -445,7 +444,6 @@ export function SearchPageSimple({
 
   return (
     <>
-      <AppHeader />
       <EuiSpacer size="xxl" />
       <EuiSpacer size="l" />
       

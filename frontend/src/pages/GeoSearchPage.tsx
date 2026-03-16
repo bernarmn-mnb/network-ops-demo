@@ -26,7 +26,6 @@ import {
   EuiBadge,
   EuiCallOut,
 } from '@elastic/eui'
-import { AppHeader } from '../components/layout/AppHeader'
 import { MapProvider, useMap } from '../components/geo/MapProvider'
 import type { Bounds } from '../components/geo/MapProvider'
 import { MapControls } from '../components/geo/MapControls'
@@ -327,7 +326,6 @@ function GeoSearchContent() {
 
   return (
     <>
-      <AppHeader />
       <EuiPageTemplate
         panelled={false}
         restrictWidth={false}
