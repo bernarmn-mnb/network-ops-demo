@@ -40,13 +40,7 @@ export const NAV_LAYOUT: NavLayoutConfig | null = null
  * Ignored when NAV_LAYOUT is set. Kept for backward compatibility.
  * Set to an array of paths to show only those pages, or null for all.
  */
-export const NAV_PAGES: string[] | null = [
-  '/',
-  '/guide',
-  '/support-console',
-  '/search',
-  '/chat',
-]
+export const NAV_PAGES: string[] | null = null
 
 // =============================================================================
 // Demo metadata - shown on the Guide page
@@ -56,5 +50,5 @@ export const NAV_PAGES: string[] | null = [
  * Demo title and subtitle for the Guide page header.
  * Set to null to use the default template values.
  */
-export const DEMO_TITLE: string | null = 'EE Support Knowledge Copilot'
-export const DEMO_SUBTITLE: string | null = 'From symptom to action with evidence-backed search and AI guidance'
+export const DEMO_TITLE: string | null = null
+export const DEMO_SUBTITLE: string | null = null

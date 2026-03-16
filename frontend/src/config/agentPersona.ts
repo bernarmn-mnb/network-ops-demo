@@ -85,24 +85,24 @@ export const DEFAULT_AVATAR_STYLE: AvatarStyle = 'initial'
  * Demos override this with a domain-specific persona.
  */
 export const DEFAULT_PERSONA: AgentPersona = {
-  name: 'EE Support Copilot',
-  tagline: 'your operations support specialist',
-  avatarColor: '#1B4D8F',
+  name: 'Assistant',
+  tagline: 'Your AI assistant',
+  avatarColor: '#0077CC',
   avatarUrl: undefined,
   avatarOptions: { photo: undefined, illustrated: undefined, initial: undefined },
-  personality: 'Calm, decisive, and focused on turning incident data into clear action.',
+  personality: 'Helpful, knowledgeable, and ready to assist.',
   modes: [
     {
       id: 'general',
-      label: 'Incident Advisor',
-      icon: 'wrench',
-      description: 'Prioritise incidents and explain practical next steps',
-      color: '#1B4D8F',
+      label: 'General',
+      icon: 'sparkles',
+      description: 'General-purpose assistant',
+      color: '#0077CC',
       contextPrefix: '',
       suggestions: [
-        { label: 'Top risks', prompt: 'Summarize the highest operational risks right now.' },
-        { label: 'Next best action', prompt: 'Given this fault, what should the team do first?' },
-        { label: 'Exec briefing', prompt: 'Give me a 30-second business briefing for this incident.' },
+        { label: 'Help me search', prompt: 'Help me find what I\'m looking for' },
+        { label: 'Tell me more', prompt: 'Tell me about your products and services' },
+        { label: 'Get started', prompt: 'What can you help me with?' },
       ],
     },
   ],
