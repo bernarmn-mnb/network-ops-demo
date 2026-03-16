@@ -144,6 +144,8 @@ The evaluator will:
 3. Score branding, functionality, professionalism, and narrative
 4. Produce a structured report
 
+Use `docs/testing/PROFESSIONAL_CLONE_QA_CHECKLIST.md` alongside the evaluator report for template-level brand fidelity gates.
+
 ---
 
 ## Phase 5: Record Results

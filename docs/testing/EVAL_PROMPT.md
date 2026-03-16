@@ -53,11 +53,23 @@ curl -s -X POST http://localhost:$(cat .dev-pids/backend.port)/api/search \
   -H "Content-Type: application/json" \
   -d '{"query": "help", "size": 3}' | python3 -m json.tool | head -30
 
-# Agent responds (if AGENT_ID is set)
-curl -s -X POST http://localhost:$(cat .dev-pids/backend.port)/api/agent/chat/test \
-  -H "Content-Type: application/json" \
-  -d '{"messages": [{"role": "user", "content": "Hello, what can you help me with?"}]}' \
-  | head -50
+# Agent responds (conditional)
+# Run only when the demo includes an agent/chat surface.
+# 1) Prefer AGENT_ID from backend/.env when set
+# 2) Otherwise use an explicit agent_id from /api/agent/agents
+AGENT_ID=$(awk -F= '/^AGENT_ID=/{print $2}' backend/.env)
+if [ -z "$AGENT_ID" ]; then
+  AGENT_ID=$(curl -s http://localhost:$(cat .dev-pids/backend.port)/api/agent/agents \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); print((d.get('results') or [{}])[0].get('id',''))")
+fi
+if [ -n "$AGENT_ID" ]; then
+  curl -s -X POST http://localhost:$(cat .dev-pids/backend.port)/api/agent/chat/test \
+    -H "Content-Type: application/json" \
+    -d "{\"input\":\"Hello, what can you help me with?\",\"agent_id\":\"$AGENT_ID\"}" \
+    | head -50
+else
+  echo "Skipping agent test: no agent configured/available for this demo"
+fi
 
 # Search fields available
 curl -s http://localhost:$(cat .dev-pids/backend.port)/api/search/fields | python3 -m json.tool | head -20
