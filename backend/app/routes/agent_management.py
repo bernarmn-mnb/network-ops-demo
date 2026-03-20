@@ -25,10 +25,19 @@ router = APIRouter(prefix="/api/agent", tags=["agent-management"])
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 
-def get_headers() -> dict:
-    """Auth headers for Agent Builder API."""
+def get_headers(for_write: bool = False) -> dict:
+    """Auth headers for Agent Builder API.
+
+    Use for_write=True for create/update/delete of agents and tools —
+    requires agentBuilder:manageTools privilege (ADMIN_API_KEY from .secrets).
+    """
+    api_key = (
+        settings.AGENT_MANAGEMENT_API_KEY if for_write else settings.ELASTIC_API_KEY
+    )
+    if not api_key:
+        api_key = settings.ELASTIC_API_KEY
     return {
-        "Authorization": f"ApiKey {settings.ELASTIC_API_KEY}",
+        "Authorization": f"ApiKey {api_key}",
         "Content-Type": "application/json",
         "kbn-xsrf": "true",
     }
@@ -50,10 +59,15 @@ def proxy_get(path: str) -> Any:
         raise HTTPException(status_code=502, detail=f"Kibana connection error: {e!s}")
 
 
-def proxy_post(path: str, json_body: Any = None, timeout: int = 60) -> Any:
+def proxy_post(
+    path: str, json_body: Any = None, timeout: int = 60, for_write: bool = False
+) -> Any:
     try:
         resp = requests.post(
-            kibana_url(path), headers=get_headers(), json=json_body, timeout=timeout
+            kibana_url(path),
+            headers=get_headers(for_write=for_write),
+            json=json_body,
+            timeout=timeout,
         )
         if not resp.ok:
             raise HTTPException(status_code=resp.status_code, detail=resp.text)
@@ -65,7 +79,10 @@ def proxy_post(path: str, json_body: Any = None, timeout: int = 60) -> Any:
 def proxy_put(path: str, json_body: Any = None) -> Any:
     try:
         resp = requests.put(
-            kibana_url(path), headers=get_headers(), json=json_body, timeout=30
+            kibana_url(path),
+            headers=get_headers(for_write=True),
+            json=json_body,
+            timeout=30,
         )
         if not resp.ok:
             raise HTTPException(status_code=resp.status_code, detail=resp.text)
@@ -76,7 +93,9 @@ def proxy_put(path: str, json_body: Any = None) -> Any:
 
 def proxy_delete(path: str) -> Any:
     try:
-        resp = requests.delete(kibana_url(path), headers=get_headers(), timeout=30)
+        resp = requests.delete(
+            kibana_url(path), headers=get_headers(for_write=True), timeout=30
+        )
         if not resp.ok:
             raise HTTPException(status_code=resp.status_code, detail=resp.text)
         if resp.status_code == 204 or not resp.content or not resp.text.strip():
@@ -154,7 +173,7 @@ def create_agent(request: CreateAgentRequest):
             "tools": [{"tool_ids": request.tool_ids}] if request.tool_ids else [],
         },
     }
-    return proxy_post("api/agent_builder/agents", body)
+    return proxy_post("api/agent_builder/agents", body, for_write=True)
 
 
 @router.put("/agents/{agent_id}")
@@ -206,7 +225,7 @@ def create_tool(request: CreateToolRequest):
         "tags": request.tags,
         "configuration": request.configuration,
     }
-    return proxy_post("api/agent_builder/tools", body)
+    return proxy_post("api/agent_builder/tools", body, for_write=True)
 
 
 @router.delete("/tools/{tool_id}")
