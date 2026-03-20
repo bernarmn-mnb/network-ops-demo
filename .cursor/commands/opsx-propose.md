@@ -2,105 +2,138 @@
 name: /opsx-propose
 id: opsx-propose
 category: Workflow
-description: Propose a new change - create it and generate all artifacts in one step
+description: "Propose a demo build: coaching output + auto-inventory + gap analysis + specs + tasks"
 ---
 
-Propose a new change - create the change and generate all artifacts in one step.
+Propose a new demo build. Creates a complete change with:
+- proposal.md (from coaching output — replaces DEMO_PLAN.md)
+- design.md (auto-inventory of component library + gap analysis)
+- specs/ (qualitative experience requirements + golden path UAT scenarios)
+- tasks.md (derived from gap analysis, not generic templates)
 
-I'll create a change with artifacts:
-- proposal.md (what & why)
-- design.md (how)
-- tasks.md (implementation steps)
-
-When ready to implement, run /opsx:apply
+When ready to implement, run `/opsx:apply`. After build, run `/opsx:verify` for UAT.
 
 ---
 
-**Input**: The argument after `/opsx:propose` is the change name (kebab-case), OR a description of what the user wants to build.
+**Input**: The argument after `/opsx:propose` is the change name (kebab-case), OR a description of the demo to build.
 
 **Steps**
 
-1. **If no input provided, ask what they want to build**
+1. **Understand what to build**
 
-   Use the **AskUserQuestion tool** (open-ended, no preset options) to ask:
-   > "What change do you want to work on? Describe what you want to build or fix."
+   If no input provided, use the **AskUserQuestion tool** to ask:
+   > "What demo do you want to build? Describe the customer, domain, and key experiences."
 
-   From their description, derive a kebab-case name (e.g., "add user authentication" → `add-user-auth`).
+   From their description, derive a kebab-case name (e.g., "kwikfit automotive demo" → `build-kwikfit-demo`).
 
-   **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
+   **IMPORTANT**: Do NOT proceed without understanding customer, domain, and key experiences.
 
 2. **Create the change directory**
    ```bash
    openspec new change "<name>"
    ```
-   This creates a scaffolded change at `openspec/changes/<name>/` with `.openspec.yaml`.
 
-3. **Get the artifact build order**
-   ```bash
-   openspec status --change "<name>" --json
+3. **Create proposal.md (from coaching output)**
+
+   Use the template at `openspec/templates/proposal-template.md` as the structure.
+   Fill in all sections from the coaching conversation output: customer context, pain points,
+   interview output contract, persona, user journey, demo script, impact criteria, capabilities.
+
+   The Capabilities section is critical — it defines which spec templates to use:
+   - `demo-experience` — ALWAYS include (quality contract)
+   - `search-page` — if search UI is needed
+   - `{custom-page-name}` — one per custom page
+   - `agent-persona` — if agent chat is needed (one per agent)
+   - `branding` — if customer branding is needed
+   - `golden-paths` — ALWAYS include (UAT scenarios + demo guide source)
+   - `data-architecture` — if multiple indexes or agents needed
+
+4. **Auto-inventory the component library**
+
+   Read these files to understand what the template provides:
+   - `docs/COMPONENT_REGISTRY.md` — full inventory of pages, components, hooks, services
+   - `docs/CUSTOM_PAGE_PATTERNS.md` — page composition patterns and UX examples
+   - `frontend/src/config/searchConfig.ts` — current search configuration
+   - `frontend/src/config/demoConfig.ts` — current demo configuration
+
+   Also scan:
+   - `frontend/src/pages/` — existing page components
+   - `frontend/src/hooks/` — available hooks
+   - `backend/app/routes/` — available backend routes
+
+5. **Create design.md with gap analysis**
+
+   Using the auto-inventory results and the proposal's capabilities, produce a gap analysis:
+
+   ```markdown
+   ## Reuse (config-only)
+   | Component | Current State | Required Change |
+
+   ## Modify (extend existing)
+   | Component | Current State | What Changes |
+
+   ## Build New
+   | Component | Why It's New | Hooks to Compose |
+
+   ## Not Needed (template features to hide)
+   | Component | Why |
    ```
-   Parse the JSON to get:
-   - `applyRequires`: array of artifact IDs needed before implementation (e.g., `["tasks"]`)
-   - `artifacts`: list of all artifacts with their status and dependencies
 
-4. **Create artifacts in sequence until apply-ready**
+   Also include standard design.md sections: Context, Goals/Non-Goals, Decisions, Risks.
+   The gap analysis makes the effort distribution visible and prevents config-only effort on complex demos.
 
-   Use the **TodoWrite tool** to track progress through the artifacts.
+6. **Create capability specs**
 
-   Loop through artifacts in dependency order (artifacts with no pending dependencies first):
+   For each capability listed in the proposal:
+   - Copy the corresponding template from `openspec/templates/specs/{capability}/spec-template.md`
+   - Fill in all `{placeholders}` with domain-specific values from the proposal
+   - Create the file at `openspec/changes/<name>/specs/{capability}/spec.md`
 
-   a. **For each artifact that is `ready` (dependencies satisfied)**:
-      - Get instructions:
-        ```bash
-        openspec instructions <artifact-id> --change "<name>" --json
-        ```
-      - The instructions JSON includes:
-        - `context`: Project background (constraints for you - do NOT include in output)
-        - `rules`: Artifact-specific rules (constraints for you - do NOT include in output)
-        - `template`: The structure to use for your output file
-        - `instruction`: Schema-specific guidance for this artifact type
-        - `outputPath`: Where to write the artifact
-        - `dependencies`: Completed artifacts to read for context
-      - Read any completed dependency files for context
-      - Create the artifact file using `template` as the structure
-      - Apply `context` and `rules` as constraints - but do NOT copy them into the file
-      - Show brief progress: "Created <artifact-id>"
+   **CRITICAL for golden-paths**: Include structured metadata (Navigation, Steps, Talking Points, Expected Outcome) in each scenario. The build agent will read this to generate `demoTracks.ts`.
 
-   b. **Continue until all `applyRequires` artifacts are complete**
-      - After creating each artifact, re-run `openspec status --change "<name>" --json`
-      - Check if every artifact ID in `applyRequires` has `status: "done"` in the artifacts array
-      - Stop when all `applyRequires` artifacts are done
+   **CRITICAL for demo-experience**: This spec prevents shortcuts. Every demo MUST have this spec. Requirements about domain authenticity, production feel, and no template artifacts are non-negotiable.
 
-   c. **If an artifact requires user input** (unclear context):
-      - Use **AskUserQuestion tool** to clarify
-      - Then continue with creation
+7. **Create tasks.md from the gap analysis**
 
-5. **Show final status**
+   Derive tasks from the design.md gap analysis:
+   - **Reuse items** → lightweight config tasks ("Configure searchConfig.ts for {index}")
+   - **Modify items** → focused modification tasks with spec references
+   - **Build New items** → full implementation tasks with spec references
+   - **Not Needed items** → task to hide/remove from NAV_PAGES
+
+   Add standard tasks:
+   - "Generate demoTracks.ts from golden path specs" (agent reads specs, writes code)
+   - "Run build-time browser verification for each capability"
+   - "Bridge tasks to beads: `./scripts/openspec-to-beads.sh <name>`"
+
+   Tasks reference their spec file: "Implement per specs/{capability}/spec.md"
+
+8. **Show final status and summary**
+
    ```bash
    openspec status --change "<name>"
    ```
 
-**Output**
-
-After completing all artifacts, summarize:
-- Change name and location
-- List of artifacts created with brief descriptions
-- What's ready: "All artifacts created! Ready for implementation."
-- Prompt: "Run `/opsx:apply` to start implementing."
+   Summarize:
+   - Change name and location
+   - Gap analysis summary: N reuse, N modify, N build-new, N hide
+   - Specs created (list)
+   - Task count by category
+   - "All artifacts created! Ready for implementation with `/opsx:apply`."
+   - "After build, run `/opsx:verify` for UAT golden path tests."
+   - "Recommend ending this session and starting a fresh one for build execution."
 
 **Artifact Creation Guidelines**
 
-- Follow the `instruction` field from `openspec instructions` for each artifact type
-- The schema defines what each artifact should contain - follow it
-- Read dependency artifacts for context before creating new ones
-- Use `template` as the structure for your output file - fill in its sections
-- **IMPORTANT**: `context` and `rules` are constraints for YOU, not content for the file
-  - Do NOT copy `<context>`, `<rules>`, `<project_context>` blocks into the artifact
-  - These guide what you write, but should never appear in the output
+- Use templates from `openspec/templates/` as the starting point for all artifacts
+- Fill ALL `{placeholders}` — unfilled placeholders indicate incomplete specs
+- The golden-paths spec is the source for demoTracks.ts — include all Navigation/Steps/TalkingPoints metadata
+- The demo-experience spec is the quality contract — never weaken or skip its requirements
+- The gap analysis in design.md must be honest — if something needs building, say so
 
 **Guardrails**
-- Create ALL artifacts needed for implementation (as defined by schema's `apply.requires`)
-- Always read dependency artifacts before creating a new one
-- If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum
+- ALWAYS create `demo-experience` and `golden-paths` specs regardless of demo complexity
+- The gap analysis must read actual files (COMPONENT_REGISTRY.md, pages/, hooks/) — never guess what exists
+- If the coaching conversation hasn't happened yet, do NOT proceed — the proposal needs real customer context
 - If a change with that name already exists, ask if user wants to continue it or create a new one
-- Verify each artifact file exists after writing before proceeding to next
+- After creating all artifacts, recommend ending the session for context headroom

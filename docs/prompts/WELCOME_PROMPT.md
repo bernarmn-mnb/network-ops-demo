@@ -107,51 +107,61 @@ When designing custom pages, reference this project's component library:
 - Workflow management page for deploying and monitoring recipes
 - See `docs/CUSTOM_PAGE_PATTERNS.md` for implementation patterns
 
-### Plan Creation overlay: Beads tasks and templates
+### Plan Creation overlay: OpenSpec proposal + specs
 
-**If beads is available** (`.beads/` exists and `bd` works):
+**Use `/opsx:propose` to create the full plan.** This replaces the previous DEMO_PLAN.md + beads template workflow.
 
-Create an epic and prioritised child tasks. Use the templates in `docs/templates/BEADS_UI_TASKS.md` for pre-written acceptance criteria covering:
+The `/opsx:propose` command will:
 
-1. **Contract + paths** — persist the interview output contract
-2. **Data** — prepare, generate, or verify OOTB data
-3. **Branding** — extract and apply customer theme
-4. **Search config** — populate `searchConfig.ts` with actual index fields
-5. **Agent setup** — create agent and tools via API
-6. **Workflows** (if applicable) — create workflows via API
-7. **Custom pages** — build domain-specific pages with hooks and visual standards
-8. **Demo config** — set `NAV_PAGES`, `DEMO_TITLE`, `DEMO_SUBTITLE` in `demoConfig.ts`
-9. **Demo guide** — populate `demoTracks.ts` with narrative from UX Design
-10. **Demo prompts** — customize `demoPrompts.ts` with domain-specific questions
-11. **Stability testing** — all pages load, search returns results, chat responds, no console errors
-12. **Value verification** — 3-pass verification per `hive-mind/skills/hive-sa-coaching/references/IMPACT_VERIFICATION.md`
-13. **Release gate** — final pass/fail with evidence
-    - `./dev verify-template` passes
-    - `npx tsc --noEmit` passes
-    - Screenshots captured for wow moments
-14. If Cloud Run delivery was chosen, add deployment tasks
+1. **Create `proposal.md`** from the coaching conversation output (replaces DEMO_PLAN.md):
+   - Uses template at `openspec/templates/proposal-template.md`
+   - Captures: customer context, interview output contract, persona, user journey, demo script, impact criteria, capabilities list
 
-Link child tasks to the epic. Set priorities based on the timeline. Add dependencies so the release gate cannot complete before stability and value verification.
+2. **Auto-inventory the component library**:
+   - Reads `docs/COMPONENT_REGISTRY.md`, scans pages/hooks/routes
+   - Understands what the template already provides
+
+3. **Produce gap analysis in `design.md`**:
+   - Categorizes every component as: Reuse / Modify / Build New / Not Needed
+   - Makes effort distribution visible (prevents config-only work on complex demos)
+
+4. **Create capability specs** from templates in `openspec/templates/specs/`:
+   - `demo-experience` — ALWAYS (quality contract preventing shortcuts)
+   - `search-page` — if search UI needed
+   - One `custom-page` spec per custom page
+   - `agent-persona` — per agent (supports multi-agent)
+   - `branding` — if customer branding needed
+   - `golden-paths` — ALWAYS (UAT scenarios + demoTracks.ts source)
+   - `data-architecture` — if multi-index or multi-agent
+
+5. **Derive `tasks.md`** from the gap analysis (not from generic templates):
+   - Reuse items → lightweight config tasks
+   - Build New items → full implementation tasks with spec references
+   - Includes: "Generate demoTracks.ts from golden path specs"
+
+6. **Bridge to beads**: `./scripts/openspec-to-beads.sh <change-name> --epic <epic-id>`
 
 **If beads is not available:**
 
-Use the portable template from `hive-mind/skills/hive-sa-coaching/references/DEMO_PLAN_TEMPLATE.md`, extended with the implementation tasks above. Copy it to `DEMO_PLAN.md` in the project root.
+The OpenSpec artifacts (proposal.md, design.md, specs/, tasks.md) serve as the complete plan.
 
 **Handoff:**
 
-> "The plan is saved. Next time you open a session, I'll pick up where we left off — just run `bd ready` or I'll read the demo plan automatically."
+> "The plan is saved as an OpenSpec change with {N} capability specs and {M} implementation tasks. I recommend starting a fresh session for execution — the build agent will read the specs directly. After build, run `/opsx:verify` for UAT golden path tests."
 
 ### Session boundary (IMPORTANT)
 
-After creating the beads plan, **strongly recommend ending this session**. A single session that does coaching + branding + page building + agent setup + verification will exhaust context and start cutting corners. Splitting sessions keeps each execution task focused with full context headroom.
+After creating the OpenSpec plan, **strongly recommend ending this session**. The three-phase flow (Plan → Build → UAT) works best with session boundaries between each phase.
 
 Say something like:
 
-> "The plan is saved with {N} tasks in beads. I recommend starting a fresh session for execution — that gives me full context headroom for each task instead of rushing through everything in one go. When you open the next session, I'll automatically detect the plan and run `bd ready` to pick up where we left off."
+> "The plan is saved as an OpenSpec change with {N} capability specs and {M} implementation tasks, bridged to beads. I recommend starting a fresh session for execution — the build agent will read the specs directly for full context on what the experience should be. After build, run `/opsx:verify` for UAT."
 >
 > "Want to stop here, or would you prefer I start executing now?"
 
 If the user chooses to continue:
 - Treat this as a new execution phase — run `bd ready` and work task-by-task
+- The build agent's PRIMARY input is the OpenSpec specs (not beads checklists)
 - Do NOT skip beads workflow (update status, comment progress, write close reasons)
-- If you catch yourself rushing or cutting corners, pause and tell the user
+- Generate `demoTracks.ts` from golden path specs (read structured metadata, write TypeScript)
+- If you catch yourself defaulting to config-only changes, re-read the gap analysis and specs
