@@ -82,18 +82,104 @@ Demo builds should be split across multiple sessions to prevent context exhausti
 
 ### Session 1: Planning
 - Coaching conversation (Opening -> Ideation/Discovery -> Strategy -> UX Design)
-- Create beads epic and tasks with acceptance criteria from `docs/templates/BEADS_UI_TASKS.md`
+- **Create OpenSpec proposal** for the demo capabilities (see Spec-Driven Development section below)
+- Bridge OpenSpec tasks to beads: `./scripts/openspec-to-beads.sh <change-name> --epic <epic-id>`
 - Save `DEMO_PLAN.md`
 - **Strongly recommend ending the session here** (see `docs/prompts/WELCOME_PROMPT.md` → Session boundary)
 
 ### Session 2+: Execution
-- Agent reads `DEMO_PLAN.md`, runs `bd ready`
-- Works through beads tasks one at a time, updating status and writing close reasons
-- Each task has acceptance criteria that define "done" — no marking complete without meeting them
+- Agent reads OpenSpec specs at `openspec/changes/<name>/` for structured context (proposal, design, specs, tasks)
+- Agent reads `DEMO_PLAN.md` for high-level narrative context
+- Runs `bd ready` to pick the next unblocked task
+- For each task: beads tracks status, OpenSpec specs define requirements
+- Marks tasks complete in both `tasks.md` (`[x]`) and beads (`bd close`)
 - Child agents (via Task tool) can work on independent tasks in parallel
 
 ### Why This Matters
 A single session that does coaching + branding + page building + agent setup + verification will exhaust context and start cutting corners — skipping fallback chains, guessing values, forgetting quality gates. Splitting sessions keeps each execution task focused with full context headroom.
+
+OpenSpec adds structured specifications that survive session boundaries — the executing agent reads formal GIVEN/WHEN/THEN requirements instead of reconstructing intent from beads checkboxes and chat history.
+
+---
+
+## Spec-Driven Development with OpenSpec (Trial)
+
+> **Status**: Trial integration on `trial/openspec-integration` branch.
+> OpenSpec adds a specification layer between planning and execution to reduce build-phase iteration.
+
+### What OpenSpec Does
+
+OpenSpec provides structured specification artifacts that the build agent reads during execution:
+
+| Artifact | Purpose | Location |
+|----------|---------|----------|
+| `proposal.md` | Why this change exists, scope, capabilities | `openspec/changes/<name>/` |
+| `design.md` | Technical decisions, component choices, trade-offs | `openspec/changes/<name>/` |
+| `specs/<capability>/spec.md` | Formal requirements with GIVEN/WHEN/THEN scenarios | `openspec/changes/<name>/specs/` |
+| `tasks.md` | Ordered implementation checklist (checkbox format) | `openspec/changes/<name>/` |
+
+### Role Separation: OpenSpec vs Beads
+
+| Layer | Tool | Owns |
+|-------|------|------|
+| **What to build** | OpenSpec | Specifications, design decisions, formal requirements |
+| **Tracking execution** | Beads | Issue status, dependencies, progress, close reasons |
+
+Tasks are authored once in OpenSpec `tasks.md`, then bridged to beads via `./scripts/openspec-to-beads.sh`.
+
+### OpenSpec Workflow (Cursor Slash Commands)
+
+```
+/opsx:explore   — Think through ideas, investigate the codebase (read-only)
+/opsx:propose   — Create a change proposal with all artifacts
+/opsx:apply     — Implement tasks from an approved change
+/opsx:archive   — Archive completed change, merge specs into living docs
+```
+
+### CLI Commands
+
+```bash
+openspec new change "<name>"                          # Scaffold a new change
+openspec status --change "<name>"                     # Check artifact completion
+openspec status --change "<name>" --json              # Machine-readable status
+openspec instructions <artifact> --change "<name>"    # Get artifact creation guidance
+openspec list                                         # List active changes
+```
+
+### When to Use OpenSpec
+
+| Build Path | Use OpenSpec? | Rationale |
+|------------|---------------|-----------|
+| OOTB Quick Build (1-2 hrs) | Optional | Simple config, beads templates suffice |
+| OOTB + Custom Pages (2-4 hrs) | Recommended | Custom pages benefit from formal specs |
+| Custom Dataset (3-5 hrs) | Recommended | Data + page specs prevent field mapping errors |
+| Full Custom (5+ hrs) | Required | Complex builds need structured specifications |
+
+### Bridge to Beads
+
+After creating an OpenSpec proposal, convert tasks to beads issues:
+
+```bash
+# Dry run to preview
+./scripts/openspec-to-beads.sh <change-name> --dry-run
+
+# Create beads issues linked to an epic
+./scripts/openspec-to-beads.sh <change-name> --epic <epic-id>
+```
+
+### Project Context
+
+OpenSpec reads `openspec/project.md` for tech stack and conventions. This file is auto-populated with this project's stack details.
+
+### After Completion
+
+When a change is fully implemented, archive it to update the living documentation:
+
+```
+/opsx:archive <change-name>
+```
+
+This moves the change to `openspec/changes/archive/` and merges spec deltas into `openspec/specs/`, keeping documentation permanently in sync with the codebase.
 
 ---
 
