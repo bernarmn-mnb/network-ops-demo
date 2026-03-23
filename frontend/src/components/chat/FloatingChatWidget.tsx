@@ -32,6 +32,12 @@ import {
 import { useAgentChat, Message } from '../../hooks/useAgentChat'
 import { useBrand } from '../providers/BrandedThemeProvider'
 
+/** Suggestion prompt shown when no messages yet */
+export interface ChatSuggestion {
+  label: string
+  prompt: string
+}
+
 export interface FloatingChatWidgetProps {
   /** Chat title shown in header */
   title?: string
@@ -47,6 +53,24 @@ export interface FloatingChatWidgetProps {
   primaryColor?: string
   /** Z-index for the widget */
   zIndex?: number
+  /** Suggestion prompts shown when no messages yet */
+  suggestions?: ChatSuggestion[]
+  /** Profile context string sent with the first message */
+  profileContext?: string | null
+  /** Mode/task context string sent with every message */
+  modeContext?: string | null
+  /** Override which Agent Builder agent to use */
+  agentId?: string | null
+  /** Custom avatar URL for the assistant (shown in header instead of icon) */
+  assistantAvatarUrl?: string
+  /** Custom FAB icon type (default: 'discuss') */
+  fabIconType?: string
+  /** Custom header icon type (default: 'discuss'). Ignored if assistantAvatarUrl is set. */
+  headerIconType?: string
+  /** Callback when widget opens/closes */
+  onToggle?: (isOpen: boolean) => void
+  /** Additional content rendered below the header (e.g., navigation actions, mode selector) */
+  headerContent?: React.ReactNode
 }
 
 export function FloatingChatWidget({
@@ -57,6 +81,15 @@ export function FloatingChatWidget({
   defaultOpen = false,
   primaryColor,
   zIndex = 9999,
+  suggestions,
+  profileContext,
+  modeContext,
+  agentId,
+  assistantAvatarUrl,
+  fabIconType,
+  headerIconType,
+  onToggle,
+  headerContent,
 }: FloatingChatWidgetProps) {
   const { brand } = useBrand()
   const { colorMode } = useEuiTheme()
@@ -72,7 +105,12 @@ export function FloatingChatWidget({
     sendMessage,
     cancelStream,
     resetConversation,
-  } = useAgentChat({ initialGreeting: greeting })
+  } = useAgentChat({
+    initialGreeting: greeting,
+    profileContext: profileContext ?? undefined,
+    modeContext: modeContext ?? undefined,
+    agentId: agentId ?? undefined,
+  })
 
   // Resolve primary color
   const color = primaryColor || brand.colors.primary
@@ -138,6 +176,7 @@ export function FloatingChatWidget({
         cancelStream()
       } else {
         setIsOpen(false)
+        onToggle?.(false)
       }
     }
   }
@@ -187,7 +226,15 @@ export function FloatingChatWidget({
           >
             <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>
               <EuiFlexItem grow={false}>
-                <EuiIcon type="discuss" size="m" color="ghost" />
+                {assistantAvatarUrl ? (
+                  <img
+                    src={assistantAvatarUrl}
+                    alt={title}
+                    style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <EuiIcon type={headerIconType ?? 'discuss'} size="m" color="ghost" />
+                )}
               </EuiFlexItem>
               <EuiFlexItem>
                 <EuiText size="s" color="ghost">
@@ -215,7 +262,10 @@ export function FloatingChatWidget({
                     iconType="cross"
                     color="text"
                     aria-label="Close chat"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => {
+                      setIsOpen(false)
+                      onToggle?.(false)
+                    }}
                     size="s"
                     style={{ color: '#FFFFFF' }}
                   />
@@ -223,6 +273,12 @@ export function FloatingChatWidget({
               </EuiFlexItem>
             </EuiFlexGroup>
           </div>
+
+          {headerContent && (
+            <div style={{ padding: '8px 16px', borderBottom: `1px solid ${panelColors.border}` }}>
+              {headerContent}
+            </div>
+          )}
 
           {/* Messages */}
           <div
@@ -244,7 +300,29 @@ export function FloatingChatWidget({
                 panelColors={panelColors}
               />
             ))}
-            
+            {suggestions && suggestions.length > 0 && messages.length <= 1 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                {suggestions.map((s, idx) => (
+                  <button
+                    type="button"
+                    key={`${s.label}-${idx}`}
+                    onClick={() => { sendMessage(s.prompt); }}
+                    style={{
+                      padding: '4px 10px',
+                      fontSize: '12px',
+                      borderRadius: '12px',
+                      border: `1px solid ${panelColors.border}`,
+                      background: panelColors.inputBackground,
+                      color: panelColors.text,
+                      cursor: 'pointer',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
             {isLoading && messages[messages.length - 1]?.role === 'assistant' && 
              !messages[messages.length - 1]?.content && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: panelColors.textSubdued }}>
@@ -332,7 +410,11 @@ export function FloatingChatWidget({
 
       {/* FAB Toggle Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          const next = !isOpen
+          setIsOpen(next)
+          onToggle?.(next)
+        }}
         aria-label={isOpen ? 'Close chat' : 'Open chat'}
         aria-expanded={isOpen}
         style={{
@@ -358,7 +440,7 @@ export function FloatingChatWidget({
         }}
       >
         <EuiIcon
-          type={isOpen ? 'cross' : 'discuss'}
+          type={isOpen ? 'cross' : (fabIconType ?? 'discuss')}
           size="l"
           color="ghost"
           style={{

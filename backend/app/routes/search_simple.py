@@ -76,6 +76,12 @@ class SearchRequest(BaseModel):
         default=None,
         description="Facet fields for aggregations. If provided, overrides server defaults.",
     )
+    search_type: str = Field(
+        default="auto",
+        description="Search strategy: 'auto' (detect semantic fields and use hybrid), "
+        "'keyword' (BM25 text matching only), 'semantic' (semantic_text fields only). "
+        "Custom values are passed through for demo-specific handling.",
+    )
 
 
 class SearchHit(BaseModel):
@@ -132,6 +138,7 @@ async def search(request: SearchRequest) -> SearchResponse:
         span.set_attribute("search.user_query", request.query)
         span.set_attribute("search.page", request.page)
         span.set_attribute("search.page_size", request.page_size)
+        span.set_attribute("search.search_type", request.search_type)
 
         try:
             es = get_es_client()
@@ -178,7 +185,7 @@ async def search(request: SearchRequest) -> SearchResponse:
                         ]
 
             logger.info(
-                f"Search: query='{request.query}' results={total} took={took_ms}ms"
+                f"Search: query='{request.query}' type={request.search_type} results={total} took={took_ms}ms"
             )
 
             return SearchResponse(
@@ -298,28 +305,64 @@ def _extract_semantic_fields(properties: dict, prefix: str, result: list):
 def _build_robust_query(es, index: str, request: SearchRequest) -> dict:
     """Build Elasticsearch query with robust defaults.
 
-    Strategy:
-    1. Check for semantic_text fields and use semantic queries for them
-    2. Also include keyword matching on keyword fields
-    3. Fall back to simple_query_string on text fields
-    4. Add aggregations only for fields that exist
+    Strategy varies by search_type:
+    - 'auto': Check for semantic_text fields, use hybrid if found, else keyword
+    - 'keyword': Always use BM25/text matching, skip semantic field detection
+    - 'semantic': Only use semantic queries on semantic_text fields
+    - Any other value: treated as 'auto' (demos can intercept before this)
     """
-    # Build bool query
     bool_query: dict[str, Any] = {}
+    search_type = request.search_type or "auto"
 
-    # Text search
     if request.query and request.query.strip():
-        semantic_fields = _get_semantic_fields(es, index)
+        # Only look for semantic fields when needed
+        semantic_fields = _get_semantic_fields(es, index) if search_type != "keyword" else []
         text_fields = _get_index_text_fields(es, index)
 
-        if semantic_fields:
-            # Build hybrid query: semantic on semantic_text fields + keyword matching
+        if search_type == "semantic":
+            if not semantic_fields:
+                logger.warning(f"search_type='semantic' but index '{index}' has no semantic_text fields — returning empty results")
+                bool_query["must"] = [{"match_none": {}}]
+            else:
+                should_clauses = []
+                for sf in semantic_fields:
+                    should_clauses.append({
+                        "semantic": {"field": sf, "query": request.query}
+                    })
+                bool_query["must"] = [
+                    {"bool": {"should": should_clauses, "minimum_should_match": 1}}
+                ]
+        elif search_type == "keyword" or not semantic_fields:
+            # Pure keyword — BM25 on text fields
+            if text_fields:
+                bool_query["must"] = [
+                    {
+                        "simple_query_string": {
+                            "query": request.query,
+                            "fields": ["*"],
+                            "default_operator": "AND",
+                            "analyze_wildcard": True,
+                        }
+                    }
+                ]
+            else:
+                bool_query["must"] = [
+                    {
+                        "multi_match": {
+                            "query": request.query,
+                            "fields": SEARCH_CONFIG["searchFields"],
+                            "type": "best_fields",
+                            "fuzziness": "AUTO",
+                        }
+                    }
+                ]
+        else:
+            # auto mode with semantic fields available: hybrid (semantic + keyword)
             should_clauses = []
             for sf in semantic_fields:
                 should_clauses.append({
                     "semantic": {"field": sf, "query": request.query}
                 })
-            # Also add keyword matching on all keyword fields for exact matches
             should_clauses.append({
                 "simple_query_string": {
                     "query": request.query,
@@ -330,28 +373,6 @@ def _build_robust_query(es, index: str, request: SearchRequest) -> dict:
             })
             bool_query["must"] = [
                 {"bool": {"should": should_clauses, "minimum_should_match": 1}}
-            ]
-        elif text_fields:
-            bool_query["must"] = [
-                {
-                    "simple_query_string": {
-                        "query": request.query,
-                        "fields": ["*"],
-                        "default_operator": "AND",
-                        "analyze_wildcard": True,
-                    }
-                }
-            ]
-        else:
-            bool_query["must"] = [
-                {
-                    "multi_match": {
-                        "query": request.query,
-                        "fields": SEARCH_CONFIG["searchFields"],
-                        "type": "best_fields",
-                        "fuzziness": "AUTO",
-                    }
-                }
             ]
     else:
         bool_query["must"] = [{"match_all": {}}]
