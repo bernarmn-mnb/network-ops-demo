@@ -53,6 +53,14 @@ All indexes SHALL be populated with domain-authentic data before demo delivery.
 - **WHEN** browsing search results with no filters
 - **THEN** at least {min_record_count} results are available, providing enough variety for meaningful faceting and search
 
+#### Scenario: Image variety
+- **WHEN** viewing search results for a specific category
+- **THEN** product images vary by category (e.g., shoes show shoe images, jackets show jacket images) — not the same generic photo repeated for all products in a sport. Use category-specific Unsplash queries for image URLs.
+
+#### Scenario: Generation approach with fallback
+- **WHEN** generating product data
+- **THEN** LLM-powered generation is preferred for realistic descriptions, but a deterministic fallback script (using templates + random combinations) MUST exist in case the LLM proxy is unavailable or rate-limited
+
 ### Requirement: Backend routes
 Any custom backend routes required beyond the template defaults SHALL be implemented and documented.
 

@@ -90,8 +90,14 @@ while IFS= read -r line; do
     title="[${current_group}] ${task_desc}"
     task_count=$((task_count + 1))
 
-    # Find relevant spec: first check task description, then fall back to group header match
-    task_spec=$(find_spec_from_text "$task_desc")
+    # Find relevant spec: check inline ref first, then description, then group header
+    # Inline refs look like: (spec: specs/search-page/spec.md) or (spec: `specs/X/spec.md`)
+    inline_spec=""
+    if [[ "$task_desc" =~ spec:\ *\`?specs/([a-z_-]+)/spec\.md ]]; then
+      inline_spec="${BASH_REMATCH[1]}"
+    fi
+
+    task_spec="${inline_spec:-$(find_spec_from_text "$task_desc")}"
     matched_spec="${task_spec:-$current_group_spec}"
 
     # Build acceptance criteria from matched spec

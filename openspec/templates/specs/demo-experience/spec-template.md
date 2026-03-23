@@ -33,6 +33,17 @@ Pages SHALL have comparable information density to production {domain} applicati
 - **WHEN** viewing any page in the demo
 - **THEN** domain-relevant imagery is present (hero banners, card thumbnails, profile images, or illustrations) — pages are not text-only wireframes
 
+### Requirement: Chat agent persona visible in UI
+If the demo includes an AI chat agent, the agent's persona (name, avatar, greeting) MUST be visible in the chat interface — not the template default.
+
+#### Scenario: Branded chat identity
+- **WHEN** the chat interface loads
+- **THEN** the agent is identified by its persona name (not "Assistant"), has a custom avatar (not the default sparkles icon), and delivers a personalised greeting referencing {domain}
+
+#### Scenario: Chat persona configuration
+- **WHEN** configuring the chat agent
+- **THEN** the agent's display name, avatar URL, and greeting text are set via `demoConfig.ts` or a dedicated `chatConfig.ts` — not hardcoded in the ChatPage component
+
 ### Requirement: Dark mode and theme consistency
 The demo SHALL render correctly in both light and dark EUI themes with consistent branding across all pages.
 
