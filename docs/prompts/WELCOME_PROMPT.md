@@ -145,6 +145,24 @@ The `/opsx:propose` command will:
 
 The OpenSpec artifacts (proposal.md, design.md, specs/, tasks.md) serve as the complete plan.
 
+**Fallback: If OpenSpec CLI is not installed or fails:**
+
+Use the concrete task checklist below to create beads issues manually with `docs/templates/BEADS_UI_TASKS.md`:
+
+1. **Contract + paths** — persist the interview output contract
+2. **Data** — prepare, generate, or verify OOTB data
+3. **Branding** — extract and apply customer theme
+4. **Search config** — populate `searchConfig.ts` with actual index fields
+5. **Agent setup** — create agent and tools via API
+6. **Workflows** (if applicable) — create workflows via API
+7. **Custom pages** — build domain-specific pages with hooks and visual standards
+8. **Demo config** — set `NAV_PAGES`, `DEMO_TITLE`, `DEMO_SUBTITLE` in `demoConfig.ts`
+9. **Demo guide** — populate `demoTracks.ts` with narrative from UX Design
+10. **Demo prompts** — customize `demoPrompts.ts` with domain-specific questions
+11. **Stability testing** — all pages load, search returns results, chat responds, no console errors
+12. **Value verification** — 3-pass verification
+13. **Release gate** — `./dev verify-template` passes, `npx tsc --noEmit` passes, screenshots captured
+
 **Handoff:**
 
 > "The plan is saved as an OpenSpec change with {N} capability specs and {M} implementation tasks. I recommend starting a fresh session for execution — the build agent will read the specs directly. After build, run `/opsx:verify` for UAT golden path tests."
