@@ -21,6 +21,7 @@ import {
   EuiToolTip,
 } from '@elastic/eui'
 import { useBrand } from '../components/providers/BrandedThemeProvider'
+import { DEMO_TITLE, DEMO_SUBTITLE } from '../config/demoConfig'
 
 /**
  * Welcome Page - Feature showcase and onboarding
@@ -272,9 +273,9 @@ export function WelcomePage() {
           {/* Welcome Header */}
           <EuiFlexGroup alignItems="center" gutterSize="m">
             <EuiFlexItem grow={false}>
-              {brand.logo.svgDataUrl ? (
+              {(brand.logo.url || brand.logo.svgDataUrl) ? (
                 <EuiImage
-                  src={brand.logo.svgDataUrl}
+                  src={brand.logo.url || brand.logo.svgDataUrl || ''}
                   alt={brand.logo.alt}
                   style={{ height: '48px', width: 'auto' }}
                 />
@@ -284,10 +285,10 @@ export function WelcomePage() {
             </EuiFlexItem>
             <EuiFlexItem>
               <EuiTitle size="l">
-                <h1>Elastic Demo Starter</h1>
+                <h1>{DEMO_TITLE || brand.name || 'Elastic Demo Starter'}</h1>
               </EuiTitle>
               <EuiText color="subdued">
-                <p>Build AI-powered demos with Agent Builder, EUI, and modern web tech</p>
+                <p>{DEMO_SUBTITLE || 'Build AI-powered demos with Agent Builder, EUI, and modern web tech'}</p>
               </EuiText>
             </EuiFlexItem>
           </EuiFlexGroup>

@@ -252,6 +252,17 @@ If browser tools are NOT available:
 
 **Do not mark a UI task as complete without visual verification.** "It compiles" is not "it looks right."
 
+### Branding Verification (MANDATORY when custom brand exists)
+
+**After creating or modifying a brand theme, you MUST run the branding check:**
+```bash
+./dev verify-template --check branding
+```
+This catches broken logo URLs, external URLs blocked by CDNs, missing DEMO_TITLE, stale
+"Elastic Demo Starter" titles, and incomplete brand color fields. **Do not mark branding
+complete if this check reports failures.** External logo URLs are flagged as warnings because
+CDNs frequently block automated requests — always download logos locally.
+
 ---
 
 ## Branding System

@@ -15,6 +15,7 @@ Checks:
 8. EuiAvatar colors — no CSS variables in color props (hex values required)
 9. Symlink validation — .cursor/skills/ symlinks resolve to existing targets
 10. OpenSpec placeholders — no unfilled {placeholder} patterns in active specs
+11. Branding verification — logo loads, DEMO_TITLE set, no stale defaults
 
 Usage:
     python scripts/verify-template.py          # Run all checks
@@ -75,7 +76,7 @@ def info(msg):
 
 def check_routes():
     """Detect duplicate route paths, unimportable route modules, and shadowed endpoints."""
-    print(f"\n{BLUE}[1/10] Route Integrity{NC}")
+    print(f"\n{BLUE}[1/11] Route Integrity{NC}")
 
     main_py = BACKEND_DIR / "app" / "main.py"
     if not main_py.exists():
@@ -179,7 +180,7 @@ def check_routes():
 
 def check_contract():
     """Verify every frontend API call has a matching backend route."""
-    print(f"\n{BLUE}[2/10] Frontend↔Backend Contract{NC}")
+    print(f"\n{BLUE}[2/11] Frontend↔Backend Contract{NC}")
 
     # Get all backend routes from OpenAPI (if server is running) or from static analysis
     backend_routes = set()
@@ -357,7 +358,7 @@ def check_contract():
 
 def check_pages():
     """Verify every route in App.tsx resolves to a real component file."""
-    print(f"\n{BLUE}[3/10] Page Completeness{NC}")
+    print(f"\n{BLUE}[3/11] Page Completeness{NC}")
 
     app_tsx = FRONTEND_SRC / "App.tsx"
     if not app_tsx.exists():
@@ -417,7 +418,7 @@ def check_pages():
 
 def check_icons():
     """Verify EUI icons used in source are registered in iconCache.ts."""
-    print(f"\n{BLUE}[4/10] EUI Icon Registration{NC}")
+    print(f"\n{BLUE}[4/11] EUI Icon Registration{NC}")
 
     icon_cache = FRONTEND_SRC / "iconCache.ts"
     if not icon_cache.exists():
@@ -487,7 +488,7 @@ def check_icons():
 
 def check_registry():
     """Verify COMPONENT_REGISTRY.md matches actual files on disk."""
-    print(f"\n{BLUE}[5/10] Component Registry{NC}")
+    print(f"\n{BLUE}[5/11] Component Registry{NC}")
 
     registry_file = PROJECT_ROOT / "docs" / "COMPONENT_REGISTRY.md"
     if not registry_file.exists():
@@ -599,7 +600,7 @@ def check_registry():
 
 def check_localhost():
     """Check for hardcoded localhost URLs in frontend source."""
-    print(f"\n{BLUE}[6/10] Localhost URL Check{NC}")
+    print(f"\n{BLUE}[6/11] Localhost URL Check{NC}")
 
     # Use the existing script if available
     check_script = PROJECT_ROOT / "scripts" / "check-localhost-urls.sh"
@@ -672,7 +673,7 @@ def _find_backend_python():
 
 def check_builds():
     """Verify both frontend and backend can build/import cleanly."""
-    print(f"\n{BLUE}[7/10] Build Verification{NC}")
+    print(f"\n{BLUE}[7/11] Build Verification{NC}")
 
     python_cmd = _find_backend_python()
 
@@ -758,7 +759,7 @@ def check_builds():
 
 def check_avatar_colors():
     """Verify EuiAvatar components use hex colors, not CSS variables (which crash the component)."""
-    print(f"\n{BLUE}[8/10] EuiAvatar Color Check{NC}")
+    print(f"\n{BLUE}[8/11] EuiAvatar Color Check{NC}")
 
     violations = []
     color_prop_pattern = re.compile(r'(color|iconColor)\s*=\s*["\'{].*var\(--')
@@ -793,7 +794,7 @@ def check_avatar_colors():
 
 def check_symlinks():
     """Verify symlinks in .cursor/skills/ resolve to existing targets."""
-    print(f"\n{BLUE}[9/10] Symlink Validation{NC}")
+    print(f"\n{BLUE}[9/11] Symlink Validation{NC}")
 
     skills_dir = PROJECT_ROOT / ".cursor" / "skills"
     if not skills_dir.exists():
@@ -825,7 +826,7 @@ def check_symlinks():
 
 def check_openspec_placeholders():
     """Check for unfilled {placeholder} patterns in active OpenSpec spec files."""
-    print(f"\n{BLUE}[10/10] OpenSpec Spec Placeholders{NC}")
+    print(f"\n{BLUE}[10/11] OpenSpec Spec Placeholders{NC}")
 
     changes_dir = PROJECT_ROOT / "openspec" / "changes"
     if not changes_dir.exists():
@@ -875,6 +876,130 @@ def check_openspec_placeholders():
 
 
 # =========================================================================
+# Check 11: Branding Verification
+# =========================================================================
+
+def check_branding():
+    """Verify brand themes are complete and assets load correctly.
+
+    If a non-default brand theme file exists, this check verifies:
+    - Logo URL resolves (not 404/403) and is an image
+    - External logo URLs are flagged as warnings (fragile)
+    - DEMO_TITLE in demoConfig.ts is set (not null)
+    - index.html <title> doesn't still say "Elastic Demo Starter"
+    - Required brand color fields are not empty/placeholder
+    """
+    print(f"\n{BLUE}[11/11] Branding Verification{NC}")
+
+    branding_dir = FRONTEND_SRC / "branding"
+    if not branding_dir.exists():
+        info("No branding directory — skipping")
+        return
+
+    # Discover non-default, non-example theme files
+    theme_files = []
+    for f in branding_dir.glob("*Theme.ts"):
+        if f.name in ("exampleTheme.ts", "elasticTheme.ts"):
+            continue
+        theme_files.append(f)
+
+    if not theme_files:
+        info("No custom brand themes found — skipping branding checks")
+        return
+
+    info(f"Found {len(theme_files)} custom brand theme(s): {', '.join(f.stem for f in theme_files)}")
+
+    # --- Check: DEMO_TITLE is set ---
+    demo_config = FRONTEND_SRC / "config" / "demoConfig.ts"
+    if demo_config.exists():
+        config_source = demo_config.read_text()
+        title_match = re.search(r"DEMO_TITLE\s*:\s*string\s*\|\s*null\s*=\s*(.+)", config_source)
+        if not title_match:
+            title_match = re.search(r"DEMO_TITLE\s*=\s*(.+)", config_source)
+        if title_match:
+            value = title_match.group(1).strip().rstrip(";").strip()
+            if value == "null" or value == "''":
+                failed("DEMO_TITLE is null — should be set when a custom brand exists")
+            else:
+                passed(f"DEMO_TITLE is set: {value}")
+        else:
+            warned("Could not parse DEMO_TITLE from demoConfig.ts")
+    else:
+        warned("demoConfig.ts not found")
+
+    # --- Check: index.html <title> ---
+    index_html = FRONTEND_DIR / "index.html"
+    if index_html.exists():
+        html_source = index_html.read_text()
+        title_tag = re.search(r"<title>([^<]+)</title>", html_source)
+        if title_tag:
+            html_title = title_tag.group(1)
+            if "Elastic Demo Starter" in html_title:
+                failed(f'index.html <title> still says "{html_title}" — update for your demo')
+            else:
+                passed(f"index.html <title> is customised: {html_title}")
+        else:
+            warned("No <title> tag found in index.html")
+
+    # --- Check each theme file for logo and colors ---
+    for theme_file in theme_files:
+        theme_name = theme_file.stem.replace("Theme", "")
+        source = theme_file.read_text()
+
+        # Check for logo URL
+        logo_url_match = re.search(r"""(?:url|svgDataUrl)\s*:\s*['"]([^'"]+)['"]""", source)
+        if not logo_url_match:
+            failed(f"[{theme_name}] No logo URL found in theme — logo is mandatory")
+            continue
+
+        logo_url = logo_url_match.group(1)
+
+        if logo_url.startswith("data:"):
+            passed(f"[{theme_name}] Logo is an embedded data URL (reliable)")
+        elif logo_url.startswith("/") or logo_url.startswith("./"):
+            # Local file — check it exists
+            local_path = FRONTEND_DIR / "public" / logo_url.lstrip("/")
+            if local_path.exists():
+                passed(f"[{theme_name}] Logo is a local file and exists: {logo_url}")
+            else:
+                failed(f"[{theme_name}] Logo references local file that doesn't exist: {logo_url}")
+        elif logo_url.startswith("http"):
+            warned(f"[{theme_name}] Logo is an external URL (fragile — CDN may block): {logo_url}")
+            # Try to verify the URL loads
+            try:
+                import urllib.request
+                req = urllib.request.Request(
+                    logo_url,
+                    headers={"User-Agent": "Mozilla/5.0 (verify-template)"},
+                )
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    content_type = resp.headers.get("Content-Type", "")
+                    if "image" in content_type or "svg" in content_type:
+                        passed(f"[{theme_name}] External logo URL returns image ({content_type})")
+                    else:
+                        failed(f"[{theme_name}] External logo URL returns non-image: {content_type}")
+            except Exception as e:
+                failed(f"[{theme_name}] External logo URL failed to load: {e}")
+        else:
+            warned(f"[{theme_name}] Unrecognised logo URL format: {logo_url}")
+
+        # Check required color fields are present and not placeholder
+        required_colors = ["primary", "accent", "background", "textPrimary"]
+        for color_name in required_colors:
+            color_match = re.search(
+                rf"""{color_name}\s*:\s*['"]([^'"]+)['"]""", source
+            )
+            if not color_match:
+                failed(f"[{theme_name}] Missing required color: {color_name}")
+            else:
+                color_value = color_match.group(1)
+                if color_value.startswith("#") and len(color_value) in (4, 7, 9):
+                    pass  # valid hex
+                else:
+                    warned(f"[{theme_name}] Color {color_name} doesn't look like a hex value: {color_value}")
+
+
+# =========================================================================
 # Main
 # =========================================================================
 
@@ -884,7 +1009,7 @@ def main():
     parser = argparse.ArgumentParser(description="Template verification suite")
     parser.add_argument(
         "--check",
-        choices=["routes", "contract", "pages", "icons", "registry", "localhost", "builds", "avatar", "symlinks", "placeholders"],
+        choices=["routes", "contract", "pages", "icons", "registry", "localhost", "builds", "avatar", "symlinks", "placeholders", "branding"],
         help="Run a single check",
     )
     parser.add_argument(
@@ -908,6 +1033,7 @@ def main():
         "avatar": check_avatar_colors,
         "symlinks": check_symlinks,
         "placeholders": check_openspec_placeholders,
+        "branding": check_branding,
     }
 
     if args.check:

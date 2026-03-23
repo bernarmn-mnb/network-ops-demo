@@ -75,9 +75,26 @@ Fill in extracted values -- never placeholder or guessed values.
 
 ## Step 5: Verify
 
+**Run the automated branding check FIRST:**
+```bash
+./dev verify-template --check branding
+```
+This catches: broken logo URLs, external URLs that CDNs block, DEMO_TITLE still null,
+index.html title still saying "Elastic Demo Starter", and missing brand colors.
+
+**THEN verify visually:**
 Apply the theme in the browser and take a screenshot.
 Compare visually with the customer's actual website.
 The color palette should be recognizably the same brand.
+
+**Do NOT mark branding complete if verify-template reports failures or warnings.**
+
+### Common branding failures to watch for:
+- External logo URLs (https://...) blocked by CDN → download locally to /brands/{id}/
+- DEMO_TITLE still null in demoConfig.ts
+- WelcomePage still showing "Elastic Demo Starter"
+- index.html `<title>` not updated
+- Logo image too small or wrong format (SVG preferred, PNG acceptable)
 
 ## Reference
 
