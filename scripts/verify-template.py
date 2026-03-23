@@ -13,6 +13,8 @@ Checks:
 6. No localhost leaks — hardcoded localhost URLs in frontend source
 7. Build verification — both frontend and backend build cleanly
 8. EuiAvatar colors — no CSS variables in color props (hex values required)
+9. Symlink validation — .cursor/skills/ symlinks resolve to existing targets
+10. OpenSpec placeholders — no unfilled {placeholder} patterns in active specs
 
 Usage:
     python scripts/verify-template.py          # Run all checks
@@ -73,7 +75,7 @@ def info(msg):
 
 def check_routes():
     """Detect duplicate route paths, unimportable route modules, and shadowed endpoints."""
-    print(f"\n{BLUE}[1/9] Route Integrity{NC}")
+    print(f"\n{BLUE}[1/10] Route Integrity{NC}")
 
     main_py = BACKEND_DIR / "app" / "main.py"
     if not main_py.exists():
@@ -177,7 +179,7 @@ def check_routes():
 
 def check_contract():
     """Verify every frontend API call has a matching backend route."""
-    print(f"\n{BLUE}[2/9] Frontend↔Backend Contract{NC}")
+    print(f"\n{BLUE}[2/10] Frontend↔Backend Contract{NC}")
 
     # Get all backend routes from OpenAPI (if server is running) or from static analysis
     backend_routes = set()
@@ -355,7 +357,7 @@ def check_contract():
 
 def check_pages():
     """Verify every route in App.tsx resolves to a real component file."""
-    print(f"\n{BLUE}[3/9] Page Completeness{NC}")
+    print(f"\n{BLUE}[3/10] Page Completeness{NC}")
 
     app_tsx = FRONTEND_SRC / "App.tsx"
     if not app_tsx.exists():
@@ -415,7 +417,7 @@ def check_pages():
 
 def check_icons():
     """Verify EUI icons used in source are registered in iconCache.ts."""
-    print(f"\n{BLUE}[4/9] EUI Icon Registration{NC}")
+    print(f"\n{BLUE}[4/10] EUI Icon Registration{NC}")
 
     icon_cache = FRONTEND_SRC / "iconCache.ts"
     if not icon_cache.exists():
@@ -485,7 +487,7 @@ def check_icons():
 
 def check_registry():
     """Verify COMPONENT_REGISTRY.md matches actual files on disk."""
-    print(f"\n{BLUE}[5/9] Component Registry{NC}")
+    print(f"\n{BLUE}[5/10] Component Registry{NC}")
 
     registry_file = PROJECT_ROOT / "docs" / "COMPONENT_REGISTRY.md"
     if not registry_file.exists():
@@ -597,7 +599,7 @@ def check_registry():
 
 def check_localhost():
     """Check for hardcoded localhost URLs in frontend source."""
-    print(f"\n{BLUE}[6/9] Localhost URL Check{NC}")
+    print(f"\n{BLUE}[6/10] Localhost URL Check{NC}")
 
     # Use the existing script if available
     check_script = PROJECT_ROOT / "scripts" / "check-localhost-urls.sh"
@@ -670,7 +672,7 @@ def _find_backend_python():
 
 def check_builds():
     """Verify both frontend and backend can build/import cleanly."""
-    print(f"\n{BLUE}[7/9] Build Verification{NC}")
+    print(f"\n{BLUE}[7/10] Build Verification{NC}")
 
     python_cmd = _find_backend_python()
 
@@ -756,7 +758,7 @@ def check_builds():
 
 def check_avatar_colors():
     """Verify EuiAvatar components use hex colors, not CSS variables (which crash the component)."""
-    print(f"\n{BLUE}[8/9] EuiAvatar Color Check{NC}")
+    print(f"\n{BLUE}[8/10] EuiAvatar Color Check{NC}")
 
     violations = []
     color_prop_pattern = re.compile(r'(color|iconColor)\s*=\s*["\'{].*var\(--')
@@ -786,6 +788,93 @@ def check_avatar_colors():
 
 
 # =========================================================================
+# Check 9: Symlink Validation
+# =========================================================================
+
+def check_symlinks():
+    """Verify symlinks in .cursor/skills/ resolve to existing targets."""
+    print(f"\n{BLUE}[9/10] Symlink Validation{NC}")
+
+    skills_dir = PROJECT_ROOT / ".cursor" / "skills"
+    if not skills_dir.exists():
+        info(".cursor/skills/ not found — skipping")
+        return
+
+    broken = []
+    valid = 0
+    for entry in sorted(skills_dir.iterdir()):
+        if entry.is_symlink():
+            target = entry.resolve()
+            if not target.exists():
+                broken.append((entry.name, os.readlink(entry)))
+            else:
+                valid += 1
+
+    if broken:
+        for name, target in broken:
+            failed(f"Broken symlink: .cursor/skills/{name} -> {target}")
+    if valid > 0 and not broken:
+        passed(f"All {valid} skill symlinks resolve to valid targets")
+    elif valid == 0 and not broken:
+        info("No symlinks found in .cursor/skills/")
+
+
+# =========================================================================
+# Check 10: OpenSpec Placeholder Validation
+# =========================================================================
+
+def check_openspec_placeholders():
+    """Check for unfilled {placeholder} patterns in active OpenSpec spec files."""
+    print(f"\n{BLUE}[10/10] OpenSpec Spec Placeholders{NC}")
+
+    changes_dir = PROJECT_ROOT / "openspec" / "changes"
+    if not changes_dir.exists():
+        info("openspec/changes/ not found — skipping")
+        return
+
+    archive_dir = changes_dir / "archive"
+    placeholder_pattern = re.compile(r"\{[a-z][a-z0-9_]*\}", re.IGNORECASE)
+    # Exclude patterns that are legitimate (markdown code blocks, bash vars, etc.)
+    false_positive_patterns = {
+        "{*}", "{id}", "{name}", "{e}", "{e!s}", "{port}",
+    }
+
+    files_with_issues = []
+    total_specs = 0
+
+    for change_dir in sorted(changes_dir.iterdir()):
+        if not change_dir.is_dir() or change_dir == archive_dir:
+            continue
+
+        specs_dir = change_dir / "specs"
+        if not specs_dir.exists():
+            continue
+
+        for spec_file in specs_dir.rglob("spec.md"):
+            total_specs += 1
+            content = spec_file.read_text()
+            placeholders = set()
+            for match in placeholder_pattern.finditer(content):
+                value = match.group(0)
+                if value not in false_positive_patterns:
+                    placeholders.add(value)
+
+            if placeholders:
+                rel_path = spec_file.relative_to(PROJECT_ROOT)
+                files_with_issues.append((rel_path, sorted(placeholders)))
+
+    if files_with_issues:
+        for path, placeholders in files_with_issues:
+            failed(f"Unfilled placeholders in {path}: {', '.join(placeholders[:5])}")
+            if len(placeholders) > 5:
+                info(f"  ... and {len(placeholders) - 5} more")
+    elif total_specs > 0:
+        passed(f"All {total_specs} active spec files have no unfilled placeholders")
+    else:
+        info("No active OpenSpec changes with spec files found")
+
+
+# =========================================================================
 # Main
 # =========================================================================
 
@@ -795,7 +884,7 @@ def main():
     parser = argparse.ArgumentParser(description="Template verification suite")
     parser.add_argument(
         "--check",
-        choices=["routes", "contract", "pages", "icons", "registry", "localhost", "builds", "avatar"],
+        choices=["routes", "contract", "pages", "icons", "registry", "localhost", "builds", "avatar", "symlinks", "placeholders"],
         help="Run a single check",
     )
     parser.add_argument(
@@ -817,6 +906,8 @@ def main():
         "localhost": check_localhost,
         "builds": check_builds,
         "avatar": check_avatar_colors,
+        "symlinks": check_symlinks,
+        "placeholders": check_openspec_placeholders,
     }
 
     if args.check:

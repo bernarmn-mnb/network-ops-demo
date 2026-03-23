@@ -804,6 +804,14 @@ cmd_session() {
         echo -e "  Browser Tools:  ${DIM}Not configured${NC}"
     fi
 
+    # OpenSpec CLI (optional — for spec-driven demo builds)
+    if command -v openspec &>/dev/null; then
+        local os_version=$(openspec --version 2>/dev/null || echo "unknown")
+        echo -e "  OpenSpec CLI:   ${GREEN}✅ Installed${NC} ${DIM}(${os_version})${NC}"
+    elif [ -d "openspec/templates" ]; then
+        echo -e "  OpenSpec CLI:   ${YELLOW}⚠️  Not installed${NC} — run: npm i -g @fission-ai/openspec"
+    fi
+
     echo ""
 
     # --- Servers ---

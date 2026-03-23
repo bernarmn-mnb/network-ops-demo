@@ -78,22 +78,105 @@ This project uses a shared knowledge base at `./hive-mind` (git submodule).
 
 ## Session Architecture
 
-Demo builds should be split across multiple sessions to prevent context exhaustion and corner-cutting.
+Demo builds use a three-phase flow. The demo-starter is a **component library with worked examples**, not a fixed template to tweak. Demos span a complexity spectrum from config-only to design-from-scratch.
 
 ### Session 1: Planning
 - Coaching conversation (Opening -> Ideation/Discovery -> Strategy -> UX Design)
-- Create beads epic and tasks with acceptance criteria from `docs/templates/BEADS_UI_TASKS.md`
-- Save `DEMO_PLAN.md`
-- **Strongly recommend ending the session here** (see `docs/prompts/WELCOME_PROMPT.md` → Session boundary)
+- **`/opsx:propose`**: creates OpenSpec proposal (replaces DEMO_PLAN.md), auto-inventories the component library, produces gap analysis in design.md, creates capability specs, and derives tasks
+- Bridge tasks to beads: `./scripts/openspec-to-beads.sh <change-name> --epic <epic-id>`
+- **Strongly recommend ending the session here** for context headroom
 
-### Session 2+: Execution
-- Agent reads `DEMO_PLAN.md`, runs `bd ready`
-- Works through beads tasks one at a time, updating status and writing close reasons
-- Each task has acceptance criteria that define "done" — no marking complete without meeting them
+### Session 2+: Build
+- Agent reads OpenSpec specs as PRIMARY input (not beads checklists)
+- Reads `design.md` gap analysis to understand: Reuse / Modify / Build New / Not Needed
+- Runs `bd ready` to pick next unblocked task
+- For each task: implements against spec scenarios, verifies via browser, marks complete
+- Generates `demoTracks.ts` from golden path specs (agent reads spec metadata, writes TypeScript)
 - Child agents (via Task tool) can work on independent tasks in parallel
 
+### UAT Pass
+- **`/opsx:verify`**: runs golden path end-to-end browser tests + design review
+- Produces structured pass/fail report with screenshot evidence
+- Auto-fixes minor issues (prompt wording, config), flags scope changes for SA review
+- Can be a separate session or final phase of build session
+
 ### Why This Matters
-A single session that does coaching + branding + page building + agent setup + verification will exhaust context and start cutting corners — skipping fallback chains, guessing values, forgetting quality gates. Splitting sessions keeps each execution task focused with full context headroom.
+Splitting sessions keeps each phase focused. OpenSpec preserves the qualitative UX vision from coaching as formal specs that the build agent must satisfy — preventing the "change the index and colors" shortcut.
+
+---
+
+## Spec-Driven Development with OpenSpec
+
+OpenSpec adds a specification layer that preserves qualitative UX vision from coaching as formal, verifiable requirements.
+
+### How It Works
+
+| Artifact | Purpose | Location |
+|----------|---------|----------|
+| `proposal.md` | Coaching output: persona, wow moments, journey, capabilities (replaces DEMO_PLAN.md) | `openspec/changes/<name>/` |
+| `design.md` | Auto-inventory gap analysis: Reuse / Modify / Build New / Not Needed | `openspec/changes/<name>/` |
+| `specs/<capability>/spec.md` | Qualitative experience requirements with GIVEN/WHEN/THEN scenarios | `openspec/changes/<name>/specs/` |
+| `tasks.md` | Implementation checklist derived from gap analysis (not generic templates) | `openspec/changes/<name>/` |
+| `verify-report.md` | UAT results with pass/fail per scenario and screenshot evidence | `openspec/changes/<name>/` |
+
+### Role Separation
+
+| Layer | Tool | Owns |
+|-------|------|------|
+| **What the experience must be** | OpenSpec specs | Qualitative requirements, design decisions, golden path scenarios |
+| **Tracking execution status** | Beads | Issue status, dependencies, progress, close reasons |
+
+### Cursor Slash Commands
+
+```
+/opsx:explore   — Think through ideas, investigate the codebase (read-only)
+/opsx:propose   — Coaching output + auto-inventory + gap analysis + specs + tasks
+/opsx:apply     — Implement tasks against spec scenarios
+/opsx:verify    — UAT golden path tests + design review (post-build)
+/opsx:archive   — Archive completed change, merge specs into living docs
+```
+
+### Spec Templates
+
+Reusable templates in `openspec/templates/specs/` — copy and fill placeholders per demo:
+
+| Template | Purpose | Required? |
+|----------|---------|-----------|
+| `demo-experience` | Quality contract: domain authenticity, production feel, no template artifacts | Always |
+| `search-page` | Search config, facets, result display, empty states | If search UI needed |
+| `custom-page` | Domain-specific page: layout, interactions, content, imagery | Per custom page |
+| `agent-persona` | Chat identity, domain knowledge, conversation flow | Per agent |
+| `branding` | Brand extraction, theme, cross-page consistency | If customer branding |
+| `golden-paths` | End-to-end UAT scenarios + demoTracks.ts generation source | Always |
+| `data-architecture` | Multi-index, multi-agent, custom backend routes | If complex architecture |
+
+### Gap Analysis in design.md
+
+The `/opsx:propose` command auto-inventories the component library (reads `docs/COMPONENT_REGISTRY.md`, scans pages/hooks/routes) and produces a gap analysis:
+
+- **Reuse** — config-only changes (point to different index, set brand colours)
+- **Modify** — extend existing components (add badge to SearchResultCard)
+- **Build New** — components/pages/agents that don't exist in the template
+- **Not Needed** — template features to hide from this demo
+
+This makes effort distribution visible and prevents config-only work on complex demos.
+
+### Golden Paths and Demo Guide Generation
+
+Golden path specs serve two purposes:
+1. **UAT test scenarios** — verified by `/opsx:verify`
+2. **demoTracks.ts source** — the build agent reads structured metadata (Navigation, Steps, Talking Points) to generate the demo guide
+
+Each scenario includes: `**Navigation:**` (becomes a demo pill), `**Steps:**` (becomes steps[]), `**Talking points:**` (becomes talkingPoints[]), `**Expected outcome:**` (UAT only, not in demo guide).
+
+### Bridge to Beads
+
+```bash
+./scripts/openspec-to-beads.sh <change-name> --dry-run    # Preview
+./scripts/openspec-to-beads.sh <change-name> --epic <id>   # Create issues
+```
+
+Beads tasks are lightweight: they reference spec files for acceptance criteria instead of embedding 15 checkboxes.
 
 ---
 
