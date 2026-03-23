@@ -40,6 +40,12 @@ class Settings:
         _config("WORKFLOWS_API_KEY", default="") or _secret("ADMIN_API_KEY")
     )
 
+    # Agent Builder management API Key (needs agentBuilder:manageTools Kibana privilege).
+    # For create/update/delete of agents and tools. Falls back to ADMIN_API_KEY from .secrets.
+    AGENT_MANAGEMENT_API_KEY: str = (
+        _config("AGENT_MANAGEMENT_API_KEY", default="") or _secret("ADMIN_API_KEY")
+    )
+
     # Monitoring Cluster Configuration
     MONITORING_ELASTICSEARCH_URL: str = _config(
         "MONITORING_ELASTICSEARCH_URL", default=""
