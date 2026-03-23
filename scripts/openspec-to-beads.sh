@@ -41,20 +41,45 @@ echo "Converting OpenSpec tasks from: $TASKS_FILE"
 [[ "$DRY_RUN" == "true" ]] && echo "(dry run — no beads will be created)"
 echo ""
 
-# Build a list of available spec files for reference
-spec_files=""
+# Build a list of available spec directory names for matching
+spec_dirs=()
 if [[ -d "$SPECS_DIR" ]]; then
-  spec_files=$(find "$SPECS_DIR" -name "spec.md" -type f 2>/dev/null | sort)
+  for dir in "$SPECS_DIR"/*/; do
+    [[ -f "${dir}spec.md" ]] && spec_dirs+=("$(basename "$dir")")
+  done
 fi
 
 current_group=""
+current_group_spec=""
 task_ids=()
 task_count=0
+
+# Try to match a spec directory from text (group header or task description)
+find_spec_from_text() {
+  local text="$1"
+  local text_lower
+  text_lower=$(echo "$text" | tr '[:upper:]' '[:lower:]')
+
+  for spec_name in "${spec_dirs[@]}"; do
+    local words
+    words=$(echo "$spec_name" | tr '-' ' ')
+    if echo "$text_lower" | grep -qi "$words"; then
+      echo "$spec_name"
+      return
+    fi
+    if echo "$text_lower" | grep -qi "$spec_name"; then
+      echo "$spec_name"
+      return
+    fi
+  done
+  echo ""
+}
 
 while IFS= read -r line; do
   # Match group headers: ## 1. Group Name
   if [[ "$line" =~ ^##\ [0-9]+\.\ (.+) ]]; then
     current_group="${BASH_REMATCH[1]}"
+    current_group_spec=$(find_spec_from_text "$current_group")
     continue
   fi
 
@@ -65,15 +90,19 @@ while IFS= read -r line; do
     title="[${current_group}] ${task_desc}"
     task_count=$((task_count + 1))
 
-    # Find relevant spec references from task description
+    # Find relevant spec: first check task description, then fall back to group header match
+    task_spec=$(find_spec_from_text "$task_desc")
+    matched_spec="${task_spec:-$current_group_spec}"
+
+    # Build acceptance criteria from matched spec
     acceptance="Implement per OpenSpec specs in ${CHANGE_DIR}/specs/"
-    if echo "$task_desc" | grep -qi "search"; then
-      [[ -f "${SPECS_DIR}/search-page/spec.md" ]] && acceptance="Satisfies scenarios in ${SPECS_DIR}/search-page/spec.md"
-    elif echo "$task_desc" | grep -qi "brand"; then
-      [[ -f "${SPECS_DIR}/branding/spec.md" ]] && acceptance="Satisfies scenarios in ${SPECS_DIR}/branding/spec.md"
-    elif echo "$task_desc" | grep -qi "agent\|chat\|persona"; then
-      [[ -f "${SPECS_DIR}/agent-persona/spec.md" ]] && acceptance="Satisfies scenarios in ${SPECS_DIR}/agent-persona/spec.md"
-    elif echo "$task_desc" | grep -qi "demo.*track\|golden.*path\|demo.*guide"; then
+
+    if [[ -n "$matched_spec" ]] && [[ -f "${SPECS_DIR}/${matched_spec}/spec.md" ]]; then
+      acceptance="Satisfies scenarios in ${SPECS_DIR}/${matched_spec}/spec.md"
+    fi
+
+    # Override with more specific matches for well-known patterns
+    if echo "$task_desc" | grep -qi "demo.*track\|golden.*path\|demo.*guide"; then
       [[ -f "${SPECS_DIR}/golden-paths/spec.md" ]] && acceptance="Generate from ${SPECS_DIR}/golden-paths/spec.md"
     elif echo "$task_desc" | grep -qi "verify\|UAT\|test"; then
       acceptance="Run /opsx:verify against all specs in ${SPECS_DIR}/"
