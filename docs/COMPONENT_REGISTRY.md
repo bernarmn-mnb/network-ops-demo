@@ -68,6 +68,7 @@
 
 | Component | Path | Status | Notes |
 |-----------|------|--------|-------|
+| Layout | `components/layout/Layout.tsx` | Production | Root layout wrapper with AppHeader, route outlet, and fixed header offset |
 | AppHeader | `components/layout/AppHeader.tsx` | Production | Main nav with brand switcher and theme toggle |
 | AppHeaderSimple | `components/layout/AppHeaderSimple.tsx` | Production | Simplified header variant |
 | ThemeToggle | `components/layout/ThemeToggle.tsx` | Production | Light/dark mode toggle |
@@ -187,6 +188,7 @@
 | Workflows | `routes/workflows.py` | `/api/workflows` | Working | Proxy to Kibana Workflows Management API |
 | Profiles | `routes/profiles.py` | `/api/profiles` | Working | Demo persona API with hot-reload |
 | Visual Search | `routes/visual_search.py` | `/api/visual-search` | Working | Jina CLIP v2 text/image kNN search |
+| Agent Management | `routes/agent_management.py` | `/api/agent` | Production | CRUD proxy for Agent Builder agents and tools |
 | Agno Demo | `routes/agno_demo.py` | `/api/agno` | Experimental | Agno framework POC |
 
 ## Backend Libraries

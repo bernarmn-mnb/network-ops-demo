@@ -1,0 +1,53 @@
+schema: spec-driven
+
+context: |
+  # elastic-demo-starter
+
+  A reusable template for building Elastic-powered demo applications.
+  Each clone is customised per customer demo with domain-specific data,
+  branding, search configuration, and AI agent personas.
+
+  ## Tech Stack
+  - Frontend: Vite + React 18 + EUI 110 + TypeScript
+  - Backend: Python 3.11+ FastAPI
+  - Styling: EUI components + Tailwind CSS (where EUI doesn't cover)
+  - Search: Elasticsearch via official elasticsearch-py client
+  - AI Agent: Elastic Agent Builder (SSE streaming via backend proxy)
+  - Observability: OpenTelemetry (browser SDK + FastAPI instrumentation)
+  - Deployment: Google Cloud Run with sidecar containers + IAP
+
+  ## Key Config Files
+  - frontend/src/config/searchConfig.ts — Search index, field mappings, facets
+  - frontend/src/config/demoConfig.ts — Navigation, demo title, visible pages
+  - frontend/src/config/demoTracks.ts — Demo guide scenarios, talking points
+  - frontend/src/config/demoPrompts.ts — Suggested chat/search prompts
+  - backend/.env — Elasticsearch URL, API key, search index, agent ID
+  - frontend/src/branding/{brand}Theme.ts — Brand themes
+
+  ## Architecture Conventions
+  - Every FastAPI route in its own file under backend/app/routes/
+  - Frontend pages in frontend/src/pages/, one component per file
+  - Routes registered in frontend/src/App.tsx inside <Route element={<Layout />}>
+  - All EUI icons must be registered in frontend/src/iconCache.ts
+  - Use CSS variables for theme-dependent colours, never hardcode hex
+  - Backend proxy routes keep API keys secure; never call Kibana from frontend
+
+  ## Composable Hooks
+  - useAgentChat — SSE streaming chat state for Agent Builder
+  - useSearchSimple — Search with filters, pagination, aggregations
+  - useA2AChat — Multi-agent orchestration
+
+  ## Naming Conventions
+  - Frontend components: PascalCase (SearchPageSimple.tsx)
+  - Backend routes: snake_case (search.py, branding.py)
+  - Config files: camelCase (searchConfig.ts, demoConfig.ts)
+  - OpenSpec changes: kebab-case (add-search-page, configure-branding)
+
+rules:
+  proposal:
+    - Use openspec/templates/proposal-template.md as the structure
+    - Capture customer context, pain points, persona, user journey, demo script
+    - The Capabilities section drives which spec templates to use
+  tasks:
+    - Derive tasks from the gap analysis in design.md, not from generic templates
+    - Reference spec files in acceptance criteria

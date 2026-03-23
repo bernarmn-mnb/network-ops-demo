@@ -382,8 +382,11 @@ else
             update_env "ELASTICSEARCH_URL" "$OOTB_ES"
             update_env "KIBANA_URL" "$OOTB_KB"
             update_env "ELASTIC_API_KEY" "$OOTB_KEY"
+            update_env "SEARCH_INDEX" "ootb-products"
+            update_env "AGENT_ID" "ootb-product-search"
 
             log_ok "Connected to OOTB shared cluster"
+            log_info "Default agent: ootb-product-search (change in backend/.env)"
         else
             log_warn "Could not fetch OOTB credentials (you may not have repo access)"
             log_info "Your AI assistant will help you configure credentials later"

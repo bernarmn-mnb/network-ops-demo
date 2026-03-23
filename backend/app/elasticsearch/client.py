@@ -6,7 +6,7 @@ Supports both Elastic Cloud (via Cloud ID) and direct URL connections.
 import logging
 from typing import Optional
 
-from elasticsearch import Elasticsearch
+from elasticsearch import AuthenticationException, AuthorizationException, Elasticsearch
 
 from ..config import settings
 
@@ -53,9 +53,12 @@ def get_es_client() -> Elasticsearch:
             "Either ELASTIC_CLOUD_ID or ELASTICSEARCH_URL must be configured"
         )
 
-    # Verify connection
-    info = _es_client.info()
-    logger.info(f"Connected to Elasticsearch cluster: {info['cluster_name']}")
+    # Verify connection (best-effort; restricted API keys may lack cluster:monitor)
+    try:
+        info = _es_client.info()
+        logger.info(f"Connected to Elasticsearch cluster: {info['cluster_name']}")
+    except (AuthenticationException, AuthorizationException) as e:
+        logger.warning(f"Could not verify ES connection (key may lack cluster:monitor privilege): {e}")
 
     return _es_client
 

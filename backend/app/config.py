@@ -53,7 +53,7 @@ class Settings:
     MONITORING_ELASTIC_API_KEY: str = _config("MONITORING_ELASTIC_API_KEY", default="")
 
     # Search Configuration
-    SEARCH_INDEX: str = _config("SEARCH_INDEX", default="products")
+    SEARCH_INDEX: str = _config("SEARCH_INDEX", default="ootb-products")
 
     # Visual Search (Jina CLIP v2 for text-to-image / image-to-image kNN)
     VISUAL_SEARCH_INDEX: str = _config("VISUAL_SEARCH_INDEX", default="products")
