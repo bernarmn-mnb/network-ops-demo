@@ -397,12 +397,60 @@ else
     fi
 fi
 
-# Telemetry credentials — fetched separately from OOTB since telemetry runs
-# from interactive_setup.py, not setup.sh. Ephemeral: only in memory, never on disk.
+# Telemetry credentials — ephemeral, only in memory, never written to disk.
 if [ "$HAS_GH" = true ]; then
-    export TELEMETRY_ENDPOINT=$(gh variable get TELEMETRY_ENDPOINT 2>/dev/null || true)
-    export TELEMETRY_API_KEY=$(gh variable get TELEMETRY_API_KEY 2>/dev/null || true)
+    TELEMETRY_ENDPOINT=$(gh variable get TELEMETRY_ENDPOINT 2>/dev/null || true)
+    TELEMETRY_API_KEY=$(gh variable get TELEMETRY_API_KEY 2>/dev/null || true)
 fi
+
+# Lightweight setup telemetry — opt-out via TELEMETRY_OPTOUT=1 or .no-telemetry file.
+# Sends: platform, arch, setup success, starter version, GitHub handle (if gh authenticated).
+send_setup_telemetry() {
+    if [ "${TELEMETRY_OPTOUT:-0}" = "1" ] || [ -f "$SCRIPT_DIR/.no-telemetry" ]; then
+        return 0
+    fi
+    if [ -z "$TELEMETRY_ENDPOINT" ] || [ -z "$TELEMETRY_API_KEY" ]; then
+        return 0
+    fi
+
+    local setup_ok="$1"
+    local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local os_name=$(uname -s | tr '[:upper:]' '[:lower:]')
+    local arch=$(uname -m | tr '[:upper:]' '[:lower:]')
+    local version=$(git describe --tags --always 2>/dev/null || echo "unknown")
+    local commit=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    local py_ver="${PY_VERSION:-unknown}"
+    local node_ver="${NODE_VERSION:-unknown}"
+    local gh_user=$(gh api user --jq '.login' 2>/dev/null || echo "")
+
+    local author_field=""
+    if [ -n "$gh_user" ]; then
+        author_field="\"github_handle\": \"${gh_user}\","
+    fi
+
+    local payload=$(cat <<EOJSON
+{
+  "@timestamp": "${ts}",
+  ${author_field}
+  "platform": "${os_name}",
+  "arch": "${arch}",
+  "setup_success": ${setup_ok},
+  "setup_mode": "silent",
+  "starter_version": "${version}",
+  "git_commit": "${commit}",
+  "python_version": "${py_ver}",
+  "node_version": "${node_ver}",
+  "source": "setup.sh"
+}
+EOJSON
+)
+
+    curl -s --max-time 5 \
+        -X POST "${TELEMETRY_ENDPOINT}/telemetry-setup/_doc" \
+        -H "Authorization: ApiKey ${TELEMETRY_API_KEY}" \
+        -H "Content-Type: application/json" \
+        -d "$payload" > /dev/null 2>&1 || true
+}
 
 # =============================================================================
 # Step 5: Start servers
@@ -584,6 +632,19 @@ echo -e "${DIM}  Backend:  http://localhost:${BACKEND_PORT}${NC}"
 echo -e "${DIM}  Logs:     ./dev logs-snapshot${NC}"
 echo -e "${DIM}  Stop:     ./dev stop${NC}"
 echo ""
+
+# =============================================================================
+# Anonymous setup telemetry (opt-out)
+# =============================================================================
+
+SETUP_SUCCESS=true
+[ ${#ERRORS[@]} -gt 0 ] && SETUP_SUCCESS=false
+
+if [ "${TELEMETRY_OPTOUT:-0}" != "1" ] && [ ! -f "$SCRIPT_DIR/.no-telemetry" ] && [ -n "$TELEMETRY_ENDPOINT" ] && [ -n "$TELEMETRY_API_KEY" ]; then
+    echo -e "${DIM}  Anonymous setup telemetry sent (platform, arch, success — no PII).${NC}"
+    echo -e "${DIM}  Opt out: export TELEMETRY_OPTOUT=1  or  touch .no-telemetry${NC}"
+    send_setup_telemetry "$SETUP_SUCCESS"
+fi
 
 # Create setup-complete marker
 cat > .setup-complete << MARKER

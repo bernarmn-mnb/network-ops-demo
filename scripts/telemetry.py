@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
-Setup Telemetry Module
+Setup Telemetry Module (interactive_setup.py path)
 
-Sends anonymous usage telemetry to help improve the elastic-demo-starter.
-All telemetry is opt-in with clear disclosure of what's collected.
+Rich telemetry for the optional interactive setup wizard. This module is
+NOT used by the default onboarding flow — setup.sh has its own lightweight
+curl-based telemetry that sends anonymously with opt-out.
+
+This module adds: feature list, use case description, and optional contact
+info (with explicit consent). It is only called from interactive_setup.py.
 
 Credentials (TELEMETRY_ENDPOINT, TELEMETRY_API_KEY) are provided via
 environment variables, fetched from GitHub repo variables during setup.
