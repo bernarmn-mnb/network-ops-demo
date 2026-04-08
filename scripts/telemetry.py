@@ -2,11 +2,12 @@
 """
 Setup Telemetry Module
 
-Sends anonymous usage telemetry to help improve the elastic-agent-starter.
+Sends anonymous usage telemetry to help improve the elastic-demo-starter.
 All telemetry is opt-in with clear disclosure of what's collected.
 
-The API key embedded here is WRITE-ONLY - it can only create documents
-in the telemetry index. It cannot read, update, or delete any data.
+Credentials (TELEMETRY_ENDPOINT, TELEMETRY_API_KEY) are provided via
+environment variables, fetched from GitHub repo variables during setup.
+If credentials are missing, telemetry silently does nothing.
 """
 
 import json
@@ -26,21 +27,45 @@ logger = logging.getLogger(__name__)
 # Telemetry Configuration
 # =============================================================================
 
-# Elasticsearch Serverless endpoint for telemetry
-TELEMETRY_ENDPOINT = "https://demo-starter-telemetry-cc02ab.es.us-central1.gcp.elastic.cloud:443"
+# Credentials are fetched from GitHub repo variables during setup.sh and passed
+# as environment variables. This keeps the write-only API key out of source
+# control (Aikido / secret-scanner safe).
+#
+# Required env vars (set by setup.sh via `gh variable get`):
+#   TELEMETRY_ENDPOINT  — Elasticsearch Serverless URL
+#   TELEMETRY_API_KEY   — Write-only key (create docs in telemetry-setup only)
+#
+# If either is missing, telemetry silently skips — no error, no blocking.
+
 TELEMETRY_INDEX = "telemetry-setup"
 
-# Write-only API key - can ONLY create documents, cannot read/update/delete
-#
-# Security notes:
-# - This key has minimal permissions: create documents in telemetry-setup only
-# - Cannot read, update, delete, or access any other indices
-# - The repository is internal to Elastic (@elastic/elastic-demo-starter)
-# - Endpoint is an Elastic Cloud Serverless project with built-in protections
-# - If key rotation is needed, update here and redeploy
-# - No rate limiting is applied; abuse is mitigated by key restrictions
-#
-TELEMETRY_API_KEY = "MF9JbkFKd0ItMDRpT0pYdmQ0RXY6ekdweDM1a21McTlpNk5kTmtCUklQQQ=="
+_credential_cache: Dict[str, str] = {}
+
+
+def _get_credential(env_var: str) -> str:
+    """Read from env var, falling back to GitHub repo variable via `gh` CLI.
+
+    Results are cached so the subprocess only runs once per credential.
+    Resolved lazily on first call — avoids blocking module import when env
+    vars are not set and `gh` CLI must be invoked.
+    """
+    if env_var in _credential_cache:
+        return _credential_cache[env_var]
+
+    value = os.getenv(env_var, "")
+    if not value:
+        try:
+            result = subprocess.run(
+                ["gh", "variable", "get", env_var],
+                capture_output=True, text=True, timeout=10,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                value = result.stdout.strip()
+        except (subprocess.SubprocessError, FileNotFoundError, OSError):
+            pass
+
+    _credential_cache[env_var] = value
+    return value
 
 # Timeout for telemetry requests (don't block setup if network is slow)
 TELEMETRY_TIMEOUT_SECONDS = 10
@@ -237,10 +262,17 @@ def send_telemetry(event: TelemetryEvent) -> bool:
     Returns True if successful, False otherwise.
     Failures are silent - telemetry should never block setup.
     """
+    endpoint = _get_credential("TELEMETRY_ENDPOINT")
+    api_key = _get_credential("TELEMETRY_API_KEY")
+
+    if not endpoint or not api_key:
+        logger.debug("Telemetry skipped: credentials not available (set TELEMETRY_ENDPOINT and TELEMETRY_API_KEY)")
+        return False
+
     try:
-        url = f"{TELEMETRY_ENDPOINT}/{TELEMETRY_INDEX}/_doc"
+        url = f"{endpoint}/{TELEMETRY_INDEX}/_doc"
         headers = {
-            "Authorization": f"ApiKey {TELEMETRY_API_KEY}",
+            "Authorization": f"ApiKey {api_key}",
             "Content-Type": "application/json",
         }
         data = json.dumps(event.to_dict()).encode("utf-8")
@@ -339,10 +371,26 @@ def collect_and_send_telemetry(
 # =============================================================================
 
 if __name__ == "__main__":
-    # Quick test when run directly
+    import sys
+
     print("Testing telemetry module...")
     print()
 
+    _ep = _get_credential("TELEMETRY_ENDPOINT")
+    _ak = _get_credential("TELEMETRY_API_KEY")
+
+    print(f"Endpoint: {'configured' if _ep else 'NOT SET'}")
+    print(f"API Key:  {'configured' if _ak else 'NOT SET'}")
+
+    if not _ep or not _ak:
+        print()
+        print("Credentials not available. Set env vars or ensure `gh` CLI")
+        print("has access to the elastic/elastic-demo-starter repo variables.")
+        print("  export TELEMETRY_ENDPOINT=<url>")
+        print("  export TELEMETRY_API_KEY=<key>")
+        sys.exit(1)
+
+    print()
     contact = detect_contact_info()
     print(f"Detected contact info:")
     print(f"  Email:  {contact.email}")
@@ -360,6 +408,6 @@ if __name__ == "__main__":
     )
 
     if success:
-        print("✅ Telemetry sent successfully!")
+        print("Telemetry sent successfully!")
     else:
-        print("❌ Telemetry failed (check network/endpoint)")
+        print("Telemetry failed (check network/endpoint)")

@@ -397,6 +397,13 @@ else
     fi
 fi
 
+# Telemetry credentials — fetched separately from OOTB since telemetry runs
+# from interactive_setup.py, not setup.sh. Ephemeral: only in memory, never on disk.
+if [ "$HAS_GH" = true ]; then
+    export TELEMETRY_ENDPOINT=$(gh variable get TELEMETRY_ENDPOINT 2>/dev/null || true)
+    export TELEMETRY_API_KEY=$(gh variable get TELEMETRY_API_KEY 2>/dev/null || true)
+fi
+
 # =============================================================================
 # Step 5: Start servers
 # =============================================================================
