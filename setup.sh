@@ -404,7 +404,7 @@ if [ "$HAS_GH" = true ]; then
 fi
 
 # Lightweight setup telemetry — opt-out via TELEMETRY_OPTOUT=1 or .no-telemetry file.
-# Sends: platform, arch, setup success, starter version. No PII, no contact info.
+# Sends: platform, arch, setup success, starter version, GitHub handle (if gh authenticated).
 send_setup_telemetry() {
     if [ "${TELEMETRY_OPTOUT:-0}" = "1" ] || [ -f "$SCRIPT_DIR/.no-telemetry" ]; then
         return 0
@@ -421,10 +421,17 @@ send_setup_telemetry() {
     local commit=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
     local py_ver="${PY_VERSION:-unknown}"
     local node_ver="${NODE_VERSION:-unknown}"
+    local gh_user=$(gh api user --jq '.login' 2>/dev/null || echo "")
+
+    local author_field=""
+    if [ -n "$gh_user" ]; then
+        author_field="\"github_handle\": \"${gh_user}\","
+    fi
 
     local payload=$(cat <<EOJSON
 {
   "@timestamp": "${ts}",
+  ${author_field}
   "platform": "${os_name}",
   "arch": "${arch}",
   "setup_success": ${setup_ok},
