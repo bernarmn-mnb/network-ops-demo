@@ -80,6 +80,7 @@ backend/data/*
 !.beads/.gitignore
 
 .setup-complete
+.no-telemetry
 project-context.yaml
 
 # Secrets (admin keys, credentials)
