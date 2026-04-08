@@ -640,7 +640,7 @@ echo ""
 SETUP_SUCCESS=true
 [ ${#ERRORS[@]} -gt 0 ] && SETUP_SUCCESS=false
 
-if [ "${TELEMETRY_OPTOUT:-0}" != "1" ] && [ ! -f "$SCRIPT_DIR/.no-telemetry" ]; then
+if [ "${TELEMETRY_OPTOUT:-0}" != "1" ] && [ ! -f "$SCRIPT_DIR/.no-telemetry" ] && [ -n "$TELEMETRY_ENDPOINT" ] && [ -n "$TELEMETRY_API_KEY" ]; then
     echo -e "${DIM}  Anonymous setup telemetry sent (platform, arch, success — no PII).${NC}"
     echo -e "${DIM}  Opt out: export TELEMETRY_OPTOUT=1  or  touch .no-telemetry${NC}"
     send_setup_telemetry "$SETUP_SUCCESS"
