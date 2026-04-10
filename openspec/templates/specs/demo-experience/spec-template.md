@@ -22,16 +22,25 @@ ALL visible text, categories, filter labels, result descriptions, chat messages,
 - **WHEN** viewing search results, chat responses, or any data-driven content
 - **THEN** the data reflects realistic {domain} entities with plausible values, not generic "Product 1" or "Item A" placeholders
 
-### Requirement: Production-quality content density
+### Requirement: Production-quality content density [MANDATORY — do not omit or weaken]
 Pages SHALL have comparable information density to production {domain} applications — real categories, realistic data volumes, appropriate imagery, and domain-specific workflows. Sparse template-default layouts with excessive whitespace are not acceptable.
 
 #### Scenario: Information density comparison
 - **WHEN** comparing the demo to a production {domain} application
 - **THEN** the demo pages contain comparable density of: navigation options, data fields per result, filter categories, and visual elements
 
-#### Scenario: Imagery and visual richness
+#### Scenario: Imagery and visual richness [MANDATORY — do not omit or weaken]
 - **WHEN** viewing any page in the demo
-- **THEN** domain-relevant imagery is present (hero banners, card thumbnails, profile images, or illustrations) — pages are not text-only wireframes
+- **THEN** every page has at least 3 domain-relevant visual elements from: hero banners, card thumbnails, profile images, photo strips, illustrated icons, or data visualizations — pages are never text-only wireframes
+- **AND** at least one page uses a full-width hero image (via `HeroSection` component or equivalent)
+- **AND** images use Unsplash with `?w=&h=&fit=crop` parameters or local assets in `public/images/` — no broken image URLs
+
+#### Scenario: Visual hierarchy and spacing
+- **WHEN** viewing any page in the demo
+- **THEN** a clear visual hierarchy is present: page hero or header (largest), section headings (medium), body content (standard)
+- **AND** sections have consistent vertical padding (minimum 24px between major sections)
+- **AND** content respects a max-width container (1200px) with appropriate side margins on wide screens
+- **AND** card grids use consistent gap spacing (16-24px)
 
 ### Requirement: Chat agent persona visible in UI
 If the demo includes an AI chat agent, the agent's persona (name, avatar, greeting) MUST be visible in the chat interface — not the template default.
@@ -44,12 +53,13 @@ If the demo includes an AI chat agent, the agent's persona (name, avatar, greeti
 - **WHEN** configuring the chat agent
 - **THEN** the agent's display name, avatar URL, and greeting text are set via `demoConfig.ts` or a dedicated `chatConfig.ts` — not hardcoded in the ChatPage component
 
-### Requirement: Dark mode and theme consistency
+### Requirement: Dark mode and theme consistency [MANDATORY — do not omit or weaken]
 The demo SHALL render correctly in both light and dark EUI themes with consistent branding across all pages.
 
 #### Scenario: Theme toggle preserves quality
 - **WHEN** toggling between light and dark mode on every page
 - **THEN** all text remains readable, borders are visible, branding colours adapt appropriately, and no hardcoded hex values cause contrast issues
+- **AND** all backgrounds use CSS variables (`var(--euiColorEmptyShade)`, `var(--brand-background)`, etc.) — no hardcoded `#ffffff` or `#000000`
 
 #### Scenario: Cross-page branding consistency
 - **WHEN** navigating between any two pages in the demo

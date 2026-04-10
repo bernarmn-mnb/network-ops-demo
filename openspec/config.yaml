@@ -48,6 +48,14 @@ rules:
     - Use openspec/templates/proposal-template.md as the structure
     - Capture customer context, pain points, persona, user journey, demo script
     - The Capabilities section drives which spec templates to use
+  specs:
+    - The demo-experience spec MUST retain all [MANDATORY] scenarios from the template — imagery/density/dark-mode requirements must not be weakened or omitted during coaching
+    - Custom page specs MUST fill in all Visual Design fields (hero, image strategy, grid pattern, min images, empty state) — do not leave as placeholders
+    - Golden path scenarios MUST include Visual check fields describing specific visual elements to verify
+    - Every spec should reference docs/PAGE_RECIPES.md for standard layout patterns and docs/DEMO_PAGE_VISUAL_DESIGN.md for CSS variable and spacing guidance
   tasks:
     - Derive tasks from the gap analysis in design.md, not from generic templates
     - Reference spec files in acceptance criteria
+    - Every task list MUST include a "Visual scaffold" task as the first page-building task — create page skeleton with HeroSection, placeholder sections, and domain imagery, then verify in browser before adding functionality
+    - Every task list MUST place "Generate demoTracks.ts" as the LAST task — demo tracks must be written after all pages are built and visually verified, not before
+    - Every task list MUST include a "Visual polish and verification" task after core functionality — verify each page in browser for imagery, spacing, dark mode, and empty states

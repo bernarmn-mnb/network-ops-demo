@@ -15,7 +15,14 @@
   - **Navigation:** becomes a demo pill ({ label, path, icon })
   - **Steps:** becomes steps[] in the demo track scenario
   - **Talking points:** becomes talkingPoints[] in the demo track scenario
+  - **Visual check:** verifiable visual elements — verified during UAT, NOT in demoTracks
   - **Expected outcome:** stays in spec only — used for UAT verification, NOT in demoTracks
+  
+  IMPORTANT BUILD SEQUENCE:
+  - Golden path specs are written during proposal (before code exists)
+  - demoTracks.ts MUST be generated AFTER all pages are built and visually verified
+  - The "Generate demo tracks" task should be the LAST task in the build task list
+  - This prevents tracks from referencing UI that doesn't exist or works differently than expected
   
   Fill in {placeholders} during the coaching/proposal phase.
 -->
@@ -40,6 +47,10 @@ The demo SHALL support a complete {journey_description} without errors.
 - "{what_to_say_about_this_step}"
 - "{key_insight_for_audience}"
 
+**Visual check:**
+- {visual_element_to_verify_1 — e.g. "Hero image visible with brand overlay", "Result cards show sentiment badges in color"}
+- {visual_element_to_verify_2 — e.g. "Facet sidebar shows count badges", "Chat avatar uses custom persona image"}
+
 **Expected outcome:**
 - **THEN** {testable_condition_1}
 - **THEN** {testable_condition_2}
@@ -53,6 +64,9 @@ The demo SHALL support a complete {journey_description} without errors.
 
 **Talking points:**
 - "{what_to_say_about_this_step}"
+
+**Visual check:**
+- {visual_element_to_verify — e.g. "Page displays domain imagery, not placeholder text"}
 
 **Expected outcome:**
 - **THEN** {testable_condition_1}
@@ -82,6 +96,9 @@ The demo SHALL support a complete {journey_description_2} without errors.
 
 **Talking points:**
 - "{what_to_say}"
+
+**Visual check:**
+- {visual_element_to_verify — e.g. "Page renders with full visual polish, not wireframe layout"}
 
 **Expected outcome:**
 - **THEN** {testable_condition}

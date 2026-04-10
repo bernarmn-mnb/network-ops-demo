@@ -3,9 +3,28 @@
 ### Requirement: Page layout and interaction model
 The {page_name} page SHALL use a {layout_description} layout that enables {primary_interaction}.
 
+<!--
+  VISUAL DESIGN DECISIONS — fill in each field during coaching.
+  These drive the build agent's implementation. Do not leave them as placeholders.
+-->
+
+**Visual design:**
+- Hero: {hero_type — one of: full-width image hero, compact section header, gradient banner, none}
+- Hero image: {hero_image_source — e.g. "Unsplash: modern newsroom", "customer logo on brand gradient", "none"}
+- Image strategy: {image_approach — one of: Unsplash with domain category, customer-provided assets, data-driven image_url field, icon-based}
+- Grid pattern: {grid_pattern — one of: 3-column card grid, 2-column split (content + chat), list view, dashboard panels, tabbed sections}
+- Imagery count: {min_images — minimum number of visual elements on the page, recommend 3+}
+- Empty state: {empty_state_design — describe what appears when no data: image/icon, message, suggested action}
+
 #### Scenario: Layout renders as designed
 - **WHEN** the {page_name} page loads
-- **THEN** the layout matches the design: {specific_layout_details}
+- **THEN** the page displays: {hero_type} at the top, followed by {grid_pattern} containing domain content
+- **AND** the visual design decisions above are reflected in the implementation
+
+#### Scenario: Visual hierarchy is clear
+- **WHEN** viewing the {page_name} page
+- **THEN** the visual weight follows: hero/page header (largest) > section headings > card content > metadata
+- **AND** at least {min_images} domain-relevant visual elements are present
 
 #### Scenario: Primary interaction works
 - **WHEN** a user performs the primary action ({primary_action})
@@ -31,7 +50,9 @@ All visible text, categories, actions, and imagery on the {page_name} page MUST 
 
 #### Scenario: Domain-relevant imagery
 - **WHEN** viewing the page
-- **THEN** at least one domain-relevant image is present (hero banner, card thumbnails, icons, or illustrations related to {domain})
+- **THEN** at least {min_images} domain-relevant images are present, using the {image_approach} strategy defined in the visual design section
+- **AND** images have appropriate sizing (heroes: full-width, cards: consistent aspect ratio, thumbnails: 80-120px)
+- **AND** all images include `loading="lazy"` for performance
 
 ### Requirement: Empty states and loading
 Empty and loading states SHALL have visual weight and domain-appropriate messaging.

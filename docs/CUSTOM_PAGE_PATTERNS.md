@@ -389,7 +389,10 @@ If your page uses EUI icons not already in the cache, add them to `frontend/src/
 
 ## Styling Guidelines
 
-> See also: `CLAUDE.md` → **Visual Quality Standards** for mandatory rules during page construction.
+> See also:
+> - `CLAUDE.md` → **Visual Quality Standards** for mandatory rules during page construction
+> - `docs/PAGE_RECIPES.md` → Standard layout patterns with component imports and spacing values
+> - `docs/DEMO_PAGE_VISUAL_DESIGN.md` → CSS variable reference, typography scale, spacing system, dark mode rules
 
 ### Use brand CSS variables
 
@@ -433,17 +436,21 @@ EUI handles responsive layout, dark mode, accessibility, and theme consistency. 
 
 Demo pages should include domain-relevant imagery from the start — not as a polish step. Text-only pages feel like wireframes. Apply these during initial construction:
 
-**Hero banners**: Use a background photo with a semi-transparent brand-coloured overlay for section headers. This adds visual depth with minimal effort.
+**Start with a recipe**: Read `docs/PAGE_RECIPES.md` and pick the closest layout recipe before writing code. Build the visual scaffold first (hero + sections + placeholder images), then wire data.
 
-**Photo strips**: Small circular images in a horizontal row work well for categories, inspiration, or featured items. Make them clickable to trigger chat prompts.
+**Hero banners**: Use `HeroSection` from `components/common/HeroSection.tsx` — it handles background photos, brand overlays, and gradient fallbacks automatically. Every landing page and dashboard should have one.
 
-**Card imagery**: Result cards, product cards, and recipe cards should include thumbnail images wherever the data provides image URLs.
+**Feature grids**: Use `FeatureGrid` from `components/common/FeatureGrid.tsx` for responsive card layouts with images. Handles 3-col/2-col/1-col responsively with image error fallbacks built in.
 
-**Empty states**: Every empty list, grid, or accordion should show a relevant image and actionable text (e.g. "Ask the assistant to build your shopping list"). Never leave bare "no data" text.
+**Photo strips**: Use `PhotoStrip` from `components/common/PhotoStrip.tsx` — small circular images in a horizontal row work well for categories, inspiration, or featured items.
+
+**Card imagery**: Result cards, product cards, and recipe cards should include thumbnail images wherever the data provides image URLs. Minimum 2 visual elements per card (see `docs/DEMO_PAGE_VISUAL_DESIGN.md`).
+
+**Empty states**: Use `BrandedEmptyState` from `components/common/BrandedEmptyState.tsx` — supports icon, image, and photo strip modes with actionable text. Never leave bare "no data" text.
 
 **Chat persona**: Give the assistant a name, custom avatar (SVG or image via `assistantAvatarUrl` prop), and a greeting that references the demo persona by name. This makes the chat feel purpose-built rather than generic.
 
-**Image sources**: Use Unsplash with URL parameters for server-side cropping: `https://images.unsplash.com/photo-{ID}?w={width}&h={height}&fit=crop`. Always add `loading="lazy"` to decorative images. For demos shown to live audiences, consider downloading key images to `public/images/` to avoid Unsplash rate limits.
+**Image sources**: Use `unsplash()` and `STOCK_IMAGES` from `utils/images.ts` (14 domain categories, 70+ curated photos). Use `getStockCategory(domain)` to find the best category for your demo. Always add `loading="lazy"` to decorative images. For demos shown to live audiences, download key images to `public/images/` to avoid Unsplash rate limits.
 
 ### Fixed header layout
 

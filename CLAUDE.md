@@ -229,21 +229,34 @@ Beads tasks are lightweight: they reference spec files for acceptance criteria i
 
 ### During Page Construction
 
-1. **Dark mode first**: Use CSS variables (`var(--euiTextColor)`, `var(--euiColorLightShade)`, etc.) for all text, backgrounds, and borders. Never hardcode hex colours for theme-dependent surfaces. See `hive-mind/patterns/eui/DEMO_PAGE_VISUAL_DESIGN.md`.
-2. **Imagery over text**: Every custom page should include domain-relevant photography or illustration — hero banners, circular photo strips, card thumbnails, or profile images. Text-only pages feel like wireframes. Use Unsplash with `?w=X&h=Y&fit=crop` parameters and `loading="lazy"`.
-3. **Empty states matter**: Empty lists, grids, and accordions should have a visual element (small image or icon) and actionable text that tells the user what to do next. Never leave bare "no data" text.
-4. **Brand the chat**: If the page has a chat interface, give the assistant a custom name, avatar, and personalised greeting that references the demo persona. Don't use the default sparkles icon.
-5. **Fixed header awareness**: The app header is `position: fixed` at 56px height. Any content below it needs explicit offset. Don't rely on EUI generating spacer divs — use `position: fixed` with calculated `top` values for full-viewport layouts.
+**Before writing any page code**, read:
+- `docs/PAGE_RECIPES.md` — pick the closest recipe for your page type
+- `docs/DEMO_PAGE_VISUAL_DESIGN.md` — CSS variables, typography scale, spacing system, image strategy
+- `docs/COMPONENT_REGISTRY.md` — know what components exist (especially `HeroSection`, `FeatureGrid`, `PhotoStrip`, `BrandedEmptyState`)
+
+**Build sequence**: visual scaffold first (hero + sections + images), then wire data, then polish. Never build logic-first and add visuals later.
+
+1. **Dark mode first**: Use CSS variables (`var(--euiTextColor)`, `var(--euiColorLightShade)`, etc.) for all text, backgrounds, and borders. Never hardcode hex colours for theme-dependent surfaces. See `docs/DEMO_PAGE_VISUAL_DESIGN.md`.
+2. **Imagery over text**: Every custom page must include at least 3 domain-relevant visual elements — hero banners, card thumbnails with images, photo strips, stat ribbons, or colored badges. Text-only pages feel like wireframes. Use `unsplash()` from `utils/images.ts` with `STOCK_IMAGES` categories (14 domains available), and `loading="lazy"` on all images. Use `getStockCategory(domain)` to find the best image category.
+3. **Use `FeatureGrid` for card layouts**: Instead of manually composing `EuiFlexGroup` + `EuiCard` for every page, use the `FeatureGrid` component for responsive card grids with images and click actions.
+4. **Empty states matter**: Empty lists, grids, and accordions should use `BrandedEmptyState` with a visual element (image, icon, or photo strip) and actionable text. Never leave bare "no data" text.
+5. **Brand the chat**: If the page has a chat interface, give the assistant a custom name, avatar, and personalised greeting that references the demo persona. Don't use the default sparkles icon.
+6. **Fixed header awareness**: The app header is `position: fixed` at 56px height. Any content below it needs explicit offset. Don't rely on EUI generating spacer divs — use `position: fixed` with calculated `top` values for full-viewport layouts.
 
 ### Visual Verification (MANDATORY)
 
 **After building or significantly modifying any page, you MUST visually verify it before marking the work as complete.**
 
+**Reference docs** (read before building pages):
+- `docs/PAGE_RECIPES.md` — standard layout patterns and visual checklist
+- `docs/DEMO_PAGE_VISUAL_DESIGN.md` — CSS variables, typography, spacing, dark mode rules
+
 If browser tools are available (Playwright MCP or Claude-in-Chrome):
 1. Navigate to the page in the browser
 2. Take a screenshot and review it — check for: hidden content, broken layout, missing images, dark mode issues
-3. If the page has interactive sections (accordions, toggles, scrolling), test those and screenshot the results
-4. Toggle dark/light mode and verify both render correctly
+3. Verify minimum visual elements: hero/header present, at least 3 images or visual elements per page, no text-only wireframe sections
+4. If the page has interactive sections (accordions, toggles, scrolling), test those and screenshot the results
+5. Toggle dark/light mode and verify both render correctly
 
 If browser tools are NOT available:
 1. Run `npx tsc --noEmit` to verify TypeScript compiles

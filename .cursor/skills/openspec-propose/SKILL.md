@@ -102,6 +102,13 @@ After completing all artifacts, summarize:
   - Do NOT copy `<context>`, `<rules>`, `<project_context>` blocks into the artifact
   - These guide what you write, but should never appear in the output
 
+**Visual Quality in Specs**
+
+- **demo-experience spec**: MUST retain ALL scenarios marked `[MANDATORY]` in the template — imagery/density/dark-mode requirements must not be weakened or omitted during coaching. These are the primary defence against wireframe-quality output.
+- **custom-page specs**: MUST fill in all Visual Design fields (hero, image strategy, grid pattern, min images, empty state) — do NOT leave as `{placeholders}`. Make concrete decisions during coaching.
+- **golden-paths specs**: MUST include `**Visual check:**` fields on every scenario describing specific visual elements to verify (e.g., "Hero image visible with brand overlay", "Result cards show sentiment badges in color").
+- **tasks artifact**: MUST include a "Visual scaffold" task as the FIRST page-building task, and "Generate demoTracks.ts" as the LAST task. See `openspec/config.yaml` rules.
+
 **Guardrails**
 - Create ALL artifacts needed for implementation (as defined by schema's `apply.requires`)
 - Always read dependency artifacts before creating a new one

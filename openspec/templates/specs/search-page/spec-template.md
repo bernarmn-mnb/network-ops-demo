@@ -23,11 +23,12 @@ The system SHALL map domain text fields to `fields.search` with boost values tha
 - **THEN** `fields.search` contains at least 2 entries mapped to real index fields with explicit boost values
 
 ### Requirement: Domain-relevant result display
-Each result card SHALL show: a meaningful title, a descriptive summary, and at least one visual element (image thumbnail or keyword badges). All content MUST use {domain}-specific terminology.
+Each result card SHALL show: a meaningful title, a descriptive summary, and visual elements that convey information density. All content MUST use {domain}-specific terminology.
 
 #### Scenario: Complete result cards
 - **WHEN** search results are displayed
-- **THEN** each card shows a non-empty title, a non-empty description, and at least one of: thumbnail image or keyword badges
+- **THEN** each card shows a non-empty title, a non-empty description, and at least TWO of: thumbnail image, keyword badges, colored status/sentiment indicator, metadata line (date, source, author), or rating/score display
+- **AND** cards have consistent visual weight — no card is just a title and bare text
 
 #### Scenario: Domain-specific result content
 - **WHEN** viewing any result card

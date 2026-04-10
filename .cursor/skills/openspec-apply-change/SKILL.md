@@ -73,6 +73,21 @@ Implement tasks from an OpenSpec change.
    - Mark task complete in the tasks file: `- [ ]` → `- [x]`
    - Continue to next task
 
+   **Build sequence for page tasks:**
+   - Read `docs/PAGE_RECIPES.md` before building any page — pick the closest recipe
+   - Read `docs/DEMO_PAGE_VISUAL_DESIGN.md` for CSS variables, spacing, and image strategy
+   - Build visual scaffold FIRST: HeroSection + section containers + domain imagery. Verify in browser before adding logic.
+   - Wire data and functionality second
+   - Generate `demoTracks.ts` LAST — only after all pages are built and visually verified
+
+   **Visual verification after page tasks:**
+   After completing any task that creates or significantly modifies a page:
+   - Navigate to the page in the browser (use browser tools if available)
+   - Check: hero/header image visible, at least 3 visual elements, no blank sections
+   - Toggle dark/light mode and verify both render correctly
+   - If visual quality is lacking (wireframe feel, sparse imagery), fix before marking complete
+   - Reference: `docs/PAGE_RECIPES.md` visual checklist
+
    **Pause if:**
    - Task is unclear → ask for clarification
    - Implementation reveals a design issue → suggest updating artifacts

@@ -113,4 +113,82 @@ export const STOCK_IMAGES: Record<string, StockImage[]> = {
     { id: '1472851294608-062f824d29cc', credit: 'Heidi Fin' },
     { id: '1555529771-835f59fc5efe', credit: 'Artificial Photography' },
   ],
+  news: [
+    { id: '1504711434969-e33886168d6c', credit: 'Roman Kraft' },
+    { id: '1495020689067-958852a7765e', credit: 'Markus Winkler' },
+    { id: '1585829365295-ab7cd400c167', credit: 'AbsolutVision' },
+    { id: '1557992260-ec58e38d363c', credit: 'Nijwam Swargiary' },
+    { id: '1478104718532-efe04cc3ff7f', credit: 'Bank Phrom' },
+  ],
+  healthcare: [
+    { id: '1576091160399-112ba8d25d1d', credit: 'National Cancer Institute' },
+    { id: '1538108149393-fbbd81895907', credit: 'Online Marketing' },
+    { id: '1559757175-5700dde675bc', credit: 'Hush Naidoo Jade Photography' },
+    { id: '1551190822-a9ce113d0d15', credit: 'Marcelo Leal' },
+    { id: '1584982751601-97dcc096659c', credit: 'National Cancer Institute' },
+  ],
+  finance: [
+    { id: '1611974789855-9c2a0a7236a3', credit: 'Maxim Hopman' },
+    { id: '1454165804606-c3d57bc86b40', credit: 'Austin Distel' },
+    { id: '1579621970563-9ae2e01d090a', credit: 'Markus Winkler' },
+    { id: '1526304640581-d334cdbbf45e', credit: 'Scott Graham' },
+  ],
+  government: [
+    { id: '1555848962-6e79363ec58f', credit: 'Jomar Thomas' },
+    { id: '1523292562811-8fa7962a78c8', credit: 'Paul Weaver' },
+    { id: '1569025690938-a00729c9e1f9', credit: 'Joshua Sukoff' },
+    { id: '1541872703-a56853b9de5a', credit: 'Mana5280' },
+  ],
+  industrial: [
+    { id: '1565043666747-69f6646db940', credit: 'Crystal Kwok' },
+    { id: '1581091226825-a6a2a5aee158', credit: 'Science in HD' },
+    { id: '1504328345606-18bbc8c9d7d1', credit: 'Patrick Hendry' },
+    { id: '1537462715879-360eeb61a0ad', credit: 'Daniel Barnes' },
+    { id: '1513828583688-c52600e749c1', credit: 'Ant Rozetsky' },
+  ],
+  education: [
+    { id: '1523050854058-8df90110c9f1', credit: 'Vasily Koloda' },
+    { id: '1503676260728-1c00da094a0b', credit: 'Tim Mossholder' },
+    { id: '1427504494785-3a9ca7044f45', credit: 'Aaron Burden' },
+    { id: '1524995997946-a1c2e315a42f', credit: 'Element5 Digital' },
+    { id: '1497633762265-9d179a990aa6', credit: 'Alexis Brown' },
+  ],
+}
+
+/** Keyword-to-category mapping, compiled once at module load. */
+const DOMAIN_MAP: [RegExp, string][] = [
+  [/news|media|journal|press|broadcast/, 'news'],
+  [/health|medical|hospital|pharma|clinical/, 'healthcare'],
+  [/financ|bank|invest|insur|trading/, 'finance'],
+  [/govern|public.?sector|policy|civic|municipal/, 'government'],
+  [/industr|manufactur|engineer|energy|mining|oil|field.?service/, 'industrial'],
+  [/educ|school|university|learning|academic|campus/, 'education'],
+  [/food|grocer|restaurant|recipe|meal|culinary/, 'food'],
+  [/fashion|cloth|apparel|style|wear/, 'fashion'],
+  [/home|furniture|interior|decor|real.?estate/, 'home'],
+  [/tech|software|saas|cyber|digital|comput/, 'tech'],
+  [/retail|shop|store|ecommerce|commerce|product/, 'retail'],
+  [/office|enterprise|corporate|business|consult/, 'office'],
+  [/nature|environment|climate|sustain|outdoor/, 'nature'],
+  [/lifestyle|travel|wellness|fitness/, 'lifestyle'],
+]
+
+/**
+ * Find the best-matching stock image category for a domain.
+ *
+ * Uses simple keyword matching — pass the domain name or description
+ * and get back the closest STOCK_IMAGES category key.
+ * Returns `'tech'` as a sensible default when no keywords match.
+ *
+ * @param domain - Domain name or description (e.g. "media intelligence", "hospitals")
+ * @returns A key from {@link STOCK_IMAGES} (e.g. "news", "healthcare"), defaulting to "tech"
+ */
+export function getStockCategory(domain: string): string {
+  const lower = domain.toLowerCase()
+
+  for (const [pattern, category] of DOMAIN_MAP) {
+    if (pattern.test(lower)) return category
+  }
+
+  return 'tech'
 }

@@ -94,6 +94,7 @@
 | Component | Path | Status | Notes |
 |-----------|------|--------|-------|
 | BrandedEmptyState | `components/common/BrandedEmptyState.tsx` | Production | Brand-themed empty state with icon/image/photo strip, falls back to EUI when no brand vars |
+| FeatureGrid | `components/common/FeatureGrid.tsx` | Working | Responsive card grid (3-col desktop, 2-col tablet, 1-col mobile) with images, icons, and click actions |
 | HeroSection | `components/common/HeroSection.tsx` | Working | Reusable hero banner with background image, overlay, and centered content; auto-reads brand heroImage |
 | PhotoStrip | `components/common/PhotoStrip.tsx` | Working | Horizontal row of images with shape variants (circle, rounded, square) for visual richness |
 | SplitChatContentLayout | `components/common/SplitChatContentLayout.tsx` | Working | Fixed-viewport two-column layout for chat + tabbed content panels with internal scrolling |
@@ -166,7 +167,7 @@
 
 | Utility | Path | Status | Notes |
 |---------|------|--------|-------|
-| unsplash / STOCK_IMAGES | `utils/images.ts` | Working | Unsplash URL builder and curated stock image registry (35 photos, 8 categories) |
+| unsplash / STOCK_IMAGES / getStockCategory | `utils/images.ts` | Working | Unsplash URL builder, curated stock image registry (70+ photos, 14 categories), and domain-to-category matcher |
 
 ## Backend Routes
 
