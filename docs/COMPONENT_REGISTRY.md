@@ -42,7 +42,8 @@
 | ReasoningSteps | `components/chat/ReasoningSteps.tsx` | Production | Collapsible reasoning step display |
 | ToolCallCard | `components/chat/ToolCallCard.tsx` | Production | Expandable tool call params/results |
 | SuggestionChips | `components/chat/SuggestionChips.tsx` | Production | Quick prompt suggestion buttons |
-| AgentEmptyState | `components/chat/AgentEmptyState.tsx` | Production | Empty state before first message |
+| AgentEmptyState | `components/chat/AgentEmptyState.tsx` | Production | Config-injectable empty state — pass `AgentEmptyStateConfig` to set logo, name, tagline, and suggestion cards |
+| SourceLinksPanel | `components/chat/SourceLinksPanel.tsx` | Production | Right-panel list of source URLs emitted by the `browser_show_source_links` browser tool |
 | QuickPrompts | `components/chat/QuickPrompts.tsx` | Production | Demo prompt pills |
 | FloatingChatWidget | `components/chat/FloatingChatWidget.tsx` | Production | Floating chat overlay with FAB toggle |
 
@@ -100,6 +101,7 @@
 | SplitChatContentLayout | `components/common/SplitChatContentLayout.tsx` | Working | Fixed-viewport two-column layout for chat + tabbed content panels with internal scrolling |
 | TabBar | `components/common/TabBar.tsx` | Working | Custom tab bar with equal-width buttons, icons, badge counts, and content dot indicators |
 | TaskSwitcher | `components/common/TaskSwitcher.tsx` | Working | Horizontal pill bar for top-level mode switching with icon and accent colour per task |
+| JsonTreeView | `components/common/JsonTreeView.tsx` | Working | Collapsible JSON tree viewer with expand/collapse all, syntax colouring via EUI theme tokens |
 
 ### Search (`components/search/`)
 
@@ -107,6 +109,9 @@
 |-----------|------|--------|-------|
 | SearchResultCard | `components/search/SearchResultCard.tsx` | Production | Product card with generic JSON fallback |
 | ProductDetailModal | `components/search/ProductDetailModal.tsx` | Working | Generic product detail modal for search and visual search |
+| QueryTuningPanel | `components/search/QueryTuningPanel.tsx` | Working | Field boost sliders + hybrid semantic-weight slider; re-runs search on every change |
+| QueryInspector | `components/search/QueryInspector.tsx` | Working | Collapsible ES query debugger with tree/raw views and copy-to-clipboard; modal full-screen mode |
+| SearchSummaryBanner | `components/search/SearchSummaryBanner.tsx` | Working | Streaming AI summary banner above results (Google AI Overview style); calls `/api/search/summarise` |
 
 ### Voice (`components/voice/`)
 
@@ -169,12 +174,23 @@
 |---------|------|--------|-------|
 | unsplash / STOCK_IMAGES / getStockCategory | `utils/images.ts` | Working | Unsplash URL builder, curated stock image registry (70+ photos, 14 categories), and domain-to-category matcher |
 
+## Frontend Config
+
+| Module | Path | Status | Notes |
+|--------|------|--------|-------|
+| AgentPersona types + DEFAULT_PERSONA | `config/agentPersona.ts` | Production | `AgentPersona`, `AgentMode`, `AvatarStyle` types + generic default persona; demos extend with their own persona object |
+| Browser tool types | `types/browserTools.ts` | Production | `BrowserApiTool`, `BrowserToolInvocation`, `BrowserToolHandlerMap`, `DispatchOptions` — the full browser tools type system |
+| Chat browser tools | `config/chatBrowserTools.ts` | Production | `SHOW_SOURCE_LINKS_BROWSER_TOOL` definition, payload parser, and context strings for the Sources panel pattern |
+
+> **Browser tools framework docs**: `docs/BROWSER_TOOLS.md` — quick start, tool ID normalisation, error containment, and debug console API.
+
 ## Backend Routes
 
 | Route | Path | Prefix | Status | Notes |
 |-------|------|--------|--------|-------|
 | Agent Builder | `routes/agent.py` | `/api/agent` | Production | SSE proxy to Agent Builder |
-| Search | `routes/search_simple.py` | `/api/search` | Production | Simplified search with OTel |
+| Search | `routes/search_simple.py` | `/api/search` | Production | Simplified search with OTel, RetrieverBuilder, field boosts, hybrid balance, query inspector |
+| AI Search Summary | `routes/search_summary.py` | `/api/search/summarise` | Working | Streaming AI summary banner over top-N results via Agent Builder converse/async |
 | Search (Full) | `routes/search.py` | `/api/search` | Production | Full-featured search with ranking |
 | Search Fields | `routes/search_fields.py` | `/api/search/fields` | Production | Field config inspection |
 | Analytics | `routes/analytics.py` | `/api/analytics` | Production | ES|QL search analytics |
@@ -197,7 +213,7 @@
 | Module | Path | Status | Notes |
 |--------|------|--------|-------|
 | ES Client | `elasticsearch/client.py` | Production | Lazy singleton with connection pooling |
-| Retriever Builder | `elasticsearch/retriever_builder.py` | Production | Composable retriever patterns |
+| Retriever Builder | `elasticsearch/retriever_builder.py` | Production | Composable retriever patterns: keyword, semantic, hybrid (RRF + linear), query rules, reranking, collapse/variants |
 | Query Builder | `elasticsearch/query_builder.py` | Production | Complex ES query DSL builder |
 | Search Logic | `elasticsearch/search.py` | Production | Search orchestration (query + retriever + scoring) |
 | Models | `elasticsearch/models.py` | Production | Pydantic models for ES documents |

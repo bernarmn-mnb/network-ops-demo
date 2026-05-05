@@ -144,7 +144,7 @@ export function SearchPageSimple({
         } else {
           setFieldsError(`Failed to load field config: ${response.status}`);
         }
-      } catch (err) {
+      } catch {
         setFieldsError('Could not connect to backend');
       } finally {
         setFieldsLoading(false);

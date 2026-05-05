@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 
 from ..config import settings
 from ..elasticsearch.client import get_es_client
+from ..elasticsearch.retriever_builder import RetrieverBuilder
 from ..otel import get_tracer
 
 logger = logging.getLogger(__name__)
@@ -40,14 +41,20 @@ router = APIRouter(prefix="/api/search", tags=["search"])
 # The frontend searchConfig.ts is the source of truth for domain-specific facets.
 SEARCH_CONFIG = {
     "index": settings.SEARCH_INDEX,
-    # Fields to search with boosts (if they exist)
-    "searchFields": ["title^3", "description", "brand^2", "category^1.5", "name^3"],
-    # Default facet fields — used as fallback when the frontend doesn't send facets.
+    # Default search fields — override in searchConfig.ts for your index
+    "searchFields": ["title^3", "description^2", "body^1", "content^1"],
+    # Default facet fields — override with your index's facetable fields
     "facets": [
         {"field": "category", "label": "Category", "size": 20},
-        {"field": "brand", "label": "Brand", "size": 20},
+        {"field": "type", "label": "Type", "size": 15},
     ],
+    # Page size advertised to the frontend via /api/search/config.
+    # Must match SearchRequest.page_size default (below) so the UI and the
+    # API agree on a default page size.
     "pageSize": 12,
+    # Query Rules ruleset ID — set to a non-empty string to enable query rules.
+    # Leave as "" to disable (no query rules applied by default).
+    "queryRulesRulesetId": "",
 }
 
 
@@ -78,9 +85,24 @@ class SearchRequest(BaseModel):
     )
     search_type: str = Field(
         default="auto",
-        description="Search strategy: 'auto' (detect semantic fields and use hybrid), "
-        "'keyword' (BM25 text matching only), 'semantic' (semantic_text fields only). "
-        "Custom values are passed through for demo-specific handling.",
+        description="Search strategy: 'keyword' (BM25 only), 'semantic' (semantic_text only), "
+        "'auto' or 'hybrid' (BM25 + semantic_text should clauses when semantic fields exist). "
+        "Other values fall through to the hybrid branch when semantic_text is present.",
+    )
+    field_boosts: dict[str, float] | None = Field(
+        default=None,
+        description="Per-field boost overrides, e.g. {'title': 3.0, 'description': 1.0}. "
+        "When provided, uses multi_match instead of simple_query_string so boosts are visible.",
+    )
+    semantic_weight: float | None = Field(
+        default=None,
+        ge=0,
+        le=100,
+        description="Hybrid mode balance: 0=all keyword, 100=all semantic, 50=equal (default).",
+    )
+    include_query: bool = Field(
+        default=False,
+        description="When true, include the raw ES query body in the response (for query inspector).",
     )
 
 
@@ -111,6 +133,7 @@ class SearchResponse(BaseModel):
     took_ms: int
     query: str
     aggregations: dict[str, list[AggregationBucket]]
+    es_query: dict[str, Any] | None = None
 
 
 # =============================================================================
@@ -146,10 +169,11 @@ async def search(request: SearchRequest) -> SearchResponse:
             span.set_attribute("search.index", index)
 
             # Build query
-            query_body = _build_robust_query(es, index, request)
+            query_body = _build_retriever_query(es, index, request)
 
             # Execute search
             response = es.search(index=index, body=query_body)
+            es_query_out = query_body if request.include_query else None
 
             # Extract results
             took_ms = response.get("took", 0)
@@ -197,6 +221,7 @@ async def search(request: SearchRequest) -> SearchResponse:
                 took_ms=took_ms,
                 query=request.query,
                 aggregations=aggs,
+                es_query=es_query_out,
             )
 
         except Exception as e:
@@ -302,121 +327,111 @@ def _extract_semantic_fields(properties: dict, prefix: str, result: list):
             _extract_semantic_fields(field_info["properties"], f"{full_name}.", result)
 
 
-def _build_robust_query(es, index: str, request: SearchRequest) -> dict:
-    """Build Elasticsearch query with robust defaults.
+def _build_search_fields(field_boosts: dict[str, float] | None) -> list[str]:
+    """Return ES field^boost strings from overrides or the config defaults."""
+    if field_boosts:
+        fields = [f"{f}^{b}" for f, b in field_boosts.items() if b > 0]
+        return fields if fields else SEARCH_CONFIG["searchFields"]
+    return SEARCH_CONFIG["searchFields"]
 
-    Strategy varies by search_type:
-    - 'auto': Check for semantic_text fields, use hybrid if found, else keyword
-    - 'keyword': Always use BM25/text matching, skip semantic field detection
-    - 'semantic': Only use semantic queries on semantic_text fields
-    - Any other value: treated as 'auto' (demos can intercept before this)
+
+def _build_filter_clauses(filters: dict | None) -> list[dict]:
+    """Convert the request filters dict into ES filter clause list."""
+    if not filters:
+        return []
+    clauses = []
+    for field, value in filters.items():
+        if value is not None:
+            clauses.append({"terms": {field: value}} if isinstance(value, list) else {"term": {field: value}})
+    return clauses
+
+
+def _build_retriever_query(es, index: str, request: SearchRequest) -> dict:
+    """Build an Elasticsearch query using the RetrieverBuilder.
+
+    Modes:
+    - keyword: standard retriever with multi_match (field boosts applied)
+    - semantic: standard retriever with semantic query on semantic_text field
+    - hybrid / auto: linear retriever combining text + semantic retrievers;
+      semantic_weight (0-100) maps to 0.0-1.0 linear weights
     """
-    bool_query: dict[str, Any] = {}
     search_type = request.search_type or "auto"
+    search_fields = _build_search_fields(request.field_boosts)
+    filter_clauses = _build_filter_clauses(request.filters)
 
-    if request.query and request.query.strip():
-        # Only look for semantic fields when needed
-        semantic_fields = _get_semantic_fields(es, index) if search_type != "keyword" else []
-        text_fields = _get_index_text_fields(es, index)
-
-        if search_type == "semantic":
-            if not semantic_fields:
-                logger.warning(f"search_type='semantic' but index '{index}' has no semantic_text fields — returning empty results")
-                bool_query["must"] = [{"match_none": {}}]
-            else:
-                should_clauses = []
-                for sf in semantic_fields:
-                    should_clauses.append({
-                        "semantic": {"field": sf, "query": request.query}
-                    })
-                bool_query["must"] = [
-                    {"bool": {"should": should_clauses, "minimum_should_match": 1}}
-                ]
-        elif search_type == "keyword" or not semantic_fields:
-            # Pure keyword — BM25 on text fields
-            if text_fields:
-                bool_query["must"] = [
-                    {
-                        "simple_query_string": {
-                            "query": request.query,
-                            "fields": ["*"],
-                            "default_operator": "AND",
-                            "analyze_wildcard": True,
-                        }
-                    }
-                ]
-            else:
-                bool_query["must"] = [
-                    {
-                        "multi_match": {
-                            "query": request.query,
-                            "fields": SEARCH_CONFIG["searchFields"],
-                            "type": "best_fields",
-                            "fuzziness": "AUTO",
-                        }
-                    }
-                ]
-        else:
-            # auto mode with semantic fields available: hybrid (semantic + keyword)
-            should_clauses = []
-            for sf in semantic_fields:
-                should_clauses.append({
-                    "semantic": {"field": sf, "query": request.query}
-                })
-            should_clauses.append({
-                "simple_query_string": {
-                    "query": request.query,
-                    "fields": ["*"],
-                    "default_operator": "AND",
-                    "analyze_wildcard": True,
-                }
-            })
-            bool_query["must"] = [
-                {"bool": {"should": should_clauses, "minimum_should_match": 1}}
-            ]
-    else:
-        bool_query["must"] = [{"match_all": {}}]
-
-    # Filters
-    if request.filters:
-        filter_clauses = []
-        for field, value in request.filters.items():
-            if value is not None:
-                filter_clauses.append({"term": {field: value}})
-        if filter_clauses:
-            bool_query["filter"] = filter_clauses
-
-    # Build complete query
-    query_body = {
-        "query": {"bool": bool_query},
-        "from": (request.page - 1) * request.page_size,
-        "size": request.page_size,
-        "highlight": {
-            "fields": {"*": {}},
-            "pre_tags": ["<mark>"],
-            "post_tags": ["</mark>"],
-        },
-    }
-
-    # Aggregations for facets — use frontend-provided facets if present, else server defaults
+    # Resolve facets for aggregations
     facet_config = request.facets if request.facets else SEARCH_CONFIG["facets"]
-    query_body["aggs"] = {}
-    for facet in facet_config:
-        field_name = facet.field if hasattr(facet, "field") else facet["field"]
-        size = facet.size if hasattr(facet, "size") else facet.get("size", 20)
-        query_body["aggs"][field_name] = {
-            "terms": {
-                "field": field_name,
-                "size": size,
-                "missing": "__missing__",  # Handle missing values gracefully
-            }
-        }
+    facets_for_builder = [
+        {"field": (f.field if hasattr(f, "field") else f["field"]),
+         "size": (f.size if hasattr(f, "size") else f.get("size", 20))}
+        for f in facet_config
+    ]
 
-    # Sort
-    if request.sort_by and request.sort_by != "_score":
-        query_body["sort"] = [
-            {request.sort_by: {"order": request.sort_dir, "unmapped_type": "keyword"}},
-            {"_score": "desc"},
-        ]
+    builder = RetrieverBuilder({
+        "index": index,
+        "searchFields": search_fields,
+        "facets": facets_for_builder,
+    })
 
-    return query_body
+    ruleset_id = SEARCH_CONFIG.get("queryRulesRulesetId")
+    ruleset_ids = [ruleset_id] if (ruleset_id and request.query and request.query.strip()) else None
+
+    # Discover semantic fields only when needed
+    semantic_fields = _get_semantic_fields(es, index) if search_type != "keyword" else []
+    # Use the first semantic_text field found (mapping insertion order)
+    semantic_field = semantic_fields[0] if semantic_fields else None
+
+    # Semantic weight: UI is 0-100, builder expects 0.0-1.0
+    raw_weight = (request.semantic_weight if request.semantic_weight is not None else 50.0) / 100.0
+    text_weight = round(1.0 - raw_weight, 3)
+    sem_weight = round(raw_weight, 3)
+
+    if search_type == "semantic":
+        if not semantic_field:
+            logger.warning(f"search_type='semantic' but no semantic_text fields found in '{index}'")
+            return {"query": {"match_none": {}}, "from": 0, "size": request.page_size}
+        # Pass the real query through so query rules (match_criteria.query_string)
+        # can still match in pure-semantic mode, but suppress the text retriever
+        # via disable_text_retriever so only the semantic retriever scores docs.
+        return builder.build(
+            query=request.query,
+            disable_text_retriever=True,
+            filters=filter_clauses,
+            page=request.page,
+            page_size=request.page_size,
+            sort_by=request.sort_by,
+            sort_dir=request.sort_dir,
+            ruleset_ids=ruleset_ids,
+            semantic_config={"field": semantic_field, "query": request.query},
+        )
+
+    elif search_type in ("hybrid", "auto") and semantic_field:
+        return builder.build(
+            query=request.query,
+            filters=filter_clauses,
+            page=request.page,
+            page_size=request.page_size,
+            sort_by=request.sort_by,
+            sort_dir=request.sort_dir,
+            ruleset_ids=ruleset_ids,
+            semantic_config={"field": semantic_field, "query": request.query},
+            hybrid_config={
+                "semantic_weight": sem_weight,
+                "text_weight": text_weight,
+                "use_linear": True,
+            },
+        )
+
+    else:
+        # keyword mode (or hybrid with no semantic fields → degrade gracefully)
+        if search_type == "hybrid" and not semantic_field:
+            logger.warning(f"search_type='hybrid' but no semantic_text fields — falling back to keyword")
+        return builder.build(
+            query=request.query,
+            filters=filter_clauses,
+            page=request.page,
+            page_size=request.page_size,
+            sort_by=request.sort_by,
+            sort_dir=request.sort_dir,
+            ruleset_ids=ruleset_ids,
+        )

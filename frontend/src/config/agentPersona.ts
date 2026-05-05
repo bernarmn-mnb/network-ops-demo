@@ -45,7 +45,7 @@ export interface AgentMode {
   /** Context prefix injected into agent messages when this mode is active */
   contextPrefix: string
   /** Suggestion chips shown when this mode is active */
-  suggestions: { label: string; prompt: string }[]
+  suggestions: { label: string; prompt: string; icon?: string }[]
   /** Override agent ID — uses a dedicated Agent Builder agent for this mode */
   agentId?: string
 }
@@ -59,6 +59,8 @@ export interface AgentMode {
 export interface AgentPersona {
   name: string
   tagline: string
+  /** Chat input placeholder (domain-specific; avoids generic “Ask me anything”) */
+  inputPlaceholder?: string
   /** Fallback avatar initial-letter colour (hex) */
   avatarColor: string
   /** Avatar image URL (resolved from active avatar style) */
@@ -124,22 +126,27 @@ export function getTimeOfDayGreeting(): string {
 }
 
 /**
- * Build a personalised greeting for the agent.
+ * Build a personalised greeting string for the agent's empty state.
  *
- * @param persona - The active agent persona
- * @param firstName - User's first name, or null for guests
- * @param isGuest - Whether the user is an unauthenticated guest
+ * Generic across personas: composes a time-of-day prefix with the persona's
+ * name and tagline. Demos can override the entire greeting by passing a
+ * literal string to `ChatContainer`'s `greeting` prop.
+ *
+ * @param persona      Active agent persona
+ * @param firstName    User's first name, or null/undefined for guests
+ * @param isGuest      Whether the user is unauthenticated (uses neutral greeting)
  */
 export function buildPersonalisedGreeting(
   persona: AgentPersona,
-  firstName: string | null,
+  firstName: string | null | undefined,
   isGuest: boolean,
 ): string {
-  const tod = getTimeOfDayGreeting()
+  const tod = getTimeOfDayGreeting().toLowerCase()
+  const tagline = persona.tagline ? persona.tagline.toLowerCase() : 'your assistant'
 
   if (isGuest || !firstName) {
-    return `Good ${tod.toLowerCase()}! I'm ${persona.name}, ${persona.tagline.toLowerCase()}. How can I help you today?`
+    return `Good ${tod}! I'm ${persona.name}, ${tagline}. How can I help you today?`
   }
 
-  return `Good ${tod.toLowerCase()}, ${firstName}! I'm ${persona.name}, ${persona.tagline.toLowerCase()}. How can I help you today?`
+  return `Good ${tod}, ${firstName}! I'm ${persona.name}, ${tagline}. How can I help you today?`
 }

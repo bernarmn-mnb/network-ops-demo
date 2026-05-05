@@ -86,11 +86,15 @@ class RetrieverBuilder:
         ltr_config: dict | None = None,
         mmr_config: dict | None = None,
         hybrid_config: dict | None = None,
+        disable_text_retriever: bool = False,
     ) -> dict:
         """Build a complete retriever-based search query.
 
         Args:
-            query: Search query string
+            query: Search query string. Used for the text retriever AND for
+                query rule `match_criteria.query_string` matching. In pure
+                semantic mode, pass the user's query but set
+                `disable_text_retriever=True` so query rules still match.
             filters: List of filter clauses (ES bool filter format)
             page: Page number (1-indexed)
             page_size: Results per page
@@ -113,6 +117,11 @@ class RetrieverBuilder:
             hybrid_config: Hybrid search config for linear retriever (ES 8.18+):
                 {enabled: bool, semantic_weight: float (0-1), text_weight: float (0-1),
                  semantic_field: str, use_linear: bool (default True)}
+            disable_text_retriever: When True, no BM25/multi_match standard
+                retriever is added even if `query` is non-empty. Use this
+                for "semantic only" mode where you still want `query` to be
+                available for `match_criteria.query_string` query-rule
+                matching.
 
         Returns:
             Complete Elasticsearch query body with retriever structure
@@ -123,7 +132,9 @@ class RetrieverBuilder:
         retrievers = []
 
         # Text search retriever (standard)
-        if query and query.strip():
+        # Skipped when the caller explicitly opts out (e.g. "semantic only"
+        # mode that still needs `query` populated for query rules).
+        if query and query.strip() and not disable_text_retriever:
             text_retriever = self._build_text_retriever(
                 query, filters, feature_weights, user_preferences, session_context
             )
@@ -388,6 +399,9 @@ class RetrieverBuilder:
                 "type": "best_fields",
                 "fuzziness": "AUTO",
                 "prefix_length": 2,
+                # stop analyzer filters English stopwords (and, the, of…) at query time
+                # so they are neither matched nor highlighted; safe for non-English text
+                "analyzer": "stop",
                 "_name": "text_relevance",
             }
         }

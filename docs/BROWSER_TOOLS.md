@@ -21,15 +21,20 @@ Agent Builder → SSE stream → useAgentChat → onBrowserToolCall → dispatch
 
 ### 1. Define tool schemas
 
+Use **underscore form** for the wire `id` (this is what Kibana
+`converse/async` expects). The dispatcher normalises it to dotted form
+(`browser_show_results` → `browser.show_results`) for handler lookup.
+
 ```typescript
 // config/myDemoTools.ts
 import type { BrowserApiTool } from '../types/browserTools'
 
 export const MY_TOOLS: BrowserApiTool[] = [
   {
-    name: 'browser.show_results',
+    // Wire id — underscore form, sent to Agent Builder
+    id: 'browser_show_results',
     description: 'Display search results in the side panel',
-    parameters: {
+    schema: {
       type: 'object',
       properties: {
         query: { type: 'string', description: 'The search query' },
@@ -41,7 +46,13 @@ export const MY_TOOLS: BrowserApiTool[] = [
 ]
 ```
 
+> Do **not** add a `name` field — Kibana rejects it on
+> `browser_api_tools` items with `definition for this key is missing`.
+
 ### 2. Register handlers
+
+Handlers are keyed by **dotted form** — the dispatcher normalises whatever
+the agent sends (underscore, dotted, double-prefixed) before lookup.
 
 ```typescript
 // In your page component
@@ -49,6 +60,7 @@ import { dispatchBrowserTool } from '../config/browserToolDispatch'
 import type { BrowserToolHandlerMap, BrowserToolInvocation } from '../types/browserTools'
 
 const handlers: BrowserToolHandlerMap = {
+  // Handler key — dotted form, matches normaliser output
   'browser.show_results': (params) => {
     const { results } = params as { results: unknown[] }
     setSearchResults(results)

@@ -22,13 +22,34 @@
 // ---------------------------------------------------------------------------
 
 /**
- * A browser tool definition for the Agent Builder API.
- * Mirrors the JSON Schema format expected by the chat endpoint.
+ * A browser tool definition sent on the wire to Agent Builder
+ * (`browser_api_tools` array on the chat request).
+ *
+ * This type intentionally mirrors the exact shape Kibana
+ * `converse/async` expects:
+ *   - `id`          — stable tool id (required; underscore form, e.g.
+ *                     `browser_show_results`). Omitting it yields 400.
+ *   - `description` — natural-language description for the LLM.
+ *   - `schema`      — JSON Schema for tool arguments. Kibana names this
+ *                     field `schema` (NOT `parameters`).
+ *
+ * It deliberately does NOT include a `name` field. Serverless / Kibana
+ * rejects a string `name` on each item with
+ * `definition for this key is missing`. If you need a human-readable
+ * label for documentation or UI, attach it as a separate constant rather
+ * than embedding it on the wire payload.
+ *
+ * Tip: the dispatcher normalises ids from underscore to dotted form
+ * (`browser_show_results` -> `browser.show_results`) for handler lookup.
  */
 export interface BrowserApiTool {
-  name: string
+  /** Stable tool id — required by Agent Builder request validation. */
+  id: string
   description: string
-  parameters: {
+  /**
+   * JSON Schema for tool arguments (Kibana field name is `schema`, not `parameters`).
+   */
+  schema: {
     type: 'object'
     properties: Record<string, unknown>
     required?: string[]
