@@ -164,12 +164,20 @@ async def list_voices():
 
 @router.get("/health")
 async def voice_health():
-    """Check TTS service availability."""
+    """Check TTS service availability.
+
+    Returns a `reason` field on 503 so callers (e.g. ./dev session) can
+    distinguish "package not installed" from "credentials missing".
+    """
     try:
         get_tts()
         return {"status": "healthy", "provider": "google-cloud-tts"}
-    except HTTPException:
+    except HTTPException as exc:
         return JSONResponse(
             status_code=503,
-            content={"status": "unhealthy", "provider": "google-cloud-tts"},
+            content={
+                "status": "unhealthy",
+                "provider": "google-cloud-tts",
+                "reason": str(exc.detail),
+            },
         )

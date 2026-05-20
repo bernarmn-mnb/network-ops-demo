@@ -66,12 +66,17 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
+          # pytest lives in the PEP 735 [dependency-groups] dev section of
+          # pyproject.toml, not in requirements.txt (which is the runtime
+          # lockfile produced by `uv pip compile`). Install the dev tools
+          # explicitly so this step doesn't depend on the lockfile format.
+          pip install "pytest>=8.0.0" "pytest-asyncio>=0.24.0"
+
       - name: Check imports
         working-directory: backend
         run: |
           python -c "from app.main import app; print('✅ FastAPI app imports successfully')"
-      
+
       - name: Run tests
         working-directory: backend
         run: pytest -v

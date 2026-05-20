@@ -910,6 +910,20 @@ cmd_session() {
         else
             echo -e "  LLM Proxy:      ${DIM}Not configured${NC}"
         fi
+        # Voice / TTS — probe backend if running, otherwise show install hint
+        if [ "$backend_running" = true ]; then
+            local voice_health
+            voice_health=$(curl -s --max-time 3 "http://localhost:$actual_backend_port/api/voice/health" 2>/dev/null || true)
+            if echo "$voice_health" | grep -q '"healthy"'; then
+                echo -e "  Voice / TTS:    ${GREEN}✅ Google Cloud TTS healthy${NC}"
+            elif echo "$voice_health" | grep -q "not installed"; then
+                echo -e "  Voice / TTS:    ${YELLOW}google-cloud-texttospeech not installed${NC} ${DIM}(cd backend && uv sync --extra voice)${NC}"
+            elif [ -n "$voice_health" ]; then
+                echo -e "  Voice / TTS:    ${YELLOW}⚠️  Unhealthy${NC} ${DIM}(run: gcloud auth application-default login)${NC}"
+            else
+                echo -e "  Voice / TTS:    ${DIM}Status unknown${NC}"
+            fi
+        fi
     else
         echo -e "  ${RED}❌ backend/.env not found${NC}"
     fi

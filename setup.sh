@@ -291,17 +291,24 @@ echo -e "${BLUE}[3/6] Installing dependencies${NC}"
 # --- Backend (Python via uv) ---
 log_info "Backend dependencies (Python)..."
 if command -v uv &> /dev/null; then
-    (cd backend && uv sync > /dev/null 2>&1) && \
-        log_ok "Backend dependencies (uv sync)" || \
+    # Include the optional `voice` extra so Google Cloud TTS works out of the box
+    # (requires `gcloud auth application-default login` at runtime for credentials).
+    (cd backend && uv sync --extra voice > /dev/null 2>&1) && \
+        log_ok "Backend dependencies (uv sync --extra voice)" || \
         log_fail "Backend dependency install failed"
 
     # Keep requirements.txt in sync (used by CI and Dockerfiles)
-    log_info "Syncing requirements.txt from pyproject.toml..."
-    if (cd backend && uv pip compile pyproject.toml -o requirements.txt --quiet 2>/dev/null); then
+    # Export from uv.lock (NOT recompile from pyproject.toml) so the
+    # pinned versions match exactly what `uv sync` installs into the
+    # venv. Recompiling from pyproject can pick newer versions than
+    # the lock and cause "works locally, fails in Docker/CI" drift.
+    # Include `voice` extras so the deployed image has TTS support.
+    log_info "Syncing requirements.txt from uv.lock..."
+    if (cd backend && uv export --frozen --extra voice --no-dev --no-hashes --no-emit-project --quiet -o requirements.txt 2>/dev/null); then
         # Add auto-generated header
         TEMP_REQ=$(mktemp)
-        echo "# AUTO-GENERATED from pyproject.toml — do not edit manually." > "$TEMP_REQ"
-        echo "# To update: cd backend && uv pip compile pyproject.toml -o requirements.txt" >> "$TEMP_REQ"
+        echo "# AUTO-GENERATED from uv.lock — do not edit manually." > "$TEMP_REQ"
+        echo "# To update: cd backend && uv export --frozen --extra voice --no-dev --no-hashes --no-emit-project -o requirements.txt" >> "$TEMP_REQ"
         echo "" >> "$TEMP_REQ"
         cat backend/requirements.txt >> "$TEMP_REQ"
         mv "$TEMP_REQ" backend/requirements.txt
