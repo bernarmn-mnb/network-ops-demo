@@ -46,6 +46,14 @@ uv run --project backend python scripts/simulate_netcrawl.py
 
 **Demo URL**: http://localhost:3001
 
+**Kibana Dashboards** (open directly in a separate tab during the demo):
+
+| Dashboard | Link |
+|---|---|
+| NOC Overview | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/b12f7eb1-e40b-4c21-86b4-13849efa574a |
+| NetFlow Traffic Analysis | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/fd38bd9a-0100-47a6-aa53-e9fd9bb329d2 |
+| CDP/LLDP Topology | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/f3ebd0b7-5168-438c-a9f6-4e32c2213709 |
+
 ---
 
 ## Pre-Demo Checklist
@@ -55,6 +63,9 @@ Run these before opening the browser:
 - [ ] `./dev status` — both servers green
 - [ ] `curl -s http://localhost:8002/health` → `{"status":"ok","elasticsearch":"ok"}`
 - [ ] `curl -s http://localhost:8002/api/agent/health` → `{"status":"healthy","agent_id":"network-agent"}`
+- [ ] Open [NOC Overview dashboard](https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/b12f7eb1-e40b-4c21-86b4-13849efa574a) — confirm panels load with data
+- [ ] Open [NetFlow Analysis dashboard](https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/fd38bd9a-0100-47a6-aa53-e9fd9bb329d2) — confirm top talkers visible
+- [ ] Open [CDP/LLDP Topology dashboard](https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/f3ebd0b7-5168-438c-a9f6-4e32c2213709) — confirm 19 adjacencies, 1 link down
 - [ ] Open http://localhost:3001 — app loads, nav shows NOC Topology / Network Analytics / Workflows / Chat
 - [ ] Go to `/network-topology` — topology loads (devices visible, links coloured)
 - [ ] Toggle to **CDP/LLDP Map** — 19 adjacencies shown, `site-b-rtr → acc-sw-03` link pulsing red
@@ -113,6 +124,10 @@ Click the **CDP/LLDP Map** toggle in the top-right.
 - "When an interface goes down, the topology updates automatically via a Kibana workflow"
 
 ---
+
+#### Step 3 — Network Analytics Dashboard (`/network-dashboard` or Kibana)
+
+> **Kibana dashboard**: [NetFlow Traffic Analysis](https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/fd38bd9a-0100-47a6-aa53-e9fd9bb329d2) · [NOC Overview](https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/b12f7eb1-e40b-4c21-86b4-13849efa574a) · [CDP/LLDP Topology](https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/f3ebd0b7-5168-438c-a9f6-4e32c2213709)
 
 #### Step 3 — Network Analytics Dashboard (`/network-dashboard`)
 
@@ -377,6 +392,9 @@ uv run --project backend python scripts/simulate_netcrawl.py
 | Deployed workflows | Kibana → AI → Workflows (8 workflows) |
 | `CDP/LLDP Network Topology` data view | Kibana → Discover → data view selector |
 | `cdp_lldp` index | Kibana → Dev Tools → `GET cdp_lldp/_count` |
+| **NOC Overview dashboard** | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/b12f7eb1-e40b-4c21-86b4-13849efa574a |
+| **NetFlow Traffic Analysis dashboard** | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/fd38bd9a-0100-47a6-aa53-e9fd9bb329d2 |
+| **CDP/LLDP Topology dashboard** | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/f3ebd0b7-5168-438c-a9f6-4e32c2213709 |
 
 ### netcrawl
 
