@@ -104,7 +104,7 @@ sed \
     -e "s|YOUR_SERVICE_NAME|${SERVICE_NAME}|g" \
     -e "s|YOUR_PROJECT_ID|${PROJECT_ID}|g" \
     -e "s|YOUR_TEAM|search-specialist|g" \
-    -e "s|YOUR_EMAIL|mark.bernard@elastic.co|g" \
+    -e "s|YOUR_EMAIL|mark-bernard|g" \
     -e "s|YOUR_PROJECT|${SERVICE_NAME}|g" \
     -e "s|${SERVICE_NAME}-nginx:PLACEHOLDER|${SERVICE_NAME}-nginx:${TAG}|g" \
     -e "s|${SERVICE_NAME}-fastapi:PLACEHOLDER|${SERVICE_NAME}-fastapi:${TAG}|g" \
