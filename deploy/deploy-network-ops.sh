@@ -132,6 +132,30 @@ gcloud run services replace "$SERVICE_YAML" \
 
 rm -f "$SERVICE_YAML"
 
+# ── Re-apply env vars (gcloud run services replace resets them) ───────────────
+# KIBANA_URL and AGENT_ID are required for Agent Builder and Workflows.
+# services replace always overwrites envs from the YAML — re-apply them here.
+
+echo ""
+echo ">>> Re-applying credentials to fastapi container..."
+
+FASTAPI_ENV=$(mktemp /tmp/fastapi-env-XXXX.yaml)
+cat > "$FASTAPI_ENV" << ENVYAML
+ELASTICSEARCH_URL: "${ELASTICSEARCH_URL}"
+ELASTIC_API_KEY: "${ELASTIC_API_KEY}"
+KIBANA_URL: "${KIBANA_URL}"
+AGENT_ID: "${AGENT_ID}"
+OTEL_ENABLED: "false"
+ENVYAML
+
+gcloud run services update "${SERVICE_NAME}" \
+    --region="${REGION}" \
+    --project="${PROJECT_ID}" \
+    --container=fastapi \
+    --env-vars-file="$FASTAPI_ENV"
+
+rm -f "$FASTAPI_ENV"
+
 # ── IAP invoker binding ───────────────────────────────────────────────────────
 
 echo ""
