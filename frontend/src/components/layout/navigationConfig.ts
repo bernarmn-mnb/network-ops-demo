@@ -183,6 +183,13 @@ export const NAV_ITEMS: NavItem[] = [
     description: 'NetFlow, SNMP metrics, syslog feed, and top talkers',
     category: 'demo',
   },
+  {
+    path: '/network-impact',
+    label: 'Impact Analysis',
+    icon: 'warning',
+    description: 'Interface flap/outage impact — MAC→IP→hostname affected device chain',
+    category: 'demo',
+  },
 
   // Development Tools
   {

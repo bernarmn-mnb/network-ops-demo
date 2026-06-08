@@ -273,7 +273,82 @@ CDP_LLDP_TOPOLOGY = {
     ],
 }
 
-DASHBOARDS = [NOC_OVERVIEW, NETFLOW_ANALYSIS, CDP_LLDP_TOPOLOGY]
+# ---------------------------------------------------------------------------
+# Dashboard 4 — Network Impact Analysis
+# ---------------------------------------------------------------------------
+#
+#  y=0  h=5   [Total Affected 12] [Departments 12] [Flap Events 12] [Outage Events 12]
+#  y=5  h=12  [By Department bar 24] [By Device Type donut 24]
+#  y=17 h=12  [MAC→IP table 48]
+#  y=29 h=12  [IP→Hostname+User table 48]
+#  y=41 h=14  [Full impact chain table 48]
+#
+NETWORK_IMPACT = {
+    "title": "Network Impact Analysis",
+    "time_range": {"from": "now-24h", "to": "now"},
+    "panels": [
+        # ── Row 1: KPIs (y=0, h=5) ──────────────────────────────────────────
+        _panel(_metric(
+            "FROM network-impact | WHERE status == \"offline\" | STATS `Affected Devices` = COUNT()",
+            "Affected Devices", "Affected Devices"), 0, 0, 12, 5),
+        _panel(_metric(
+            "FROM network-impact | WHERE status == \"offline\" | STATS `Departments` = COUNT_DISTINCT(department)",
+            "Departments", "Departments Impacted"), 12, 0, 12, 5),
+        _panel(_metric(
+            "FROM network-impact | WHERE status == \"offline\" AND event_type == \"flap\" | STATS `Flap Events` = COUNT_DISTINCT(event_id)",
+            "Flap Events", "Active Flap Events"), 24, 0, 12, 5),
+        _panel(_metric(
+            "FROM network-impact | WHERE status == \"offline\" AND event_type == \"outage\" | STATS `Outage Events` = COUNT_DISTINCT(event_id)",
+            "Outage Events", "Active Outages"), 36, 0, 12, 5),
+
+        # ── Row 2: Dept bar + Device type donut (y=5, h=12) ─────────────────
+        _panel(_bar_h(
+            "Affected Devices by Department",
+            "FROM network-impact | WHERE status == \"offline\" "
+            "| STATS count = COUNT() BY department | SORT count DESC",
+            "department", "count", "Devices"), 0, 5, 24, 12),
+        _panel(_donut(
+            "Affected Devices by Type",
+            "FROM network-impact | WHERE status == \"offline\" "
+            "| STATS count = COUNT() BY device_type | SORT count DESC",
+            "count", "device_type"), 24, 5, 24, 12),
+
+        # ── Row 3: MAC→IP mapping table (y=17, h=12) ────────────────────────
+        _panel(_table(
+            "MAC Address → IP Address Mapping (ARP Table)",
+            "FROM network-arp-table "
+            "| SORT router_device_id ASC, ip_address ASC "
+            "| KEEP mac_address, ip_address, router_device_id, vlan_id, interface, age_minutes "
+            "| LIMIT 100",
+            ["mac_address", "ip_address", "router_device_id", "interface", "vlan_id"],
+            ["age_minutes"]), 0, 17, 48, 12),
+
+        # ── Row 4: IP→Hostname+User table (y=29, h=12) ──────────────────────
+        _panel(_table(
+            "IP Address → Hostname · User · Department (DNS/DHCP)",
+            "FROM network-dns "
+            "| SORT department ASC, hostname ASC "
+            "| KEEP ip_address, hostname, fqdn, user_name, user_email, department, device_type, building, floor "
+            "| LIMIT 100",
+            ["ip_address", "hostname", "user_name", "user_email", "department", "device_type"],
+            ["building"]), 0, 29, 48, 12),
+
+        # ── Row 5: Full impact chain (y=41, h=14) ────────────────────────────
+        _panel(_table(
+            "Full Impact Chain — Switch Port → MAC → IP → Hostname → User",
+            "FROM network-impact "
+            "| WHERE status == \"offline\" "
+            "| SORT department ASC, hostname ASC "
+            "| KEEP event_type, trigger_device, trigger_interface, switch_port, vlan_id, "
+            "       mac_address, ip_address, hostname, user_name, department, device_type, building, floor "
+            "| LIMIT 200",
+            ["event_type", "trigger_device", "switch_port", "vlan_id",
+             "mac_address", "ip_address", "hostname", "user_name", "department", "device_type"],
+            ["building"]), 0, 41, 48, 14),
+    ],
+}
+
+DASHBOARDS = [NOC_OVERVIEW, NETFLOW_ANALYSIS, CDP_LLDP_TOPOLOGY, NETWORK_IMPACT]
 
 
 # ---------------------------------------------------------------------------

@@ -19,6 +19,7 @@ import { BrandedHomePage } from './pages/BrandedHomePage'
 import { VisualSearchPage } from './pages/VisualSearchPage'
 import { NetworkTopologyPage } from './pages/NetworkTopologyPage'
 import { NetworkDashboardPage } from './pages/NetworkDashboardPage'
+import { NetworkImpactPage } from './pages/NetworkImpactPage'
 
 /**
  * Main App Component
@@ -52,6 +53,7 @@ function App() {
         <Route path="/overlay-guide" element={<OverlayGuidePage />} />
         <Route path="/network-topology" element={<NetworkTopologyPage />} />
         <Route path="/network-dashboard" element={<NetworkDashboardPage />} />
+        <Route path="/network-impact" element={<NetworkImpactPage />} />
       </Route>
     </Routes>
   )

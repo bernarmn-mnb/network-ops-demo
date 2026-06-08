@@ -34,6 +34,7 @@ from .routes.visual_search import router as visual_search_router
 from .routes.workflows import router as workflows_router
 from .routes.network_telemetry import router as network_telemetry_router
 from .routes.cdp_lldp import router as cdp_lldp_router
+from .routes.network_impact import router as network_impact_router
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,7 @@ app.include_router(network_telemetry_router)
 
 # CDP/LLDP topology (netcrawl integration)
 app.include_router(cdp_lldp_router)
+app.include_router(network_impact_router)
 
 
 @app.get("/")

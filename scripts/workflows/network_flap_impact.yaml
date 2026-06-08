@@ -1,0 +1,72 @@
+name: Network Flap Impact Analysis
+enabled: true
+description: Detects interface flap or outage events, walks the MAC→IP→hostname chain across switch MAC tables, router ARP tables, and DNS records to identify all affected users and devices.
+tags: ["network", "flap", "impact", "mac", "arp", "dns", "users"]
+
+triggers:
+  - type: manual
+
+inputs:
+  - name: trigger_device
+    type: string
+    required: true
+  - name: trigger_interface
+    type: string
+    required: true
+  - name: event_type
+    type: string
+    required: false
+
+steps:
+  - name: get_flap_syslogs
+    type: elasticsearch.search
+    with:
+      index: network-syslog
+      query:
+        bool:
+          must:
+            - match:
+                device_id: "{{ inputs.trigger_device }}"
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-30m"
+      size: 20
+
+  - name: get_mac_table
+    type: elasticsearch.search
+    with:
+      index: network-mac-table
+      query:
+        bool:
+          must:
+            - match:
+                device_id: "{{ inputs.trigger_device }}"
+      size: 100
+
+  - name: get_impact_chain
+    type: elasticsearch.search
+    with:
+      index: network-impact
+      query:
+        bool:
+          must:
+            - match:
+                trigger_device: "{{ inputs.trigger_device }}"
+            - match:
+                trigger_interface: "{{ inputs.trigger_interface }}"
+          filter:
+            - term:
+                status: "offline"
+      size: 200
+
+  - name: ai_impact_analysis
+    type: ai.agent
+    with:
+      agent_id: "network-agent"
+      message: "Analyse the network impact of an interface event on {{ inputs.trigger_device }} interface {{ inputs.trigger_interface }}. Event type: {{ inputs.event_type }}. Syslog events found: {{ steps.get_flap_syslogs.output.hits.total.value }} in the last 30 minutes. MAC address table entries on the affected switch: {{ steps.get_mac_table.output.hits.total.value }} MACs. Affected devices in the impact chain (MAC→IP→hostname): {{ steps.get_impact_chain.output.hits.total.value }} devices currently offline. Provide: 1) Summary of which users and departments are affected, 2) Business impact assessment (can Trading still execute? Is HR accessible?), 3) Recommended immediate actions, 4) Estimated time to restore if this is a physical layer issue."
+
+  - name: log_impact
+    type: console
+    with:
+      message: "IMPACT ANALYSIS — {{ inputs.trigger_device }}/{{ inputs.trigger_interface }}: {{ steps.get_mac_table.output.hits.total.value }} MACs on switch, {{ steps.get_impact_chain.output.hits.total.value }} devices offline. AI: {{ steps.ai_impact_analysis.output.message }}"
