@@ -1,7 +1,7 @@
-name: Product Recommendation
+name: Traffic Analysis
 enabled: true
-description: Search products by query and generate an AI recommendation comparing top results.
-tags: ["ootb", "products", "recommendation"]
+description: Search network flows for a device, IP, or protocol, then use AI to recommend security or capacity actions based on the traffic patterns.
+tags: ["network", "traffic", "recommendation", "analysis"]
 
 triggers:
   - type: manual
@@ -12,22 +12,28 @@ inputs:
     required: true
 
 steps:
-  - name: search_products
+  - name: search_flows
     type: elasticsearch.search
     with:
-      index: ootb-products
+      index: network-flows
       query:
-        match:
-          title: "{{ inputs.query }}"
-      size: 5
+        bool:
+          should:
+            - match:
+                src_ip: "{{ inputs.query }}"
+            - match:
+                device_id: "{{ inputs.query }}"
+            - match:
+                protocol: "{{ inputs.query }}"
+      size: 10
 
   - name: ai_recommendation
     type: ai.agent
     with:
-      agent_id: ootb-product-search
-      message: "A customer is looking for '{{ inputs.query }}'. I found {{ steps.search_products.output.hits.total.value }} products. Compare the top results and provide a recommendation considering rating, price, and brand."
+      agent_id: "network-agent"
+      message: "Analyse network traffic for query '{{ inputs.query }}'. Found {{ steps.search_flows.output.hits.total.value }} flow records. Provide: 1) A summary of the traffic behaviour, 2) Any security or performance concerns, 3) Recommended actions for the NOC team."
 
   - name: log_recommendation
     type: console
     with:
-      message: "RECOMMENDATION for '{{ inputs.query }}': {{ steps.search_products.output.hits.total.value }} products found. AI: {{ steps.ai_recommendation.output }}"
+      message: "TRAFFIC ANALYSIS for '{{ inputs.query }}': {{ steps.search_flows.output.hits.total.value }} flows. AI: {{ steps.ai_recommendation.output.message }}"
