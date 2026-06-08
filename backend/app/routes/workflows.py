@@ -142,13 +142,34 @@ class WorkflowTestRequest(BaseModel):
 
 @router.post("/search")
 async def search_workflows(request: WorkflowSearchRequest):
-    """Search and list workflows with optional filters."""
-    body = {"limit": request.limit, "page": request.page}
+    """Search and list workflows. Kibana uses GET /api/workflows (no POST /search)."""
+    params: dict = {"size": request.limit, "page": request.page}
     if request.enabled is not None:
-        body["enabled"] = request.enabled
+        params["enabled"] = str(request.enabled).lower()
     if request.query:
-        body["query"] = request.query
-    return proxy_post("api/workflows/search", body)
+        params["search"] = request.query
+    try:
+        resp = requests.get(
+            kibana_url("api/workflows"),
+            headers=get_kibana_headers(),
+            params=params,
+            timeout=30,
+        )
+        if not resp.ok:
+            raise HTTPException(status_code=resp.status_code, detail=resp.text)
+        data = resp.json()
+        # Normalise to the format the frontend expects: {results, total, page, size}
+        dashboards = data.get("dashboards", data.get("results", []))
+        workflows = []
+        for item in dashboards:
+            wf = {"id": item.get("id", ""), **item.get("data", item)}
+            if "meta" in item:
+                wf["created_at"] = item["meta"].get("created_at", "")
+                wf["updated_at"] = item["meta"].get("updated_at", "")
+            workflows.append(wf)
+        return {"results": workflows, "total": data.get("total", len(workflows)), "page": request.page, "size": request.limit}
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Kibana connection error: {e!s}")
 
 
 @router.get("/stats")
@@ -177,20 +198,42 @@ async def get_workflow(workflow_id: str):
 
 @router.post("")
 async def create_workflow(request: WorkflowCreateRequest):
-    """Create a new workflow from YAML definition."""
-    return proxy_post("api/workflows", {"yaml": request.yaml})
+    """Create a new workflow from YAML. Kibana expects {"workflows": [{name, yaml}]}."""
+    # Extract name from YAML for the API payload
+    name = "Untitled workflow"
+    for line in request.yaml.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("name:"):
+            name = stripped.split(":", 1)[1].strip().strip("'\"")
+            break
+    try:
+        resp = requests.post(
+            kibana_url("api/workflows"),
+            headers=get_kibana_headers(),
+            json={"workflows": [{"name": name, "yaml": request.yaml}]},
+            timeout=30,
+        )
+        if not resp.ok:
+            raise HTTPException(status_code=resp.status_code, detail=resp.text)
+        data = resp.json()
+        if data.get("failed"):
+            raise HTTPException(status_code=400, detail=str(data["failed"]))
+        created = data.get("created", [])
+        return created[0] if created else data
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Kibana connection error: {e!s}")
 
 
 @router.put("/{workflow_id}")
 async def update_workflow(workflow_id: str, request: WorkflowUpdateRequest):
-    """Update a workflow's YAML definition."""
-    return proxy_put(f"api/workflows/{workflow_id}", {"yaml": request.yaml})
+    """Update a workflow's YAML definition (preserves execution history)."""
+    return proxy_put(f"api/workflows/workflow/{workflow_id}", {"yaml": request.yaml})
 
 
 @router.delete("/{workflow_id}")
 async def delete_workflow(workflow_id: str):
     """Delete a workflow."""
-    return proxy_delete(f"api/workflows/{workflow_id}")
+    return proxy_delete(f"api/workflows/workflow/{workflow_id}")
 
 
 @router.post("/{workflow_id}/clone")
@@ -267,15 +310,19 @@ async def cancel_execution(execution_id: str):
 
 @router.get("/health/check")
 async def workflows_health():
-    """Check if the Workflows API is accessible."""
+    """Check if the Workflows API is accessible by listing workflows."""
     try:
-        result = proxy_get("api/workflows/stats")
-        return {
-            "status": "healthy",
-            "workflows_enabled": True,
-            "stats": result,
-        }
-    except HTTPException:
+        resp = requests.get(
+            kibana_url("api/workflows"),
+            headers=get_kibana_headers(),
+            params={"size": 1},
+            timeout=10,
+        )
+        if resp.ok:
+            total = resp.json().get("total", 0)
+            return {"status": "healthy", "workflows_enabled": True, "total": total}
+        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+    except (HTTPException, requests.RequestException):
         return {
             "status": "unhealthy",
             "workflows_enabled": False,

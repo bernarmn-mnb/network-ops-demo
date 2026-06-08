@@ -1,0 +1,57 @@
+name: Network Anomaly Triage
+enabled: true
+description: Search NetFlow and SNMP data for traffic anomalies on a device, then use AI to triage severity and identify potential threats.
+tags: ["network", "security", "anomaly", "triage"]
+
+triggers:
+  - type: manual
+
+inputs:
+  - name: device_id
+    type: string
+    required: true
+  - name: time_window
+    type: string
+    required: false
+
+steps:
+  - name: search_flows
+    type: elasticsearch.search
+    with:
+      index: network-flows
+      query:
+        bool:
+          must:
+            - match:
+                device_id: "{{ inputs.device_id }}"
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-1h"
+      size: 20
+
+  - name: search_snmp
+    type: elasticsearch.search
+    with:
+      index: network-snmp
+      query:
+        bool:
+          must:
+            - match:
+                device_id: "{{ inputs.device_id }}"
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-1h"
+      size: 10
+
+  - name: ai_triage
+    type: ai.agent
+    with:
+      agent_id: "network-agent"
+      message: "Triage a network anomaly for device {{ inputs.device_id }}. NetFlow search found {{ steps.search_flows.output.hits.total.value }} flows in the last hour. SNMP data returned {{ steps.search_snmp.output.hits.total.value }} recent metric samples. Provide: 1) Severity assessment (critical/warning/info) with justification, 2) Most likely root cause (DDoS, misconfiguration, insider threat, hardware fault), 3) Immediate containment actions with CLI commands, 4) Escalation recommendation."
+
+  - name: log_result
+    type: console
+    with:
+      message: "ANOMALY TRIAGE — {{ inputs.device_id }}: {{ steps.search_flows.output.hits.total.value }} flows analysed. AI assessment: {{ steps.ai_triage.output.message }}"

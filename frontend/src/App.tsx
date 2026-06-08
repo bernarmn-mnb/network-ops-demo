@@ -17,6 +17,8 @@ import { ProfilePage } from './pages/ProfilePage'
 import { VoiceChatPage } from './pages/VoiceChatPage'
 import { BrandedHomePage } from './pages/BrandedHomePage'
 import { VisualSearchPage } from './pages/VisualSearchPage'
+import { NetworkTopologyPage } from './pages/NetworkTopologyPage'
+import { NetworkDashboardPage } from './pages/NetworkDashboardPage'
 
 /**
  * Main App Component
@@ -48,6 +50,8 @@ function App() {
         <Route path="/voice" element={<VoiceChatPage />} />
         <Route path="/overlay" element={<OverlayDemoPage />} />
         <Route path="/overlay-guide" element={<OverlayGuidePage />} />
+        <Route path="/network-topology" element={<NetworkTopologyPage />} />
+        <Route path="/network-dashboard" element={<NetworkDashboardPage />} />
       </Route>
     </Routes>
   )

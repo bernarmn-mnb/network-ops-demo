@@ -39,32 +39,36 @@ HEADERS = {
 
 def search_workflows() -> list[dict]:
     """Fetch all existing workflows from the cluster."""
-    resp = requests.post(
-        f"{KIBANA_URL}/api/workflows/search",
+    resp = requests.get(
+        f"{KIBANA_URL}/api/workflows",
         headers=HEADERS,
-        json={"limit": 100, "page": 1},
+        params={"size": 100, "page": 1},
         timeout=30,
     )
     resp.raise_for_status()
     return resp.json().get("results", [])
 
 
-def create_workflow(yaml_content: str) -> dict:
+def create_workflow(yaml_content: str, name: str) -> dict:
     """Create a new workflow from YAML."""
     resp = requests.post(
         f"{KIBANA_URL}/api/workflows",
         headers=HEADERS,
-        json={"yaml": yaml_content},
+        json={"workflows": [{"name": name, "yaml": yaml_content}]},
         timeout=30,
     )
     resp.raise_for_status()
-    return resp.json()
+    data = resp.json()
+    if data.get("failed"):
+        raise ValueError(f"Workflow creation failed: {data['failed']}")
+    created = data.get("created", [])
+    return created[0] if created else {}
 
 
 def update_workflow(workflow_id: str, yaml_content: str) -> dict:
     """Update an existing workflow."""
     resp = requests.put(
-        f"{KIBANA_URL}/api/workflows/{workflow_id}",
+        f"{KIBANA_URL}/api/workflows/workflow/{workflow_id}",
         headers=HEADERS,
         json={"yaml": yaml_content},
         timeout=30,
@@ -76,7 +80,7 @@ def update_workflow(workflow_id: str, yaml_content: str) -> dict:
 def delete_workflow(workflow_id: str) -> None:
     """Delete a workflow by ID."""
     resp = requests.delete(
-        f"{KIBANA_URL}/api/workflows/{workflow_id}",
+        f"{KIBANA_URL}/api/workflows/workflow/{workflow_id}",
         headers=HEADERS,
         timeout=30,
     )
@@ -175,7 +179,7 @@ def main():
                 print(f"  WOULD CREATE: {name} from {fname}")
             else:
                 print(f"  Creating: {name} from {fname}")
-                result = create_workflow(yaml_content)
+                result = create_workflow(yaml_content, name)
                 wid = result.get("id", "unknown")
                 print(f"    -> ID: {wid}")
             created += 1

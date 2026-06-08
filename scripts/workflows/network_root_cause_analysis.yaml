@@ -1,0 +1,72 @@
+name: Network Root Cause Analysis
+enabled: true
+description: Correlate syslog, SNMP metrics, and NetFlow for a device to identify root cause and blast radius with AI analysis.
+tags: ["network", "rca", "correlation", "incident"]
+
+triggers:
+  - type: manual
+
+inputs:
+  - name: alert_device
+    type: string
+    required: true
+  - name: alert_description
+    type: string
+    required: true
+
+steps:
+  - name: search_syslog
+    type: elasticsearch.search
+    with:
+      index: network-syslog
+      query:
+        bool:
+          must:
+            - match:
+                device_id: "{{ inputs.alert_device }}"
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-4h"
+      size: 20
+
+  - name: search_snmp
+    type: elasticsearch.search
+    with:
+      index: network-snmp
+      query:
+        bool:
+          must:
+            - match:
+                device_id: "{{ inputs.alert_device }}"
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-4h"
+      size: 48
+
+  - name: search_flows
+    type: elasticsearch.search
+    with:
+      index: network-flows
+      query:
+        bool:
+          must:
+            - match:
+                device_id: "{{ inputs.alert_device }}"
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-2h"
+      size: 20
+
+  - name: ai_rca
+    type: ai.agent
+    with:
+      agent_id: "network-agent"
+      message: "Perform root cause analysis for device {{ inputs.alert_device }}. Alert: {{ inputs.alert_description }}. Data collected: {{ steps.search_syslog.output.hits.total.value }} syslog events (last 4h), {{ steps.search_snmp.output.hits.total.value }} SNMP metric samples, {{ steps.search_flows.output.hits.total.value }} NetFlow records (last 2h). Provide: 1) Timeline of events, 2) Root cause with confidence level (high/medium/low), 3) Contributing factors, 4) Blast radius and affected services, 5) Remediation steps in priority order, 6) Prevention measures."
+
+  - name: log_rca
+    type: console
+    with:
+      message: "RCA COMPLETE — {{ inputs.alert_device }}: {{ steps.search_syslog.output.hits.total.value }} syslogs, {{ steps.search_snmp.output.hits.total.value }} SNMP samples, {{ steps.search_flows.output.hits.total.value }} flows. RCA: {{ steps.ai_rca.output.message }}"

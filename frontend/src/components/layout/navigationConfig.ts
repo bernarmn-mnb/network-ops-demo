@@ -168,6 +168,22 @@ export const NAV_ITEMS: NavItem[] = [
     category: 'demo',
   },
   
+  // Network Telemetry Demo
+  {
+    path: '/network-topology',
+    label: 'NOC Topology',
+    icon: 'graphApp',
+    description: 'Live network topology with device health and traffic flows',
+    category: 'demo',
+  },
+  {
+    path: '/network-dashboard',
+    label: 'Network Analytics',
+    icon: 'visBarVerticalStacked',
+    description: 'NetFlow, SNMP metrics, syslog feed, and top talkers',
+    category: 'demo',
+  },
+
   // Development Tools
   {
     path: '/audit',

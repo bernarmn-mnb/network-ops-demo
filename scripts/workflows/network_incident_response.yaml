@@ -1,0 +1,72 @@
+name: Network Incident Response
+enabled: true
+description: Multi-step incident response — collect syslog and traffic data, then generate an AI remediation runbook with containment and recovery steps.
+tags: ["network", "incident", "response", "runbook"]
+
+triggers:
+  - type: manual
+
+inputs:
+  - name: incident_device
+    type: string
+    required: true
+  - name: incident_type
+    type: string
+    required: false
+
+steps:
+  - name: get_syslog
+    type: elasticsearch.search
+    with:
+      index: network-syslog
+      query:
+        bool:
+          must:
+            - match:
+                device_id: "{{ inputs.incident_device }}"
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-6h"
+      size: 25
+
+  - name: get_flows
+    type: elasticsearch.search
+    with:
+      index: network-flows
+      query:
+        bool:
+          must:
+            - match:
+                device_id: "{{ inputs.incident_device }}"
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-2h"
+      size: 15
+
+  - name: get_snmp
+    type: elasticsearch.search
+    with:
+      index: network-snmp
+      query:
+        bool:
+          must:
+            - match:
+                device_id: "{{ inputs.incident_device }}"
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-2h"
+      size: 12
+
+  - name: ai_runbook
+    type: ai.agent
+    with:
+      agent_id: "network-agent"
+      message: "Generate an incident response runbook for device {{ inputs.incident_device }}, incident type: {{ inputs.incident_type }}. Context: {{ steps.get_syslog.output.hits.total.value }} syslog events (last 6h), {{ steps.get_flows.output.hits.total.value }} traffic anomalies (last 2h), {{ steps.get_snmp.output.hits.total.value }} SNMP samples. Generate a structured runbook: 1) INCIDENT SUMMARY (severity, scope, impact), 2) IMMEDIATE ACTIONS (first 15 minutes — stabilise and contain), 3) INVESTIGATION STEPS (commands to run, logs to check), 4) REMEDIATION PROCEDURE with rollback plan, 5) STAKEHOLDER COMMUNICATION, 6) POST-INCIDENT TASKS."
+
+  - name: log_incident
+    type: console
+    with:
+      message: "INCIDENT RECORD — {{ inputs.incident_device }} | Syslogs: {{ steps.get_syslog.output.hits.total.value }} | Flows: {{ steps.get_flows.output.hits.total.value }} | Runbook: {{ steps.ai_runbook.output.message }}"

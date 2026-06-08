@@ -32,6 +32,8 @@ from .routes.tracking import router as tracking_router
 from .routes.voice import router as voice_router
 from .routes.visual_search import router as visual_search_router
 from .routes.workflows import router as workflows_router
+from .routes.network_telemetry import router as network_telemetry_router
+from .routes.cdp_lldp import router as cdp_lldp_router
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +89,12 @@ app.include_router(voice_router)
 
 # Workflows (requires Kibana Workflows feature enabled)
 app.include_router(workflows_router)
+
+# Network Telemetry (NOC demo — works with or without ingested data)
+app.include_router(network_telemetry_router)
+
+# CDP/LLDP topology (netcrawl integration)
+app.include_router(cdp_lldp_router)
 
 
 @app.get("/")

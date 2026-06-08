@@ -33,7 +33,11 @@ import type { NavLayoutConfig } from '../components/layout/navigationConfig'
  *   // All pages flat (no submenu) — same as null
  *   null
  */
-export const NAV_LAYOUT: NavLayoutConfig | null = null
+export const NAV_LAYOUT: NavLayoutConfig | null = {
+  main: ['/', '/network-topology', '/network-dashboard', '/workflows', '/chat'],
+  more: null,
+  hidden: [],
+}
 
 /**
  * Legacy: flat page whitelist.
@@ -50,5 +54,5 @@ export const NAV_PAGES: string[] | null = null
  * Demo title and subtitle for the Guide page header.
  * Set to null to use the default template values.
  */
-export const DEMO_TITLE: string | null = null
-export const DEMO_SUBTITLE: string | null = null
+export const DEMO_TITLE: string | null = 'Network Operations Center'
+export const DEMO_SUBTITLE: string | null = 'Unified NetFlow, SNMP, and syslog telemetry with AI-powered workflows'

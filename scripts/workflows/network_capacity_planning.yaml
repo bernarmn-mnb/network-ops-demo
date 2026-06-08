@@ -1,0 +1,66 @@
+name: Network Capacity Planning
+enabled: true
+description: Analyse bandwidth utilisation across network interfaces, identify congestion hot spots, and generate AI capacity recommendations.
+tags: ["network", "capacity", "planning", "bandwidth"]
+
+triggers:
+  - type: manual
+
+inputs:
+  - name: time_range
+    type: string
+    required: false
+  - name: utilization_threshold
+    type: string
+    required: false
+
+steps:
+  - name: find_congested
+    type: elasticsearch.search
+    with:
+      index: network-snmp
+      query:
+        bool:
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-7d"
+            - range:
+                in_utilization_pct:
+                  gte: 75
+      size: 50
+
+  - name: get_flow_volume
+    type: elasticsearch.search
+    with:
+      index: network-flows
+      query:
+        bool:
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-7d"
+      size: 0
+
+  - name: get_all_snmp
+    type: elasticsearch.search
+    with:
+      index: network-snmp
+      query:
+        bool:
+          filter:
+            - range:
+                "@timestamp":
+                  gte: "now-7d"
+      size: 0
+
+  - name: ai_capacity_plan
+    type: ai.agent
+    with:
+      agent_id: "network-agent"
+      message: "Perform a network capacity planning analysis for the past 7 days. Data: {{ steps.find_congested.output.hits.total.value }} interfaces above 75% utilisation threshold, {{ steps.get_flow_volume.output.hits.total.value }} total flow records, {{ steps.get_all_snmp.output.hits.total.value }} SNMP samples collected. Provide: 1) CURRENT STATE — hotspots and devices approaching limits, 2) GROWTH TREND — projected bandwidth over next 30/60/90 days, 3) RISK ASSESSMENT — which links will become bottlenecks and when, 4) RECOMMENDATIONS — specific upgrades with cost-benefit rationale, 5) QUICK WINS — optimisations deployable within 48 hours without hardware changes, 6) LONG-TERM ROADMAP — infrastructure changes for the next 1-2 quarters."
+
+  - name: log_capacity
+    type: console
+    with:
+      message: "CAPACITY PLAN — Congested interfaces: {{ steps.find_congested.output.hits.total.value }} | AI recommendations: {{ steps.ai_capacity_plan.output.message }}"
