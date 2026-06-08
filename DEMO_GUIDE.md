@@ -19,7 +19,8 @@ Elastic as the **single pane of glass for network operations** — ingesting Net
 | NOC Topology | Live network map with Cisco device icons, health indicators, and utilisation-coloured links |
 | CDP/LLDP Map | Real adjacency data discovered by netcrawl — actual interface names, protocol badges, down-link detection |
 | Network Analytics | NetFlow top talkers, SNMP device health table, syslog alert feed |
-| AI Workflows | 5 deployed workflows that correlate data across indices and call `network-agent` for analysis |
+| **Impact Analysis** | Interface flap/outage → MAC→IP→hostname chain → every affected user by name, department, VLAN |
+| AI Workflows | 9 deployed workflows correlating NetFlow, SNMP, syslog, MAC/ARP/DNS for AI-grounded analysis |
 | Event-Driven Intelligence | Interface-down syslog → triggers CDP/LLDP crawl → topology updates automatically |
 | NOC Chat Assistant | Floating AI chat on every page — ask about alerts, devices, or events |
 
@@ -330,6 +331,25 @@ Give me a quick status summary of the entire network right now.
 | Device Health | Full device table with CPU and memory progress bars, highlighted rows for critical/warning |
 | Time filter | 1h / 6h / 24h / 7d selector (UI toggle — queries update when wired to live ES data) |
 
+### Impact Analysis (`/network-impact`)
+
+| Element | Description |
+|---|---|
+| Alert banners | One per active event (flap/outage) with bounce timeline badges |
+| KPI row | Total affected · Departments · Flap events · Outage events |
+| Department bar | Visual breakdown of how many devices per department are offline |
+| Device type strip | Workstations · Servers · VoIP Phones · Printers count |
+| Search field | Live filter across hostname, IP, MAC, FQDN, user, department, type, port |
+| Department pills | Click to filter to one department (Finance, Trading, HR…) |
+| Event type toggle | All / Flaps only / Outages only |
+| Affected devices table | Status · Hostname · IP · MAC · VLAN · Type · User · Department · Port · Event |
+| Row colouring | Amber rows = flap, red rows = outage |
+| Floating chat | Ask "who is affected?", "can Trading still trade?", "what caused this?" |
+
+**Two pre-loaded scenarios:**
+- **Flap**: acc-sw-03 Gi0/1 — 5 bounces in 14 min — Finance (8), Trading (6), HR (5), NOC (4), IT (3)
+- **Outage**: acc-sw-02 Gi0/3 — clean down — Operations (3), Security (2), IT (1)
+
 ### AI Workflows (`/workflows`)
 
 | Workflow | Inputs | What it does |
@@ -339,6 +359,8 @@ Give me a quick status summary of the entire network right now.
 | Network Incident Response | `incident_device`, `incident_type` | Critical syslogs + flows → AI remediation runbook |
 | Network Capacity Planning | _(none required)_ | SNMP bandwidth trends → AI capacity recommendations |
 | Interface Down CDP/LLDP Crawl | `device_id`, `interface_name` | Syslog + CDP/LLDP check + HTTP crawl → AI topology impact |
+| **Network Flap Impact Analysis** | `trigger_device`, `trigger_interface` | Syslog + MAC table + impact chain → AI business impact ("can Trading execute?") |
+| Traffic Analysis | `query` (IP/device/protocol) | NetFlow search → AI traffic behaviour + security/performance recommendations |
 
 ### Data
 
@@ -349,6 +371,10 @@ Give me a quick status summary of the entire network right now.
 | `network-snmp` | 2,880 | SNMP metrics: CPU, memory, interface utilisation, error counters (5-min intervals, 24h) |
 | `network-syslog` | 500+ | Syslog events: severity, message, category, including interface-down triggers |
 | `cdp_lldp` | 19 | CDP/LLDP adjacencies: local/neighbour device, interfaces, protocol, link status |
+| `network-mac-table` | 46 | Switch MAC address tables: device, port, MAC, VLAN |
+| `network-arp-table` | 46 | Router ARP tables: MAC → IP mappings |
+| `network-dns` | 46 | DNS/DHCP records: IP → hostname, user, department, device type |
+| `network-impact` | 45 | Pre-joined impact chain: flap/outage → switch port → MAC → IP → hostname → user |
 
 ---
 
@@ -771,14 +797,16 @@ LAYER 5 — Frontend Topology Update (30-second poll)
 - [ ] Open http://localhost:3001 — confirm app loads and nav is correct
 - [ ] Click `site-b-rtr` on the topology — confirm red status dot and CPU panel
 - [ ] Toggle to CDP/LLDP Map — confirm the pulsing red ✕ on the `site-b-rtr → acc-sw-03` link
-- [ ] Go to `/workflows` — confirm 8 workflows listed and enabled
+- [ ] Go to `/workflows` — confirm 9 workflows listed and enabled
+- [ ] Open `/network-impact` — confirm 45+ affected devices shown, search field works
 - [ ] Pre-warm the chat widget by opening it and sending "hello" (first response may be slow)
 
 ### Timing
 - Track A (Visibility): ~5 min — good for a quick intro or warm-up
 - Track B (Workflows): ~8 min — the main demo, most impactful
 - Track C (Event-driven): ~4 min — optional deeper dive for technical audiences
-- Full demo end-to-end: ~15-18 min
+- Track D (Impact Analysis): ~6 min — operations/management audience, "who is affected?"
+- Full demo end-to-end: ~20-25 min
 
 ### Key Differentiators to Emphasise
 1. **No agents on devices** — CDP/LLDP discovery via SNMP, syslog via standard syslog forwarding, NetFlow via standard export
