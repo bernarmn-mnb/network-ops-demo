@@ -3,7 +3,7 @@ import {
   EuiPageTemplate, EuiFlexGroup, EuiFlexItem, EuiPanel, EuiTitle,
   EuiSpacer, EuiBadge, EuiText, EuiLoadingSpinner, EuiStat,
   EuiHorizontalRule, EuiIcon, EuiCallOut, EuiButtonGroup,
-  EuiBasicTable, EuiToolTip, type EuiBasicTableColumn,
+  EuiBasicTable, EuiToolTip, EuiFieldSearch, type EuiBasicTableColumn,
 } from '@elastic/eui'
 import {
   fetchImpactEvents, fetchAffectedDevices, fetchImpactSummary,
@@ -209,6 +209,7 @@ export function NetworkImpactPage() {
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState('all')
   const [deptFilter, setDeptFilter] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
 
   const load = useCallback(async () => {
     try {
@@ -231,6 +232,20 @@ export function NetworkImpactPage() {
   useEffect(() => { loadDevices() }, [loadDevices])
 
   const allDepts = Array.from(new Set(devices.map(d => d.department))).sort()
+
+  const q = search.toLowerCase().trim()
+  const visibleDevices = q
+    ? devices.filter(d =>
+        d.hostname.toLowerCase().includes(q) ||
+        d.ip_address.includes(q) ||
+        d.mac_address.toLowerCase().includes(q) ||
+        d.user_name.toLowerCase().includes(q) ||
+        d.department.toLowerCase().includes(q) ||
+        d.device_type.toLowerCase().includes(q) ||
+        d.fqdn.toLowerCase().includes(q) ||
+        d.switch_port.toLowerCase().includes(q)
+      )
+    : devices
 
   return (
     <>
@@ -375,10 +390,19 @@ export function NetworkImpactPage() {
                 </EuiFlexGroup>
 
                 <EuiSpacer size="s" />
+                <EuiFieldSearch
+                  placeholder="Search hostname, IP, MAC, user, department, port…"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  isClearable
+                  fullWidth
+                  compressed
+                />
+                <EuiSpacer size="xs" />
                 <EuiHorizontalRule margin="xs" />
 
                 <EuiBasicTable
-                  items={devices}
+                  items={visibleDevices}
                   columns={DEVICE_COLS}
                   tableLayout="auto"
                   rowProps={(d) => ({
@@ -390,15 +414,15 @@ export function NetworkImpactPage() {
                   })}
                 />
 
-                {devices.length === 0 && (
+                {visibleDevices.length === 0 && (
                   <EuiText color="subdued" textAlign="center" style={{ padding: 40 }}>
-                    No affected devices match the current filter.
+                    {search ? `No devices match "${search}".` : 'No affected devices match the current filter.'}
                   </EuiText>
                 )}
 
                 <EuiSpacer size="s" />
                 <EuiText size="xs" color="subdued">
-                  {devices.length} device{devices.length !== 1 ? 's' : ''} shown ·
+                  {visibleDevices.length}{search ? ` of ${devices.length}` : ''} device{visibleDevices.length !== 1 ? 's' : ''} shown ·
                   Chain: Switch MAC table → Router ARP table → DNS/DHCP records
                 </EuiText>
               </EuiPanel>
