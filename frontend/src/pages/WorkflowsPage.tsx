@@ -124,8 +124,8 @@ export function WorkflowsPage() {
 
       const { workflowExecutionId } = await runWorkflow(runForm.workflowId, inputs)
 
-      // Poll for completion
-      const result = await pollExecution(workflowExecutionId, 1500, 40, (update) => {
+      // Poll for completion — AI workflows can take 2-3 min; poll for up to 5 min
+      const result = await pollExecution(workflowExecutionId, 2000, 150, (update) => {
         setExecution({ ...update })
       })
       setExecution(result)
