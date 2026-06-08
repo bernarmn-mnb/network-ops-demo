@@ -32,7 +32,7 @@ spec:
   template:
     metadata:
       annotations:
-        run.googleapis.com/container-dependencies: '{"nginx":["fastapi","otel-collector"]}'
+        run.googleapis.com/container-dependencies: '{"nginx":["fastapi"]}'
         run.googleapis.com/startup-cpu-boost: "true"
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "5"
