@@ -93,26 +93,6 @@ spec:
             failureThreshold: 30
             timeoutSeconds: 2
 
-        # Sidecar: OTel Collector
-        - name: otel-collector
-          image: us-central1-docker.pkg.dev/YOUR_PROJECT_ID/cloud-run-source-deploy/YOUR_SERVICE_NAME-otel:PLACEHOLDER
-          env:
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "OTEL_ENDPOINT_PLACEHOLDER"
-            - name: ELASTIC_APM_SECRET_TOKEN
-              value: "APM_TOKEN_PLACEHOLDER"
-          resources:
-            limits:
-              memory: 256Mi
-              cpu: "0.25"
-          startupProbe:
-            httpGet:
-              path: /
-              port: 13133
-            initialDelaySeconds: 2
-            periodSeconds: 2
-            failureThreshold: 10
-            timeoutSeconds: 2
 
   traffic:
     - latestRevision: true
