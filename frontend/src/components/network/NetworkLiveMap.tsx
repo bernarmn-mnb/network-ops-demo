@@ -77,7 +77,11 @@ function DownLinkMarker({ pos }: { pos: [number, number] }) {
     <CircleMarker
       center={pos}
       radius={14}
-      pathOptions={{ color: '#BD271E', fillColor: '#BD271E', fillOpacity: 0.25, weight: 2, dashArray: '4 3' }}
+      interactive={false}
+      pathOptions={{
+        color: '#BD271E', fillColor: '#BD271E', fillOpacity: 0.2,
+        weight: 2, dashArray: '4 3',
+      }}
     />
   )
 }
@@ -161,6 +165,7 @@ export function NetworkLiveMap({ devices, topoLinks, cdpLinks, selectedId, onSel
             <Polyline
               key={i}
               positions={[srcCoord, dstCoord]}
+              interactive={false}
               pathOptions={{
                 color,
                 weight: isDown ? 3 : 2.5,
