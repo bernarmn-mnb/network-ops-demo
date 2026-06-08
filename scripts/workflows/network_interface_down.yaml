@@ -1,6 +1,6 @@
 name: Network Interface Down — CDP/LLDP Crawl
 enabled: true
-description: Triggered by interface-down syslog events. Queries affected device syslogs, calls the backend to run a CDP/LLDP topology crawl via netcrawl, then uses AI to assess the topology impact.
+description: Triggered by interface-down syslog events. Queries affected device syslogs, checks existing CDP/LLDP topology, then uses AI to assess downstream impact and recommended actions.
 tags: ["network", "interface", "cdp", "lldp", "topology", "event-driven"]
 
 triggers:
@@ -24,8 +24,6 @@ steps:
           must:
             - match:
                 device_id: "{{ inputs.device_id }}"
-            - match:
-                event_type: "interface_down"
           filter:
             - range:
                 "@timestamp":
@@ -43,23 +41,26 @@ steps:
                 local_device: "{{ inputs.device_id }}"
       size: 20
 
-  - name: run_cdp_lldp_crawl
-    type: http
+  - name: get_down_links
+    type: elasticsearch.search
     with:
-      url: "http://localhost:8002/api/network/cdp-crawl"
-      method: POST
-      body:
-        device_id: "{{ inputs.device_id }}"
-        interface_name: "{{ inputs.interface_name }}"
-        trigger: "interface_down"
+      index: cdp_lldp
+      query:
+        bool:
+          must:
+            - match:
+                local_device: "{{ inputs.device_id }}"
+            - match:
+                link_status: "down"
+      size: 10
 
   - name: ai_topology_impact
     type: ai.agent
     with:
       agent_id: "network-agent"
-      message: "An interface-down event was detected on device {{ inputs.device_id }}, interface {{ inputs.interface_name }}. Syslog found {{ steps.get_interface_events.output.hits.total.value }} related events in the last 15 minutes. The CDP/LLDP topology crawl found {{ steps.get_existing_topology.output.hits.total.value }} existing adjacencies for this device. A fresh crawl has been triggered. Assess: 1) Which downstream devices or services are now unreachable, 2) Is this a physical link failure or a protocol issue, 3) Recommended immediate actions, 4) Which network segments are impacted."
+      message: "An interface-down event was detected on device {{ inputs.device_id }}, interface {{ inputs.interface_name }}. Context: {{ steps.get_interface_events.output.hits.total.value }} syslog events in the last 15 minutes, {{ steps.get_existing_topology.output.hits.total.value }} known CDP/LLDP adjacencies for this device, {{ steps.get_down_links.output.hits.total.value }} adjacencies currently showing link_status=down. Assess: 1) Which downstream devices or services are now unreachable, 2) Is this a physical link failure or a protocol issue, 3) Recommended immediate actions, 4) Which network segments are impacted."
 
   - name: log_crawl
     type: console
     with:
-      message: "INTERFACE DOWN — {{ inputs.device_id }}/{{ inputs.interface_name }}: CDP/LLDP crawl triggered. {{ steps.get_existing_topology.output.hits.total.value }} adjacencies on record. AI impact: {{ steps.ai_topology_impact.output.message }}"
+      message: "INTERFACE DOWN — {{ inputs.device_id }}/{{ inputs.interface_name }}: {{ steps.get_interface_events.output.hits.total.value }} syslog events, {{ steps.get_existing_topology.output.hits.total.value }} adjacencies checked, {{ steps.get_down_links.output.hits.total.value }} links down. AI impact: {{ steps.ai_topology_impact.output.message }}"

@@ -193,7 +193,7 @@ async def get_schema(loose: bool = False):
 @router.get("/{workflow_id}")
 async def get_workflow(workflow_id: str):
     """Get a workflow by ID."""
-    return proxy_get(f"api/workflows/{workflow_id}")
+    return proxy_get(f"api/workflows/workflow/{workflow_id}")
 
 
 @router.post("")
@@ -239,7 +239,7 @@ async def delete_workflow(workflow_id: str):
 @router.post("/{workflow_id}/clone")
 async def clone_workflow(workflow_id: str):
     """Clone an existing workflow."""
-    return proxy_post(f"api/workflows/{workflow_id}/clone")
+    return proxy_post(f"api/workflows/workflow/{workflow_id}/clone")
 
 
 # --- Workflow Execution ---
@@ -249,7 +249,7 @@ async def clone_workflow(workflow_id: str):
 async def run_workflow(workflow_id: str, request: WorkflowRunRequest):
     """Execute a workflow with optional inputs. Returns execution ID."""
     return proxy_post(
-        f"api/workflows/{workflow_id}/run",
+        f"api/workflows/workflow/{workflow_id}/run",
         {"inputs": request.inputs},
     )
 
@@ -274,16 +274,16 @@ async def get_executions(
     statuses: str | None = None,
 ):
     """List executions for a workflow."""
-    params = {"workflowId": workflow_id, "page": page, "perPage": perPage}
+    params: dict = {"page": page, "perPage": perPage}
     if statuses:
         params["statuses"] = statuses
-    return proxy_get("api/workflowExecutions", params)
+    return proxy_get(f"api/workflows/workflow/{workflow_id}/executions", params)
 
 
 @router.get("/executions/{execution_id}")
 async def get_execution(execution_id: str):
     """Get detailed execution status including step results."""
-    return proxy_get(f"api/workflowExecutions/{execution_id}")
+    return proxy_get(f"api/workflows/executions/{execution_id}")
 
 
 @router.get("/executions/{execution_id}/logs")
@@ -294,7 +294,7 @@ async def get_execution_logs(
 ):
     """Get execution logs for debugging and audit."""
     return proxy_get(
-        f"api/workflowExecutions/{execution_id}/logs",
+        f"api/workflows/executions/{execution_id}/logs",
         {"limit": limit, "offset": offset},
     )
 
@@ -302,7 +302,7 @@ async def get_execution_logs(
 @router.post("/executions/{execution_id}/cancel")
 async def cancel_execution(execution_id: str):
     """Cancel a running workflow execution."""
-    return proxy_post(f"api/workflowExecutions/{execution_id}/cancel")
+    return proxy_post(f"api/workflows/executions/{execution_id}/cancel")
 
 
 # --- Health ---
