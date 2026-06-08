@@ -268,6 +268,125 @@ export const DEMO_TRACKS: DemoTrack[] = [
   },
 
   // =========================================================================
+  // Track D — Impact Analysis
+  // =========================================================================
+  {
+    id: 'd',
+    title: 'Track D: Impact Analysis',
+    description: 'Interface flap/outage — MAC→IP→hostname chain to identify every affected user and device',
+    color: 'primary',
+    badges: ['MAC Table', 'ARP', 'DNS', 'Users', 'Departments'],
+    valueProposition: {
+      title: 'Know Exactly Who Is Affected in Seconds',
+      icon: 'warning',
+      content: 'When an interface flaps or goes down, Elastic walks the full identity chain — switch MAC table → router ARP table → DNS/DHCP records — to surface every affected hostname, user, and department. What used to require manual SNMP polling across three systems is now a single view.',
+    },
+    keyMessages: [
+      '"Which users are offline right now?" — answered in seconds, not minutes"',
+      '"The chain is automatic: MAC → IP → hostname → user → department — no manual correlation"',
+      '"Two scenarios live in the demo: a flap (5 bounces) and a clean outage — same view, different stories"',
+    ],
+    scenarios: [
+      {
+        id: 'impact-overview',
+        badge: '1',
+        badgeColor: 'warning',
+        title: 'Network Impact Page — Two Live Scenarios',
+        keyInsight: 'A flap and an outage are running simultaneously — compare the bounce timeline vs a clean down event.',
+        steps: [
+          'Navigate to Impact Analysis (/network-impact)',
+          'Show the two alert banners at the top: FLAP ×5 on acc-sw-03 (Finance/Trading/HR) and OUTAGE on acc-sw-02 (Operations/Security)',
+          'Point out the flap bounce timeline badges — 5 state changes in 14 minutes vs a single down event',
+          'Show the KPI row: 45 total affected, 7 departments, 2 flap events, 1 outage',
+          'Show the department bar chart — Finance and Trading are the heaviest hit',
+        ],
+        talkingPoints: [
+          'The flap scenario is more damaging than an outage — intermittent connectivity breaks trading sessions and file transfers even when the link comes back',
+          'The KPI row tells the manager story: 7 departments, 45 people, in seconds',
+          'The bar chart immediately shows which business units to escalate to',
+        ],
+        demoPills: [
+          { label: 'Impact Analysis', path: '/network-impact' },
+        ],
+      },
+      {
+        id: 'mac-chain',
+        badge: '2',
+        badgeColor: 'warning',
+        title: 'The MAC→IP→Hostname Chain',
+        keyInsight: 'Three separate data sources joined automatically: switch MAC table, router ARP table, DNS/DHCP.',
+        steps: [
+          'Scroll to the "Affected Devices — MAC→IP→Hostname Chain" table',
+          'Point out the columns in order: Status → Hostname → IP → MAC → VLAN → Type → User → Department → Port',
+          'This is the full identity chain: the switch knows the MAC, the router maps MAC→IP, DNS maps IP→hostname/user',
+          'Click a department pill (e.g. Trading) to filter to 6 Trading users',
+          'Type "ivan" in the search field — instantly finds ivan.petrov on trd-ws-01',
+          'Clear and type "10.2.1.5" — finds the device by IP address',
+          'Type "voip" — shows all VoIP phones affected',
+        ],
+        talkingPoints: [
+          'This chain is what takes a NOC engineer 20-30 minutes to build manually — pulling SNMP from the switch, cross-referencing the router ARP table, looking up in DNS',
+          'Elastic does it automatically using three indices and two ENRICH policies',
+          'The search field lets the engineer answer "is alice.chen\'s machine affected?" instantly',
+          'VoIP phones in the results matter for management — "the trading floor phones are down" is a P1 escalation trigger',
+        ],
+        demoPills: [
+          { label: 'Impact Analysis', path: '/network-impact' },
+        ],
+      },
+      {
+        id: 'impact-esql',
+        badge: '3',
+        badgeColor: 'accent',
+        title: 'Live ES|QL Chain in Kibana',
+        keyInsight: 'ENRICH policies let you run the full MAC→IP→hostname join live in Discover or a dashboard.',
+        steps: [
+          'Open the Network Impact Analysis Kibana dashboard',
+          'Show the MAC→IP table (ARP data) and IP→Hostname+User table (DNS/DHCP data) side by side',
+          'Open Kibana Discover, select the "Network MAC Address Table" data view',
+          'Run the ES|QL demo query from the data view:',
+        ],
+        talkingPoints: [
+          'The ES|QL ENRICH pattern is the key — you can run this query live in Kibana without any pre-joined index',
+          '"FROM network-mac-table | WHERE device_id == \\"acc-sw-03\\" | ENRICH mac-to-ip ON mac_address | ENRICH ip-to-hostname ON ip_address | KEEP vlan_id, mac_address, ip_address, hostname, user_name, department | SORT department, hostname"',
+          'Two ENRICH policies are deployed: mac-to-ip (ARP table) and ip-to-hostname (DNS/DHCP)',
+          'This same pattern works in production — point it at real SNMP collection indices',
+        ],
+        demoPills: [
+          { label: 'Impact Analysis', path: '/network-impact' },
+        ],
+        resources: [
+          { label: 'Network Impact Dashboard', href: 'https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/32d04ef9-8145-44f8-95f2-8b8370d9b5d8', type: 'docs' },
+        ],
+      },
+      {
+        id: 'impact-workflow',
+        badge: '4',
+        badgeColor: 'success',
+        title: 'Flap Impact Workflow — AI Business Assessment',
+        keyInsight: 'The workflow asks the AI: "Can Trading still execute? Is HR accessible?" — business impact, not just device counts.',
+        steps: [
+          'Navigate to Workflows',
+          'Run "Network Flap Impact Analysis"',
+          'Enter: trigger_device = acc-sw-03, trigger_interface = GigabitEthernet0/1, event_type = flap',
+          'Watch the workflow query syslog, MAC table, and the impact chain',
+          'Show the AI output — it assesses business impact by department, not just device counts',
+        ],
+        talkingPoints: [
+          'The workflow correlates three indices: syslog (what happened), MAC table (what devices), impact chain (who are they)',
+          'The AI answer is grounded in real data: "35 devices offline in Finance, Trading, HR, NOC, IT — Trading algorithmic servers trd-srv-01 and trd-srv-02 are unreachable"',
+          '"Can Trading still execute?" is the question the CTO asks — this workflow answers it automatically',
+          'Can be triggered by a Kibana alert rule the moment a LINEPROTO syslog arrives',
+        ],
+        demoPills: [
+          { label: 'Workflows', path: '/workflows' },
+          { label: 'Impact Analysis', path: '/network-impact' },
+        ],
+      },
+    ],
+  },
+
+  // =========================================================================
   // Track C — Event-Driven Intelligence
   // =========================================================================
   {
