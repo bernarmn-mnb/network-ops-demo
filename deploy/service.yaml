@@ -72,6 +72,10 @@ spec:
               value: "ELASTICSEARCH_URL_PLACEHOLDER"
             - name: ELASTIC_API_KEY
               value: "ELASTIC_API_KEY_PLACEHOLDER"
+            - name: KIBANA_URL
+              value: "KIBANA_URL_PLACEHOLDER"
+            - name: AGENT_ID
+              value: "AGENT_ID_PLACEHOLDER"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://localhost:4318"
             - name: OTEL_ENABLED
