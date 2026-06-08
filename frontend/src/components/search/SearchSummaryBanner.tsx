@@ -27,7 +27,8 @@ import {
   EuiToolTip,
   EuiBadge,
 } from '@elastic/eui';
-import type { SearchHit } from '../../hooks/useSearchSimple';
+import type { SearchHit } from '../../hooks/useSearchSimple'
+import { API_PREFIX } from '../../services/apiBase'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -90,7 +91,7 @@ async function streamSummary(
 
   let response: Response;
   try {
-    response = await fetch('/api/search/summarise', {
+    response = await fetch(`${API_PREFIX}/api/search/summarise`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, results, max_sentences: maxSentences }),

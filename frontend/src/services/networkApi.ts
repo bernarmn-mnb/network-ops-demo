@@ -1,4 +1,5 @@
-const BASE = '/api/network'
+import { API_PREFIX } from './apiBase'
+const BASE = `${API_PREFIX}/api/network`
 
 export interface NetworkDevice {
   id: string

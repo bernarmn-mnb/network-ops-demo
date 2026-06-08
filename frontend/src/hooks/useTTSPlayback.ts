@@ -10,6 +10,7 @@
  */
 
 import { useCallback, useRef, useEffect } from 'react'
+import { API_PREFIX } from '../services/apiBase'
 
 const MAX_TTS_CHUNK_LENGTH = 2000
 
@@ -133,7 +134,7 @@ export function useTTSPlayback({
       try {
         const controller = new AbortController()
         abortRef.current = controller
-        const response = await fetch('/api/voice/synthesize', {
+        const response = await fetch(`${API_PREFIX}/api/voice/synthesize`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -187,7 +188,7 @@ export function useTTSPlayback({
       try {
         const controller = new AbortController()
         abortRef.current = controller
-        const response = await fetch('/api/voice/synthesize', {
+        const response = await fetch(`${API_PREFIX}/api/voice/synthesize`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

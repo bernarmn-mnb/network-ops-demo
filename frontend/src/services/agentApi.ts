@@ -10,6 +10,8 @@
  * - Support AbortController for cancellation
  */
 
+import { API_PREFIX } from './apiBase'
+
 import type { BrowserApiTool } from '../types/browserTools'
 
 // Event types from Agent Builder
@@ -103,7 +105,7 @@ export async function streamAgentMessage(
   agentId?: string | null,
 ): Promise<void> {
   // Use relative path - Vite proxy handles routing to backend
-  const response = await fetch('/api/agent/chat', {
+  const response = await fetch(`${API_PREFIX}/api/agent/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

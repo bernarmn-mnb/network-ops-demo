@@ -7,7 +7,8 @@
  * See: hive-mind/patterns/agent-builder/CONVERSATION_HISTORY_AUDIT.md
  */
 
-const API_BASE = '/api/audit'
+import { API_PREFIX } from './apiBase'
+const API_BASE = `${API_PREFIX}/api/audit`
 
 // ============================================================================
 // Types

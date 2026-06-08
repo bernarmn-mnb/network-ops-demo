@@ -12,6 +12,8 @@ import { BrandTheme, brands as staticBrands, getSelectedBrandId, setSelectedBran
  * - Injects CSS variables globally
  */
 
+import { API_PREFIX } from '../../services/apiBase'
+
 // Create Emotion cache for EUI styles
 const euiCache = createCache({
   key: 'eui',
@@ -357,7 +359,7 @@ export function BrandedThemeProvider({
   // Fetch brands from API and merge with static brands
   const refreshBrands = useCallback(async () => {
     try {
-      const response = await fetch('/api/branding/')
+      const response = await fetch(`${API_PREFIX}/api/branding/`)
       if (response.ok) {
         const apiBrands: ApiBrand[] = await response.json()
         

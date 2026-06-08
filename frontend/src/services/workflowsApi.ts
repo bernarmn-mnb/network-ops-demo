@@ -7,7 +7,8 @@
  * See: hive-mind/patterns/agent-builder/WORKFLOW_INTEGRATION.md
  */
 
-const API_BASE = '/api/workflows'
+import { API_PREFIX } from './apiBase'
+const API_BASE = `${API_PREFIX}/api/workflows`
 
 // ============================================================================
 // Types

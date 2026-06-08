@@ -1,3 +1,4 @@
+import { API_PREFIX } from '../../services/apiBase'
 import { useEffect, useState } from 'react';
 import {
   EuiPanel,
@@ -54,7 +55,7 @@ export const AgentArchitectureGraph = () => {
   useEffect(() => {
     const fetchStructure = async () => {
       try {
-        const response = await fetch('/api/agno/v2/structure');
+        const response = await fetch(`${API_PREFIX}/api/agno/v2/structure`);
         if (!response.ok) {
           throw new Error('Failed to fetch agent structure');
         }

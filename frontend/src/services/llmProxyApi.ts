@@ -11,6 +11,8 @@
  * - Support AbortController for cancellation
  */
 
+import { API_PREFIX } from './apiBase'
+
 // Event types from A2A chat endpoint
 export type A2AEventType =
   | 'function_call'         // Server-side function (Agent Builder)
@@ -66,7 +68,7 @@ export async function streamA2AChat(
   signal?: AbortSignal,
   systemPrompt?: string,
   clientFunctions?: ClientFunctionDef[],
-  endpoint: string = '/api/a2a/chat'
+  endpoint: string = `${API_PREFIX}/api/a2a/chat`
 ): Promise<void> {
   // Build request body, only including optional fields if they have values
   const requestBody: Record<string, unknown> = {
@@ -172,7 +174,7 @@ export async function fetchAgents(): Promise<{
     parameters: Record<string, unknown>
   }>
 }> {
-  const response = await fetch('/api/a2a/agents')
+  const response = await fetch(`${API_PREFIX}/api/a2a/agents`)
 
   if (!response.ok) {
     const errorText = await response.text()
@@ -299,7 +301,7 @@ export interface A2AHealthStatus {
  */
 export async function checkA2AHealth(): Promise<A2AHealthStatus> {
   try {
-    const response = await fetch('/api/a2a/health')
+    const response = await fetch(`${API_PREFIX}/api/a2a/health`)
     
     if (!response.ok) {
       return {
@@ -326,7 +328,7 @@ export async function checkA2AHealth(): Promise<A2AHealthStatus> {
  */
 export async function testA2AConnectivity(): Promise<A2AHealthStatus> {
   try {
-    const response = await fetch('/api/a2a/health/test')
+    const response = await fetch(`${API_PREFIX}/api/a2a/health/test`)
     
     if (!response.ok) {
       return {

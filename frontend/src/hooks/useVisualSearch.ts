@@ -10,6 +10,8 @@
  * SearchResultCard component can render them without changes.
  */
 
+import { API_PREFIX } from '../services/apiBase'
+
 import { useState, useCallback, useEffect } from 'react';
 import type { SearchHit } from './useSearchSimple';
 
@@ -40,7 +42,7 @@ export function useVisualSearch(): UseVisualSearchResult {
   const [available, setAvailable] = useState<boolean | null>(null);
 
   useEffect(() => {
-    fetch('/api/visual-search/health')
+    fetch(`${API_PREFIX}/api/visual-search/health`)
       .then((r) => r.json())
       .then((d) => setAvailable(d.jina_configured !== false))
       .catch(() => setAvailable(false));
