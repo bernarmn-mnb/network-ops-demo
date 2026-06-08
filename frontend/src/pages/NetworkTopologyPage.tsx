@@ -31,6 +31,7 @@ import {
   type NetworkAlert,
 } from '../services/networkApi'
 import { FloatingChatWidget } from '../components/chat/FloatingChatWidget'
+import { NetworkLiveMap } from '../components/network/NetworkLiveMap'
 
 // ---------------------------------------------------------------------------
 // Fixed topology layout positions (900 × 570 viewport)
@@ -866,8 +867,9 @@ function Legend() {
 // ---------------------------------------------------------------------------
 
 const VIEW_OPTIONS = [
-  { id: 'topology', label: 'NOC Topology' },
-  { id: 'cdp-lldp', label: 'CDP/LLDP Map' },
+  { id: 'topology',  label: 'NOC Topology' },
+  { id: 'cdp-lldp',  label: 'CDP/LLDP Map' },
+  { id: 'live-map',  label: 'Live Map' },
 ]
 
 export function NetworkTopologyPage() {
@@ -878,7 +880,7 @@ export function NetworkTopologyPage() {
   const [error, setError] = useState<string>()
 
   // CDP/LLDP view state
-  const [viewMode, setViewMode] = useState<'topology' | 'cdp-lldp'>('topology')
+  const [viewMode, setViewMode] = useState<'topology' | 'cdp-lldp' | 'live-map'>('topology')
   const [cdpTopology, setCdpTopology] = useState<CdpTopology | null>(null)
   const [cdpLoading, setCdpLoading] = useState(false)
   const [cdpSelectedId, setCdpSelectedId] = useState<string | null>(null)
@@ -925,7 +927,7 @@ export function NetworkTopologyPage() {
   }, [load])
 
   useEffect(() => {
-    if (viewMode === 'cdp-lldp') loadCdp()
+    if (viewMode === 'cdp-lldp' || viewMode === 'live-map') loadCdp()
   }, [viewMode, loadCdp])
 
   return (
@@ -939,6 +941,8 @@ export function NetworkTopologyPage() {
           description={
             viewMode === 'cdp-lldp'
               ? 'CDP/LLDP discovered topology — real adjacency data from netcrawl. Down links pulse red.'
+              : viewMode === 'live-map'
+              ? 'Geographic map — devices pinned to real locations, CDP/LLDP links live from netcrawl discovery.'
               : 'Live topology — click a device to inspect health metrics. Link colour indicates utilisation.'
           }
           rightSideItems={[
@@ -948,7 +952,7 @@ export function NetworkTopologyPage() {
               options={VIEW_OPTIONS}
               idSelected={viewMode}
               onChange={(id) => {
-                setViewMode(id as 'topology' | 'cdp-lldp')
+                setViewMode(id as 'topology' | 'cdp-lldp' | 'live-map')
                 setCdpSelectedId(null)
                 setSelectedDevice(null)
               }}
@@ -1012,6 +1016,24 @@ export function NetworkTopologyPage() {
                       onSelect={setSelectedDevice}
                     />
                   ) : null
+                ) : viewMode === 'live-map' ? (
+                  loading ? (
+                    <EuiFlexGroup justifyContent="center" style={{ padding: 60 }}>
+                      <EuiLoadingSpinner size="xl" />
+                    </EuiFlexGroup>
+                  ) : (
+                    <NetworkLiveMap
+                      devices={topology?.nodes.filter(n => n.type !== 'internet') ?? []}
+                      topoLinks={topology?.links ?? []}
+                      cdpLinks={cdpTopology?.links ?? []}
+                      selectedId={selectedDevice?.id ?? null}
+                      onSelect={(id) => {
+                        if (!id) { setSelectedDevice(null); return }
+                        const d = topology?.nodes.find(n => n.id === id)
+                        setSelectedDevice(d ?? null)
+                      }}
+                    />
+                  )
                 ) : (
                   cdpLoading ? (
                     <EuiFlexGroup justifyContent="center" style={{ padding: 60 }}>
@@ -1030,6 +1052,11 @@ export function NetworkTopologyPage() {
                 <EuiSpacer size="s" />
                 {viewMode === 'topology' ? (
                   <Legend />
+                ) : viewMode === 'live-map' ? (
+                  <EuiText size="xs" color="subdued">
+                    Geographic locations: DC-1 → New York · Site-A → Chicago · Site-B → Dallas ·
+                    Links powered by CDP/LLDP netcrawl discovery · Map © OpenStreetMap
+                  </EuiText>
                 ) : (
                   <EuiFlexGroup gutterSize="l" responsive={false} wrap alignItems="center">
                     {[['CDP', '#0077CC'], ['LLDP', '#00BF9A'], ['Down', '#BD271E']].map(([label, color]) => (
