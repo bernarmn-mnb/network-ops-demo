@@ -35,8 +35,20 @@ import type { NavLayoutConfig } from '../components/layout/navigationConfig'
  */
 export const NAV_LAYOUT: NavLayoutConfig | null = {
   main: ['/', '/network-topology', '/network-dashboard', '/network-impact', '/workflows', '/chat'],
-  more: null,
-  hidden: [],
+  more: ['/guide', '/mcp', '/a2a-chat'],
+  hidden: [
+    '/home',          // Store Home
+    '/branded',       // Demo
+    '/search',        // Search
+    '/visual-search', // Visual Search
+    '/geo',           // Geo Search
+    '/profile',       // Profile
+    '/voice',         // Voice
+    '/overlay',       // Overlay Demo
+    '/overlay-guide', // Inject Guide
+    '/audit',         // Audit
+    '/brands',        // Brand Editor (not relevant for NOC)
+  ],
 }
 
 /**
