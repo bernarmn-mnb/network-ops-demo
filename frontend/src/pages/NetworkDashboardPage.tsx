@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   EuiPageTemplate,
   EuiFlexGroup,
@@ -15,6 +15,7 @@ import {
   EuiProgress,
   EuiBasicTable,
   EuiButtonGroup,
+  EuiFieldSearch,
   type EuiBasicTableColumn,
 } from '@elastic/eui'
 import {
@@ -275,6 +276,9 @@ export function NetworkDashboardPage() {
   const [devices, setDevices] = useState<NetworkDevice[]>([])
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState('24h')
+  const [ipSearch, setIpSearch] = useState('')
+  const [vendorFilter, setVendorFilter] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -298,6 +302,23 @@ export function NetworkDashboardPage() {
     const interval = setInterval(load, 30_000)
     return () => clearInterval(interval)
   }, [load])
+
+  // Derived filter values
+  const allVendors = useMemo(() => [...new Set(devices.map(d => d.vendor).filter(Boolean))].sort(), [devices])
+
+  const q = ipSearch.toLowerCase().trim()
+  const filteredTalkers = useMemo(() =>
+    (summary?.top_talkers ?? []).filter(t =>
+      (!q || t.src_ip.includes(q) || t.dst_ip.includes(q)) &&
+      (!vendorFilter) // talkers don't have vendor — vendor filter applies to device table
+    ), [summary, q, vendorFilter])
+
+  const filteredDevices = useMemo(() =>
+    devices.filter(d =>
+      (!q || d.ip?.includes(q) || d.hostname?.toLowerCase().includes(q)) &&
+      (!vendorFilter || d.vendor === vendorFilter) &&
+      (!statusFilter || d.status === statusFilter)
+    ), [devices, q, vendorFilter, statusFilter])
 
   return (
     <>
@@ -330,16 +351,106 @@ export function NetworkDashboardPage() {
             <>
               <KpiRow summary={summary} />
 
+              <EuiSpacer size="m" />
+
+              {/* ── Filter bar ── */}
+              <EuiPanel paddingSize="s" hasBorder hasShadow={false}>
+                <EuiFlexGroup gutterSize="m" alignItems="center" responsive={false} wrap>
+                  {/* IP search */}
+                  <EuiFlexItem style={{ minWidth: 240, maxWidth: 320 }}>
+                    <EuiFieldSearch
+                      placeholder="Filter by IP address…"
+                      value={ipSearch}
+                      onChange={e => setIpSearch(e.target.value)}
+                      isClearable
+                      compressed
+                    />
+                  </EuiFlexItem>
+
+                  {/* Vendor pills */}
+                  <EuiFlexItem grow={false}>
+                    <EuiText size="xs" color="subdued" style={{ marginRight: 4 }}>Vendor:</EuiText>
+                  </EuiFlexItem>
+                  <EuiFlexItem grow={false}>
+                    <EuiFlexGroup gutterSize="xs" responsive={false} wrap>
+                      {['All', ...allVendors].map(v => (
+                        <EuiFlexItem key={v} grow={false}>
+                          <EuiBadge
+                            color={(v === 'All' ? !vendorFilter : vendorFilter === v) ? 'primary' : 'hollow'}
+                            onClick={() => setVendorFilter(v === 'All' ? null : v)}
+                            onClickAriaLabel={`Filter by ${v}`}
+                          >
+                            {v}
+                          </EuiBadge>
+                        </EuiFlexItem>
+                      ))}
+                    </EuiFlexGroup>
+                  </EuiFlexItem>
+
+                  {/* Status pills */}
+                  <EuiFlexItem grow={false}>
+                    <EuiText size="xs" color="subdued" style={{ marginRight: 4 }}>Status:</EuiText>
+                  </EuiFlexItem>
+                  <EuiFlexItem grow={false}>
+                    <EuiFlexGroup gutterSize="xs" responsive={false}>
+                      {[
+                        { id: null,       label: 'All',      color: 'hollow'  },
+                        { id: 'healthy',  label: 'Healthy',  color: 'success' },
+                        { id: 'warning',  label: 'Warning',  color: 'warning' },
+                        { id: 'critical', label: 'Critical', color: 'danger'  },
+                      ].map(({ id, label, color }) => (
+                        <EuiFlexItem key={label} grow={false}>
+                          <EuiBadge
+                            color={statusFilter === id ? color as 'hollow' : 'hollow'}
+                            style={{ opacity: statusFilter === id ? 1 : 0.6 }}
+                            onClick={() => setStatusFilter(id)}
+                            onClickAriaLabel={`Filter by ${label}`}
+                          >
+                            {label}
+                          </EuiBadge>
+                        </EuiFlexItem>
+                      ))}
+                    </EuiFlexGroup>
+                  </EuiFlexItem>
+
+                  {/* Clear all */}
+                  {(ipSearch || vendorFilter || statusFilter) && (
+                    <EuiFlexItem grow={false}>
+                      <EuiBadge
+                        color="accent"
+                        onClick={() => { setIpSearch(''); setVendorFilter(null); setStatusFilter(null) }}
+                        onClickAriaLabel="Clear all filters"
+                        iconType="cross"
+                        iconSide="left"
+                      >
+                        Clear
+                      </EuiBadge>
+                    </EuiFlexItem>
+                  )}
+                </EuiFlexGroup>
+              </EuiPanel>
+
               <EuiSpacer size="l" />
 
               {/* Top talkers + Alerts */}
               <EuiFlexGroup gutterSize="m" alignItems="flexStart" responsive={false}>
                 <EuiFlexItem grow={6}>
                   <EuiPanel paddingSize="m" hasBorder hasShadow={false}>
-                    <EuiTitle size="xs"><h2>Top Talkers — Last 24h</h2></EuiTitle>
+                    <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" responsive={false}>
+                      <EuiFlexItem grow={false}>
+                        <EuiTitle size="xs"><h2>Top Talkers — Last 24h</h2></EuiTitle>
+                      </EuiFlexItem>
+                      {q && (
+                        <EuiFlexItem grow={false}>
+                          <EuiText size="xs" color="subdued">
+                            {filteredTalkers.length} of {summary?.top_talkers?.length ?? 0} shown
+                          </EuiText>
+                        </EuiFlexItem>
+                      )}
+                    </EuiFlexGroup>
                     <EuiSpacer size="s" />
                     <EuiBasicTable
-                      items={summary?.top_talkers ?? []}
+                      items={filteredTalkers}
                       columns={TOP_TALKER_COLS}
                       tableLayout="auto"
                     />
@@ -373,12 +484,14 @@ export function NetworkDashboardPage() {
                     <EuiTitle size="xs"><h2>Device Health</h2></EuiTitle>
                   </EuiFlexItem>
                   <EuiFlexItem grow={false}>
-                    <EuiText size="xs" color="subdued">{devices.length} devices monitored</EuiText>
+                    <EuiText size="xs" color="subdued">
+                      {filteredDevices.length}{filteredDevices.length !== devices.length ? ` of ${devices.length}` : ''} devices
+                    </EuiText>
                   </EuiFlexItem>
                 </EuiFlexGroup>
                 <EuiSpacer size="s" />
                 <EuiBasicTable
-                  items={devices}
+                  items={filteredDevices}
                   columns={DEVICE_COLS}
                   tableLayout="auto"
                   rowProps={(device) => ({
