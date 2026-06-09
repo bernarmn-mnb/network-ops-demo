@@ -59,125 +59,93 @@ interface Feature {
  * Features are grouped by category for display.
  */
 const FEATURES: Feature[] = [
-  // Demo Building Features
+  // NOC Demo Features
   {
-    id: 'chat',
-    path: '/chat',
-    title: 'Agent Chat',
-    description: 'Streaming chat interface with your Elastic Agent Builder agent. Shows reasoning steps, tool calls, and real-time responses.',
-    icon: 'newChat',
-    category: 'demo',
-    requirements: { agentConnection: true },
-    useCase: 'Build customer-facing chat demos with your Agent Builder agents',
-  },
-  {
-    id: 'overlay',
-    path: '/overlay-guide',
-    title: 'Overlay Injection',
-    description: 'Inject a floating AI chat onto ANY website using Tampermonkey. Perfect for "here\'s how it could look on YOUR site" demos.',
-    icon: 'popout',
-    category: 'demo',
-    requirements: { agentConnection: true, optional: 'Tampermonkey browser extension' },
-    useCase: 'Demo AI assistants directly on customer websites without code changes',
-  },
-  {
-    id: 'branded',
-    path: '/branded',
-    title: 'Branded Demo',
-    description: 'Full-screen branded experience ready for customer presentations. Apply your custom theme and showcase the chat in context.',
-    icon: 'sparkles',
-    category: 'demo',
-    requirements: { agentConnection: true, optional: 'Custom branding recommended' },
-    useCase: 'Present polished demos to customers with their branding',
-  },
-  {
-    id: 'brands',
-    path: '/brands',
-    title: 'Brand Editor',
-    description: 'Create and manage brand themes with color pickers and logo uploads. Quick way to customize the demo appearance.',
-    icon: 'brush',
+    id: 'network-topology',
+    path: '/network-topology',
+    title: 'NOC Topology',
+    description: 'Live network topology map with Cisco device icons, SNMP health indicators, utilisation-coloured links, and animated traffic flow. Switch to CDP/LLDP Map for real adjacency discovery or Live Map for geographic device locations.',
+    icon: 'graphApp',
     category: 'demo',
     requirements: {},
-    useCase: 'Quickly customize colors and logos for different customers',
+    useCase: 'Show real-time network visibility across heterogeneous vendor environments',
   },
   {
-    id: 'voice',
-    path: '/voice',
-    title: 'Voice Chat',
-    description: 'Voice-first chat interface with Speech-to-Text and Text-to-Speech. Speak to your agent and hear responses read aloud.',
-    icon: 'discuss',
+    id: 'network-dashboard',
+    path: '/network-dashboard',
+    title: 'Network Analytics',
+    description: 'NetFlow top talkers, SNMP device health table, and syslog alert feed. Filter by IP address, vendor, or status. Supports real NetFlow and Cisco Meraki data.',
+    icon: 'visBarVerticalStacked',
     category: 'demo',
-    requirements: { agentConnection: true, optional: 'Google Cloud TTS credentials for spoken responses' },
-    useCase: 'Build voice-enabled demos where users speak naturally to the AI assistant',
+    requirements: {},
+    useCase: 'Demonstrate unified NetFlow, SNMP, and syslog analysis in a single pane of glass',
+  },
+  {
+    id: 'network-impact',
+    path: '/network-impact',
+    title: 'Impact Analysis',
+    description: 'Interface flap and outage impact — walks the full MAC→IP→hostname chain across switch MAC tables, ARP tables, and DNS records to show every affected user and device by name, department, and VLAN.',
+    icon: 'warning',
+    category: 'demo',
+    requirements: {},
+    useCase: 'Answer "who is affected right now?" in seconds using real network identity data',
   },
   {
     id: 'workflows',
     path: '/workflows',
-    title: 'Workflows',
-    description: 'Deploy, run, and monitor Elastic Workflows. Includes a recipe library with pre-built automation patterns for your domain.',
+    title: 'AI Workflows',
+    description: '9 deployed workflows: anomaly triage, root cause analysis, incident response, capacity planning, CDP/LLDP crawl, flap impact analysis, and more. Each correlates NetFlow, SNMP, and syslog, then calls the NOC AI agent.',
     icon: 'pipelineApp',
     category: 'demo',
-    requirements: { optional: 'Elastic 9.3+ with Workflows enabled' },
-    useCase: 'Automate operational procedures — escalation, triage, reporting — triggered from search results or on demand',
+    requirements: { agentConnection: true },
+    useCase: 'Show AI-grounded analysis — what took 45 minutes now takes 30 seconds',
+  },
+  {
+    id: 'chat',
+    path: '/chat',
+    title: 'NOC Chat Assistant',
+    description: 'Floating AI chat on every page — ask about alerts, affected devices, root causes, or network events in natural language. Powered by network-agent with access to all telemetry indices.',
+    icon: 'newChat',
+    category: 'demo',
+    requirements: { agentConnection: true },
+    useCase: 'Let NOC engineers ask questions instead of writing ES|QL queries',
   },
 
-  // Development Tools
+  // Tools
   {
     id: 'guide',
     path: '/guide',
     title: 'Demo Guide',
-    description: 'Presenter guide with demo flow, talking points, and quick navigation. Customize this for your specific demo.',
+    description: 'Presenter guide with four demo tracks (Visibility, AI Workflows, Event-Driven, Impact Analysis), step-by-step talking points, and quick-launch buttons.',
     icon: 'training',
     category: 'tools',
     requirements: {},
-    useCase: 'Guide yourself or others through the demo with structured scenarios',
-  },
-  {
-    id: 'audit',
-    path: '/audit',
-    title: 'Conversation Audit',
-    description: 'Review conversation history with full agent reasoning visibility. See every thinking step, tool call, and response.',
-    icon: 'inspect',
-    category: 'tools',
-    requirements: { agentConnection: true },
-    useCase: 'Debug agent behavior, review reasoning, and understand tool usage',
+    useCase: 'Walk through the demo with structured scenarios and pre-written talking points',
   },
   {
     id: 'mcp',
     path: '/mcp',
     title: 'MCP Explorer',
-    description: 'Browse and test MCP (Model Context Protocol) server tools. Discover available tools and their schemas.',
+    description: 'Browse and test MCP server tools exposed by the NOC agent.',
     icon: 'plugs',
     category: 'tools',
     requirements: { agentConnection: true },
-    useCase: 'Explore what tools your Agent Builder exposes via MCP',
-  },
-
-  // Advanced Features
-  {
-    id: 'a2a',
-    path: '/a2a-chat',
-    title: 'A2A Multi-Agent',
-    description: 'Orchestrate multiple Agent Builder agents with a coordinator LLM. The coordinator decides which agent to call based on the query.',
-    icon: 'aggregate',
-    category: 'advanced',
-    requirements: { agentConnection: true, llmProxy: true },
-    useCase: 'Build complex workflows with multiple specialized agents',
+    useCase: 'Inspect what tools the network-agent exposes',
   },
 ]
 
 const CATEGORY_LABELS: Record<string, { label: string; description: string }> = {
-  demo: { 
-    label: '🎨 Demo Building', 
-    description: 'Features for creating customer presentations' 
+  demo: {
+    label: '📡 NOC Demo Features',
+    description: 'Network telemetry, topology, AI workflows, and impact analysis',
   },
-  tools: { 
-    label: '🔧 Development Tools', 
-    description: 'Features for debugging and exploration' 
+  tools: {
+    label: '🔧 Presenter Tools',
+    description: 'Guide, talking points, and agent exploration',
   },
-  advanced: { 
-    label: '🚀 Advanced', 
-    description: 'Features requiring additional setup' 
+  advanced: {
+    label: '🚀 Advanced',
+    description: 'Features requiring additional setup',
   },
 }
 
@@ -295,46 +263,22 @@ export function WelcomePage() {
 
           <EuiSpacer size="xl" />
 
-          {/* Status Overview */}
-          <EuiFlexGroup gutterSize="m">
-            <EuiFlexItem>
-              <EuiPanel color={status.agentConnected ? 'success' : 'warning'} paddingSize="m">
+          {/* NOC Status — compact single line */}
+          <EuiFlexGroup gutterSize="m" alignItems="center" responsive={false}>
+            <EuiFlexItem grow={false}>
+              <EuiPanel color={status.agentConnected ? 'success' : 'subdued'} paddingSize="s">
                 <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>
                   <EuiFlexItem grow={false}>
-                    <EuiIcon 
-                      type={status.loading ? 'loading' : status.agentConnected ? 'checkInCircleFilled' : 'warning'} 
-                      color={status.agentConnected ? 'success' : 'warning'}
+                    <EuiIcon
+                      type={status.loading ? 'loading' : status.agentConnected ? 'checkInCircleFilled' : 'minusInCircle'}
+                      color={status.agentConnected ? 'success' : 'subdued'}
                     />
                   </EuiFlexItem>
                   <EuiFlexItem>
                     <EuiText size="s">
-                      <strong>Agent Builder</strong>
-                      <br />
-                      <span style={{ fontSize: '0.85em' }}>
-                        {status.loading ? 'Checking...' : 
-                         status.agentConnected ? `Connected: ${status.agentName}` : 
-                         'Not configured'}
-                      </span>
-                    </EuiText>
-                  </EuiFlexItem>
-                </EuiFlexGroup>
-              </EuiPanel>
-            </EuiFlexItem>
-            <EuiFlexItem>
-              <EuiPanel color={status.llmProxyConfigured ? 'success' : 'subdued'} paddingSize="m">
-                <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>
-                  <EuiFlexItem grow={false}>
-                    <EuiIcon 
-                      type={status.llmProxyConfigured ? 'checkInCircleFilled' : 'minusInCircle'} 
-                      color={status.llmProxyConfigured ? 'success' : 'subdued'}
-                    />
-                  </EuiFlexItem>
-                  <EuiFlexItem>
-                    <EuiText size="s">
-                      <strong>LLM Proxy (A2A)</strong>
-                      <br />
-                      <span style={{ fontSize: '0.85em' }}>
-                        {status.llmProxyConfigured ? 'Configured' : 'Optional - for multi-agent'}
+                      <strong>NOC Agent</strong>{' '}
+                      <span style={{ fontSize: '0.85em', color: 'var(--euiColorSubduedText)' }}>
+                        {status.loading ? 'Checking…' : status.agentConnected ? `${status.agentName} · ready` : 'Not connected'}
                       </span>
                     </EuiText>
                   </EuiFlexItem>
@@ -342,25 +286,6 @@ export function WelcomePage() {
               </EuiPanel>
             </EuiFlexItem>
           </EuiFlexGroup>
-
-          {/* Setup Needed Callout */}
-          {!status.loading && !status.agentConnected && (
-            <>
-              <EuiSpacer size="m" />
-              <EuiCallOut title="Setup Required" color="warning" iconType="help">
-                <p>Configure your Elastic connection to enable most features.</p>
-                <EuiSpacer size="s" />
-                <EuiFlexGroup gutterSize="s">
-                  <EuiFlexItem grow={false}>
-                    <EuiCode>./setup.sh</EuiCode>
-                  </EuiFlexItem>
-                  <EuiFlexItem grow={false}>
-                    <EuiText size="s">or edit <EuiCode>backend/.env</EuiCode></EuiText>
-                  </EuiFlexItem>
-                </EuiFlexGroup>
-              </EuiCallOut>
-            </>
-          )}
 
           <EuiSpacer size="xl" />
           <EuiHorizontalRule />
@@ -371,7 +296,7 @@ export function WelcomePage() {
             <h2>Available Features</h2>
           </EuiTitle>
           <EuiText size="s" color="subdued">
-            <p>Pick the features you need for your demo. Each can be used independently.</p>
+            <p>Click any feature to open it. All NOC features work with both synthetic demo data and real NetFlow / Meraki telemetry.</p>
           </EuiText>
           <EuiSpacer size="l" />
 
