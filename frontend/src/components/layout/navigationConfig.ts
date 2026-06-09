@@ -184,6 +184,13 @@ export const NAV_ITEMS: NavItem[] = [
     category: 'demo',
   },
   {
+    path: '/netflow',
+    label: 'NetFlow Analysis',
+    icon: 'visArea',
+    description: 'Deep NetFlow analysis — top talkers, protocols, ports, conversation partners, Kibana links',
+    category: 'demo',
+  },
+  {
     path: '/network-impact',
     label: 'Impact Analysis',
     icon: 'warning',

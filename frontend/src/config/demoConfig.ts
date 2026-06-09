@@ -34,7 +34,7 @@ import type { NavLayoutConfig } from '../components/layout/navigationConfig'
  *   null
  */
 export const NAV_LAYOUT: NavLayoutConfig | null = {
-  main: ['/', '/network-topology', '/network-dashboard', '/network-impact', '/workflows', '/chat'],
+  main: ['/', '/network-topology', '/network-dashboard', '/netflow', '/network-impact', '/workflows', '/chat'],
   more: ['/guide', '/mcp', '/a2a-chat'],
   hidden: [
     '/home',          // Store Home
