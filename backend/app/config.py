@@ -55,6 +55,20 @@ class Settings:
     # Search Configuration
     SEARCH_INDEX: str = _config("SEARCH_INDEX", default="ootb-products")
 
+    # Network data source: "synthetic" (default) or "real"
+    # Set DATA_SOURCE=real after running scripts/setup_real_data_integration.py
+    DATA_SOURCE: str = _config("DATA_SOURCE", default="synthetic")
+
+    # Real data index names (populated by setup_real_data_integration.py transforms)
+    REAL_FLOWS_INDEX:   str = _config("REAL_FLOWS_INDEX",   default="real-network-flows")
+    REAL_SYSLOG_INDEX:  str = _config("REAL_SYSLOG_INDEX",  default="real-network-syslog")
+    REAL_DEVICES_INDEX: str = _config("REAL_DEVICES_INDEX", default="real-network-devices")
+
+    # Raw real indices (for direct ES|QL / Kibana use without transforms)
+    RAW_NETFLOW_INDEX:  str = _config("RAW_NETFLOW_INDEX",  default="logs-netflow.log-cisco-*")
+    RAW_MERAKI_INDEX:   str = _config("RAW_MERAKI_INDEX",   default="logs-cisco_meraki.log-cisco-*")
+    RAW_MERAKI_METRICS: str = _config("RAW_MERAKI_METRICS", default="metrics-cisco_meraki_metrics.device_health-cisco-*")
+
     # Visual Search (Jina CLIP v2 for text-to-image / image-to-image kNN)
     VISUAL_SEARCH_INDEX: str = _config("VISUAL_SEARCH_INDEX", default="products")
     JINA_API_KEY: str = _config("JINA_API_KEY", default="")

@@ -79,6 +79,24 @@ _TOP_TALKERS: list[dict[str, Any]] = [
 # Endpoints
 # ---------------------------------------------------------------------------
 
+@router.get("/data-source")
+async def get_data_source():
+    """Return current data source configuration."""
+    return {
+        "mode": settings.DATA_SOURCE,
+        "indices": {
+            "flows":   _flows_index(),
+            "syslog":  _syslog_index(),
+            "devices": _devices_index(),
+        },
+        "real_available": {
+            "netflow": settings.RAW_NETFLOW_INDEX,
+            "meraki":  settings.RAW_MERAKI_INDEX,
+            "meraki_metrics": settings.RAW_MERAKI_METRICS,
+        },
+    }
+
+
 @router.get("/topology")
 async def get_topology():
     """Return topology nodes and links for the interactive diagram."""
@@ -86,6 +104,7 @@ async def get_topology():
         "nodes": [_INTERNET] + _DEVICES,
         "links": _LINKS,
         "source": "demo",
+        "data_mode": settings.DATA_SOURCE,
     }
 
 
@@ -131,6 +150,19 @@ async def get_alerts():
 
 
 # ---------------------------------------------------------------------------
+# Index name resolution — switches between synthetic and real indices
+# ---------------------------------------------------------------------------
+
+def _flows_index() -> str:
+    return settings.REAL_FLOWS_INDEX if settings.DATA_SOURCE == "real" else "network-flows"
+
+def _syslog_index() -> str:
+    return settings.REAL_SYSLOG_INDEX if settings.DATA_SOURCE == "real" else "network-syslog"
+
+def _devices_index() -> str:
+    return settings.REAL_DEVICES_INDEX if settings.DATA_SOURCE == "real" else "network-devices"
+
+# ---------------------------------------------------------------------------
 # Elasticsearch helpers — sync client wrapped in asyncio.to_thread
 # (aiohttp not installed, AsyncElasticsearch unavailable)
 # ---------------------------------------------------------------------------
@@ -152,7 +184,7 @@ def _sync_es_search(index: str, body: dict) -> list[dict] | None:
 async def _es_devices() -> list[dict] | None:
     import asyncio
     return await asyncio.to_thread(
-        _sync_es_search, "network-devices", {"size": 50, "sort": [{"hostname.keyword": "asc"}]}
+        _sync_es_search, _devices_index(), {"size": 50, "sort": [{"hostname.keyword": "asc"}]}
     )
 
 
@@ -160,7 +192,7 @@ async def _es_alerts() -> list[dict] | None:
     import asyncio
     raw = await asyncio.to_thread(
         _sync_es_search,
-        "network-syslog",
+        _syslog_index(),
         {"size": 20, "sort": [{"@timestamp": "desc"}], "query": {"range": {"@timestamp": {"gte": "now-24h"}}}},
     )
     if not raw:

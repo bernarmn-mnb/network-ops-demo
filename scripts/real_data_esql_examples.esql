@@ -1,0 +1,37 @@
+
+# ── Top talkers from real NetFlow ──────────────────────────────────────────
+FROM logs-netflow.log-cisco-*
+| EVAL src_ip = source.ip, dst_ip = destination.ip,
+       protocol = TO_UPPER(network.transport),
+       bytes = network.bytes
+| STATS total_bytes = SUM(bytes), flows = COUNT()
+    BY src_ip, dst_ip, protocol
+| SORT total_bytes DESC
+| LIMIT 20
+
+# ── Real Meraki security events (last 1h) ─────────────────────────────────
+FROM logs-cisco_meraki.log-cisco-*
+| WHERE @timestamp >= NOW() - 1 hours
+| WHERE cisco_meraki.event_type IN ("security_event", "ids_alerted", "urls")
+| EVAL device = observer.hostname, event = event.action,
+       src = source.ip, dst = destination.ip
+| KEEP @timestamp, device, event, src, dst, message
+| SORT @timestamp DESC
+| LIMIT 50
+
+# ── Meraki device inventory with model/serial ─────────────────────────────
+FROM metrics-cisco_meraki_metrics.device_health-cisco-*
+| STATS last_seen = MAX(@timestamp)
+    BY meraki.device.name, meraki.device.model,
+       meraki.device.product_type, meraki.device.lan_ip, meraki.device.serial
+| SORT meraki.device.product_type, meraki.device.name
+
+# ── Merged view: MAC from Meraki → IP from NetFlow ────────────────────────
+FROM logs-cisco_meraki.log-cisco-*
+| WHERE cisco_meraki.urls.mac IS NOT NULL AND source.ip IS NOT NULL
+| EVAL mac = cisco_meraki.urls.mac, ip = source.ip,
+       device = observer.hostname
+| STATS last_seen = MAX(@timestamp)
+    BY mac, ip, device
+| SORT last_seen DESC
+| LIMIT 100
