@@ -70,3 +70,14 @@ steps:
     type: console
     with:
       message: "INCIDENT RECORD — {{ inputs.incident_device }} | Syslogs: {{ steps.get_syslog.output.hits.total.value }} | Flows: {{ steps.get_flows.output.hits.total.value }} | Runbook: {{ steps.ai_runbook.output.message }}"
+
+  - name: save_output
+    type: elasticsearch.index
+    with:
+      index: workflow-ai-outputs
+      document:
+        workflow_id: "network-incident-response"
+        workflow_name: "Network Incident Response"
+        device_id: "{{ inputs.incident_device }}"
+        incident_type: "{{ inputs.incident_type }}"
+        ai_output: "{{ steps.ai_runbook.output.message }}"

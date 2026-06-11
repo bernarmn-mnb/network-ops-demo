@@ -36,6 +36,25 @@ import {
 import type { Workflow, WorkflowExecution } from '../services/workflowsApi'
 import { WORKFLOW_RECIPES } from '../config/workflowRecipes'
 import type { WorkflowRecipe } from '../config/workflowRecipes'
+import { API_PREFIX } from '../services/apiBase'
+
+const KB_WORKFLOWS = 'https://home-depot.kb.us-central1.gcp.cloud.es.io/app/enterprise_search/kibana_workflows'
+
+interface WorkflowAiOutput {
+  workflow_id: string
+  workflow_name: string
+  device_id?: string
+  ai_output: string
+  '@timestamp': string
+}
+
+async function fetchLatestOutput(workflowId: string): Promise<WorkflowAiOutput | null> {
+  try {
+    const r = await fetch(`${API_PREFIX}/api/workflow-outputs/${workflowId}`)
+    const d = await r.json()
+    return d.output ?? null
+  } catch { return null }
+}
 
 // ============================================================================
 // Types
@@ -60,6 +79,7 @@ export function WorkflowsPage() {
   const [runForm, setRunForm] = useState<RunFormState | null>(null)
   const [runningId, setRunningId] = useState<string>()
   const [execution, setExecution] = useState<WorkflowExecution | null>(null)
+  const [aiOutput, setAiOutput] = useState<WorkflowAiOutput | null>(null)
 
   // Deploy state
   const [deployingRecipeId, setDeployingRecipeId] = useState<string>()
@@ -107,16 +127,17 @@ export function WorkflowsPage() {
     }
     setRunForm({ workflowId: wf.id, inputs: defaultInputs })
     setExecution(null)
+    setAiOutput(null)
   }, [])
 
   const handleRunWorkflow = useCallback(async () => {
     if (!runForm) return
     setRunningId(runForm.workflowId)
     setExecution(null)
+    setAiOutput(null)
     setError(undefined)
 
     try {
-      // Filter out empty inputs
       const inputs: Record<string, unknown> = {}
       Object.entries(runForm.inputs).forEach(([k, v]) => {
         if (v.trim()) inputs[k] = v.trim()
@@ -129,6 +150,15 @@ export function WorkflowsPage() {
         setExecution({ ...update })
       })
       setExecution(result)
+
+      // After completion, poll for AI output written to ES by the workflow's save_output step
+      if (result.status === 'completed') {
+        for (let i = 0; i < 6; i++) {
+          await new Promise(r => setTimeout(r, 3000))
+          const out = await fetchLatestOutput(runForm.workflowId)
+          if (out) { setAiOutput(out); break }
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Workflow run failed')
     } finally {
@@ -249,9 +279,10 @@ export function WorkflowsPage() {
                     runForm={runForm}
                     setRunForm={setRunForm}
                     onRun={handleRunWorkflow}
-                    onCancel={() => { setRunForm(null); setExecution(null) }}
+                    onCancel={() => { setRunForm(null); setExecution(null); setAiOutput(null) }}
                     isRunning={runningId === wf.id}
                     execution={execution}
+                    aiOutput={aiOutput}
                   />
                 )}
                 <EuiHorizontalRule margin="s" />
@@ -361,6 +392,7 @@ function RunFormPanel({
   onCancel,
   isRunning,
   execution,
+  aiOutput,
 }: {
   runForm: RunFormState
   setRunForm: (f: RunFormState | null) => void
@@ -368,6 +400,7 @@ function RunFormPanel({
   onCancel: () => void
   isRunning: boolean
   execution: WorkflowExecution | null
+  aiOutput: WorkflowAiOutput | null
 }) {
   const inputKeys = Object.keys(runForm.inputs)
 
@@ -428,6 +461,76 @@ function RunFormPanel({
         <>
           <EuiSpacer size="s" />
           <ExecutionStatus execution={execution} />
+        </>
+      )}
+
+      {/* AI Output panel — shown after completion */}
+      {execution?.status === 'completed' && (
+        <>
+          <EuiSpacer size="m" />
+          {aiOutput ? (
+            <EuiPanel paddingSize="m" color="transparent"
+              style={{ border: '1px solid #00BF9A', borderRadius: 6 }}>
+              <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" responsive={false}>
+                <EuiFlexItem grow={false}>
+                  <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
+                    <EuiFlexItem grow={false}>
+                      <EuiIcon type="checkInCircleFilled" color="success" />
+                    </EuiFlexItem>
+                    <EuiFlexItem grow={false}>
+                      <EuiText size="s"><strong>AI Analysis Output</strong></EuiText>
+                    </EuiFlexItem>
+                    {aiOutput.device_id && (
+                      <EuiFlexItem grow={false}>
+                        <EuiBadge color="hollow">{aiOutput.device_id}</EuiBadge>
+                      </EuiFlexItem>
+                    )}
+                  </EuiFlexGroup>
+                </EuiFlexItem>
+                <EuiFlexItem grow={false}>
+                  <EuiButtonEmpty size="xs" iconType="popout"
+                    href={KB_WORKFLOWS} target="_blank" rel="noopener noreferrer">
+                    Full execution in Kibana
+                  </EuiButtonEmpty>
+                </EuiFlexItem>
+              </EuiFlexGroup>
+              <EuiSpacer size="s" />
+              <div style={{
+                background: 'var(--euiColorEmptyShade, #fff)',
+                border: '1px solid var(--euiColorLightShade, #D3DAE6)',
+                borderRadius: 4, padding: '12px 16px',
+                fontFamily: 'var(--euiFontFamily, Inter, sans-serif)',
+                fontSize: 13, lineHeight: 1.6,
+                whiteSpace: 'pre-wrap', maxHeight: 400, overflowY: 'auto',
+              }}>
+                {aiOutput.ai_output}
+              </div>
+              <EuiSpacer size="xs" />
+              <EuiText size="xs" color="subdued">
+                {new Date(aiOutput['@timestamp']).toLocaleTimeString()} · saved to workflow-ai-outputs index
+              </EuiText>
+            </EuiPanel>
+          ) : (
+            <EuiPanel paddingSize="s" color="transparent"
+              style={{ border: '1px dashed #D3DAE6', borderRadius: 6 }}>
+              <EuiFlexGroup alignItems="center" gutterSize="m" responsive={false}>
+                <EuiFlexItem grow={false}>
+                  <EuiLoadingSpinner size="s" />
+                </EuiFlexItem>
+                <EuiFlexItem>
+                  <EuiText size="xs" color="subdued">
+                    Fetching AI output from Elasticsearch… (the workflow writes to workflow-ai-outputs)
+                  </EuiText>
+                </EuiFlexItem>
+                <EuiFlexItem grow={false}>
+                  <EuiButtonEmpty size="xs" iconType="popout"
+                    href={KB_WORKFLOWS} target="_blank" rel="noopener noreferrer">
+                    View in Kibana
+                  </EuiButtonEmpty>
+                </EuiFlexItem>
+              </EuiFlexGroup>
+            </EuiPanel>
+          )}
         </>
       )}
     </EuiPanel>

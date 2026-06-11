@@ -37,6 +37,7 @@ from .routes.cdp_lldp import router as cdp_lldp_router
 from .routes.network_impact import router as network_impact_router
 from .routes.network_netflow import router as network_netflow_router
 from .routes.network_meraki import router as network_meraki_router
+from .routes.workflow_outputs import router as workflow_outputs_router
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,7 @@ app.include_router(cdp_lldp_router)
 app.include_router(network_impact_router)
 app.include_router(network_netflow_router)
 app.include_router(network_meraki_router)
+app.include_router(workflow_outputs_router)
 
 
 @app.get("/")

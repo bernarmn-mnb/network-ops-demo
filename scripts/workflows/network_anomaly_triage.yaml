@@ -55,3 +55,15 @@ steps:
     type: console
     with:
       message: "ANOMALY TRIAGE — {{ inputs.device_id }}: {{ steps.search_flows.output.hits.total.value }} flows analysed. AI assessment: {{ steps.ai_triage.output.message }}"
+
+  - name: save_output
+    type: elasticsearch.index
+    with:
+      index: workflow-ai-outputs
+      document:
+        workflow_id: "network-anomaly-triage"
+        workflow_name: "Network Anomaly Triage"
+        device_id: "{{ inputs.device_id }}"
+        flows_found: "{{ steps.search_flows.output.hits.total.value }}"
+        snmp_samples: "{{ steps.search_snmp.output.hits.total.value }}"
+        ai_output: "{{ steps.ai_triage.output.message }}"

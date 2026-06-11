@@ -64,3 +64,12 @@ steps:
     type: console
     with:
       message: "CAPACITY PLAN — Congested interfaces: {{ steps.find_congested.output.hits.total.value }} | AI recommendations: {{ steps.ai_capacity_plan.output.message }}"
+
+  - name: save_output
+    type: elasticsearch.index
+    with:
+      index: workflow-ai-outputs
+      document:
+        workflow_id: "network-capacity-planning"
+        workflow_name: "Network Capacity Planning"
+        ai_output: "{{ steps.ai_capacity_plan.output.message }}"

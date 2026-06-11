@@ -70,3 +70,14 @@ steps:
     type: console
     with:
       message: "IMPACT ANALYSIS — {{ inputs.trigger_device }}/{{ inputs.trigger_interface }}: {{ steps.get_mac_table.output.hits.total.value }} MACs on switch, {{ steps.get_impact_chain.output.hits.total.value }} devices offline. AI: {{ steps.ai_impact_analysis.output.message }}"
+
+  - name: save_output
+    type: elasticsearch.index
+    with:
+      index: workflow-ai-outputs
+      document:
+        workflow_id: "network-flap-impact-analysis"
+        workflow_name: "Network Flap Impact Analysis"
+        device_id: "{{ inputs.trigger_device }}"
+        interface_name: "{{ inputs.trigger_interface }}"
+        ai_output: "{{ steps.ai_topology_impact.output.message }}"

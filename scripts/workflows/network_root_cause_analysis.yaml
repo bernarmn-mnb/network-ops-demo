@@ -70,3 +70,14 @@ steps:
     type: console
     with:
       message: "RCA COMPLETE — {{ inputs.alert_device }}: {{ steps.search_syslog.output.hits.total.value }} syslogs, {{ steps.search_snmp.output.hits.total.value }} SNMP samples, {{ steps.search_flows.output.hits.total.value }} flows. RCA: {{ steps.ai_rca.output.message }}"
+
+  - name: save_output
+    type: elasticsearch.index
+    with:
+      index: workflow-ai-outputs
+      document:
+        workflow_id: "network-root-cause-analysis"
+        workflow_name: "Network Root Cause Analysis"
+        device_id: "{{ inputs.alert_device }}"
+        alert_description: "{{ inputs.alert_description }}"
+        ai_output: "{{ steps.ai_rca.output.message }}"
