@@ -82,3 +82,18 @@ steps:
         interface_name: "{{ inputs.trigger_interface }}"
         "@timestamp": "{{ context.execution.startedAt }}"
         ai_output: "{{ steps.ai_topology_impact.output.message }}"
+
+  - name: create_case
+    type: http
+    with:
+      url: "https://demos.gcp.elasticsa.co/noc/api/cases/create"
+      method: POST
+      body:
+        title: "NOC Alert: {{ inputs.trigger_device }} / {{ inputs.trigger_interface }} — Interface Flap"
+        description: "{{ steps.ai_topology_impact.output.message }}"
+        workflow_id: "network-flap-impact-analysis"
+        device_id: "{{ inputs.trigger_device }}"
+        tags:
+          - "network"
+          - "ai-generated"
+          - "flap-impact"

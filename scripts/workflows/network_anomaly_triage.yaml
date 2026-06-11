@@ -68,3 +68,18 @@ steps:
         snmp_samples: "{{ steps.search_snmp.output.hits.total.value }}"
         "@timestamp": "{{ context.execution.startedAt }}"
         ai_output: "{{ steps.ai_triage.output.message }}"
+
+  - name: create_case
+    type: http
+    with:
+      url: "https://demos.gcp.elasticsa.co/noc/api/cases/create"
+      method: POST
+      body:
+        title: "NOC Alert: {{ inputs.device_id }} — Anomaly Triage"
+        description: "{{ steps.ai_triage.output.message }}"
+        workflow_id: "network-anomaly-triage"
+        device_id: "{{ inputs.device_id }}"
+        tags:
+          - "network"
+          - "ai-generated"
+          - "anomaly-triage"

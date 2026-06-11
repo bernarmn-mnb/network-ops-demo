@@ -74,3 +74,18 @@ steps:
         workflow_name: "Network Capacity Planning"
         "@timestamp": "{{ context.execution.startedAt }}"
         ai_output: "{{ steps.ai_capacity_plan.output.message }}"
+
+  - name: create_case
+    type: http
+    with:
+      url: "https://demos.gcp.elasticsa.co/noc/api/cases/create"
+      method: POST
+      body:
+        title: "NOC Capacity Planning Report"
+        description: "{{ steps.ai_capacity_plan.output.message }}"
+        workflow_id: "network-capacity-planning"
+        device_id: ""
+        tags:
+          - "network"
+          - "ai-generated"
+          - "capacity-planning"

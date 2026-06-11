@@ -82,3 +82,18 @@ steps:
         incident_type: "{{ inputs.incident_type }}"
         "@timestamp": "{{ context.execution.startedAt }}"
         ai_output: "{{ steps.ai_runbook.output.message }}"
+
+  - name: create_case
+    type: http
+    with:
+      url: "https://demos.gcp.elasticsa.co/noc/api/cases/create"
+      method: POST
+      body:
+        title: "NOC Incident: {{ inputs.incident_device }} — {{ inputs.incident_type }}"
+        description: "{{ steps.ai_runbook.output.message }}"
+        workflow_id: "network-incident-response"
+        device_id: "{{ inputs.incident_device }}"
+        tags:
+          - "network"
+          - "ai-generated"
+          - "incident-response"

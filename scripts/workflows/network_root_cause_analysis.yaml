@@ -82,3 +82,18 @@ steps:
         alert_description: "{{ inputs.alert_description }}"
         "@timestamp": "{{ context.execution.startedAt }}"
         ai_output: "{{ steps.ai_rca.output.message }}"
+
+  - name: create_case
+    type: http
+    with:
+      url: "https://demos.gcp.elasticsa.co/noc/api/cases/create"
+      method: POST
+      body:
+        title: "NOC Alert: {{ inputs.alert_device }} — Root Cause Analysis"
+        description: "Alert: {{ inputs.alert_description }}. Analysis: {{ steps.ai_rca.output.message }}"
+        workflow_id: "network-root-cause-analysis"
+        device_id: "{{ inputs.alert_device }}"
+        tags:
+          - "network"
+          - "ai-generated"
+          - "root-cause-analysis"
