@@ -86,14 +86,24 @@ steps:
   - name: create_case
     type: http
     with:
-      url: "https://demos.gcp.elasticsa.co/noc/api/cases/create"
+      url: "https://home-depot.kb.us-central1.gcp.cloud.es.io/api/cases"
       method: POST
+      headers:
+        Authorization: "ApiKey Tk13LWxaNEI4QnR1aHRMZUE3RFo6bk9yZkFBRTZPMzkyNENJRmw4amhZUQ=="
+        kbn-xsrf: "true"
+        Content-Type: "application/json"
       body:
         title: "NOC Alert: {{ inputs.alert_device }} — Root Cause Analysis"
-        description: "Alert: {{ inputs.alert_description }}. Analysis: {{ steps.ai_rca.output.message }}"
-        workflow_id: "network-root-cause-analysis"
-        device_id: "{{ inputs.alert_device }}"
+        description: "{{ steps.ai_rca.output.message }}"
         tags:
           - "network"
           - "ai-generated"
           - "root-cause-analysis"
+        connector:
+          id: "none"
+          name: "none"
+          type: ".none"
+          fields: null
+        settings:
+          syncAlerts: false
+        owner: "cases"

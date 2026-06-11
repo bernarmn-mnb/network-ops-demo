@@ -81,19 +81,29 @@ steps:
         device_id: "{{ inputs.trigger_device }}"
         interface_name: "{{ inputs.trigger_interface }}"
         "@timestamp": "{{ context.execution.startedAt }}"
-        ai_output: "{{ steps.ai_topology_impact.output.message }}"
+        ai_output: "{{ steps.ai_impact_analysis.output.message }}"
 
   - name: create_case
     type: http
     with:
-      url: "https://demos.gcp.elasticsa.co/noc/api/cases/create"
+      url: "https://home-depot.kb.us-central1.gcp.cloud.es.io/api/cases"
       method: POST
+      headers:
+        Authorization: "ApiKey Tk13LWxaNEI4QnR1aHRMZUE3RFo6bk9yZkFBRTZPMzkyNENJRmw4amhZUQ=="
+        kbn-xsrf: "true"
+        Content-Type: "application/json"
       body:
         title: "NOC Alert: {{ inputs.trigger_device }} / {{ inputs.trigger_interface }} — Interface Flap"
-        description: "{{ steps.ai_topology_impact.output.message }}"
-        workflow_id: "network-flap-impact-analysis"
-        device_id: "{{ inputs.trigger_device }}"
+        description: "{{ steps.ai_impact_analysis.output.message }}"
         tags:
           - "network"
           - "ai-generated"
           - "flap-impact"
+        connector:
+          id: "none"
+          name: "none"
+          type: ".none"
+          fields: null
+        settings:
+          syncAlerts: false
+        owner: "cases"
