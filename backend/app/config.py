@@ -65,9 +65,9 @@ class Settings:
     REAL_DEVICES_INDEX: str = _config("REAL_DEVICES_INDEX", default="real-network-devices")
 
     # Raw real indices (for direct ES|QL / Kibana use without transforms)
-    RAW_NETFLOW_INDEX:  str = _config("RAW_NETFLOW_INDEX",  default="logs-netflow.log-cisco-*")
-    RAW_MERAKI_INDEX:   str = _config("RAW_MERAKI_INDEX",   default="logs-cisco_meraki.log-cisco-*")
-    RAW_MERAKI_METRICS: str = _config("RAW_MERAKI_METRICS", default="metrics-cisco_meraki_metrics.device_health-cisco-*")
+    RAW_NETFLOW_INDEX:  str = _config("RAW_NETFLOW_INDEX",  default="logs-netflow.log-cisco")
+    RAW_MERAKI_INDEX:   str = _config("RAW_MERAKI_INDEX",   default="logs-cisco_meraki.log-cisco")
+    RAW_MERAKI_METRICS: str = _config("RAW_MERAKI_METRICS", default="metrics-cisco_meraki_metrics.device_health-cisco")
 
     # Visual Search (Jina CLIP v2 for text-to-image / image-to-image kNN)
     VISUAL_SEARCH_INDEX: str = _config("VISUAL_SEARCH_INDEX", default="products")

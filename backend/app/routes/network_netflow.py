@@ -39,7 +39,7 @@ async def get_dashboards():
 
 def _netflow_index() -> str:
     if settings.DATA_SOURCE == "real":
-        return "logs-netflow.log-cisco-*"
+        return "logs-netflow.log-cisco"  # data stream name, not wildcard
     return settings.REAL_FLOWS_INDEX if settings.REAL_FLOWS_INDEX != "real-network-flows" else "network-flows"
 
 

@@ -11,8 +11,8 @@ from ..config import settings
 
 router = APIRouter(prefix="/api/network/meraki", tags=["meraki"])
 
-MERAKI_LOG_IDX     = "logs-cisco_meraki.log-cisco-*"
-MERAKI_METRICS_IDX = "metrics-cisco_meraki_metrics.device_health-cisco-*"
+MERAKI_LOG_IDX     = "logs-cisco_meraki.log-cisco"
+MERAKI_METRICS_IDX = "metrics-cisco_meraki_metrics.device_health-cisco"
 
 KIBANA_DASHBOARDS = [
     {
