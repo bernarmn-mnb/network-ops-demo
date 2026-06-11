@@ -353,20 +353,28 @@ Works with `DATA_SOURCE=real` against `logs-netflow.log-cisco-*` (100M+ real rec
 
 ### Meraki Analysis (`/meraki`)
 
-| Element | Description |
+| Element | Clicks to |
 |---|---|
-| KPI row | Total Events · URL Events · Unique Clients · Active Devices · Security Alerts · Air Marshal Events |
-| Security callout | Red callout when IDS/security events detected in the period |
+| **Total Events** KPI | `[Logs Cisco Meraki] Syslog Events Overview` dashboard |
+| **URL Events** KPI | Kibana Discover → `cisco_meraki.event_type : "urls"` |
+| **Unique Clients** KPI | Kibana Discover → `source.ip : *` |
+| **Active Devices** KPI | `[Metrics Cisco Meraki] Device Health Overview` dashboard |
+| **Security Alerts** KPI | Kibana Discover → `ids_alerted or security_event` filtered |
+| **Air Marshal Events** KPI | Kibana Discover → `airmarshal_events` filtered |
+| Security callout | Red callout when IDS/security events detected — click to investigate |
 | Events timeline | SVG area chart — events per hour |
-| By Event Type | urls / events / airmarshal_events breakdown |
-| Top Active Devices | Which Meraki devices (MX68, APs) are seeing most traffic |
-| Top Source IPs | Most active client IPs on the 192.168.20.x subnet |
-| Top Domains | URL filtering — most visited domains |
-| Device Inventory | All 15 Meraki devices: name, model, type badge, LAN IP, MAC, serial, firmware. Amber highlight for outdated firmware |
+| **Event Type** bar row | Kibana Discover pre-filtered to that `cisco_meraki.event_type` |
+| **Top Device** bar row | Kibana Discover pre-filtered to that `observer.hostname` |
+| **Source IP** bar row | Kibana Discover pre-filtered to that `source.ip` |
+| **Domain** bar row | Kibana Discover pre-filtered to that `url.domain` |
+| **Device Inventory row** | Kibana Discover filtered to that device's events |
+| Device Inventory table | All 15 Meraki devices: model, type, LAN IP, MAC, serial, firmware · amber = outdated firmware |
 | Air Marshal feed | Rogue AP detections with device and message |
-| Kibana links | `[Logs Cisco Meraki] Syslog Events Overview` + `[Metrics Cisco Meraki] Device Health Overview` |
+| Kibana links bar | `[Logs Cisco Meraki] Syslog Events Overview` + `[Metrics Cisco Meraki] Device Health Overview` |
 
-Works with `DATA_SOURCE=real` against `logs-cisco_meraki.log-cisco-*` (13M+ real records) and `metrics-cisco_meraki_metrics.device_health-cisco-*`.
+**Visual cues**: blue underlined text · `↗` arrow · "Open in Kibana" micro-label on KPI cards · pointer cursor and hover highlight on all clickable rows. Every click opens a new tab.
+
+Works with `DATA_SOURCE=real` against `logs-cisco_meraki.log-cisco` data stream (14M+ records) and `metrics-cisco_meraki_metrics.device_health-cisco`.
 
 ### Impact Analysis (`/network-impact`)
 
