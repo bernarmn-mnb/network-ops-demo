@@ -191,6 +191,13 @@ export const NAV_ITEMS: NavItem[] = [
     category: 'demo',
   },
   {
+    path: '/meraki',
+    label: 'Meraki Analysis',
+    icon: 'securityApp',
+    description: 'Cisco Meraki event logs — URL filtering, security events, Air Marshal, device inventory',
+    category: 'demo',
+  },
+  {
     path: '/network-impact',
     label: 'Impact Analysis',
     icon: 'warning',

@@ -21,6 +21,7 @@ import { NetworkTopologyPage } from './pages/NetworkTopologyPage'
 import { NetworkDashboardPage } from './pages/NetworkDashboardPage'
 import { NetworkImpactPage } from './pages/NetworkImpactPage'
 import { NetflowAnalysisPage } from './pages/NetflowAnalysisPage'
+import { MerakiAnalysisPage } from './pages/MerakiAnalysisPage'
 
 /**
  * Main App Component
@@ -56,6 +57,7 @@ function App() {
         <Route path="/network-dashboard" element={<NetworkDashboardPage />} />
         <Route path="/network-impact" element={<NetworkImpactPage />} />
         <Route path="/netflow" element={<NetflowAnalysisPage />} />
+        <Route path="/meraki" element={<MerakiAnalysisPage />} />
       </Route>
     </Routes>
   )
