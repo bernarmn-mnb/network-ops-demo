@@ -11,6 +11,22 @@ import { FloatingChatWidget } from '../components/chat/FloatingChatWidget'
 
 const BASE = `${API_PREFIX}/api/network/meraki`
 
+// Kibana base URL and the 'cisco' data view (covers *cisco* — all Meraki + NetFlow)
+const KB = 'https://home-depot.kb.us-central1.gcp.cloud.es.io'
+const CISCO_DATA_VIEW = 'dba0a79a-eb25-4fbc-a096-5d74fb915de2'
+const KB_SYSLOG_DASH  = `${KB}/app/dashboards#/view/cisco_meraki-4832a430-af22-11ec-a899-6f7e676e0fb4`
+const KB_HEALTH_DASH  = `${KB}/app/dashboards#/view/cisco_meraki_metrics-d6b9863a-88e2-4e3d-a2a7-36ca1ee525b1`
+
+/** Build a Kibana Discover URL with a pre-applied KQL filter. */
+function buildDiscoverUrl(kql: string, timeRange = 'now-24h'): string {
+  const g = encodeURIComponent(`(time:(from:${timeRange},to:now))`)
+  const a = encodeURIComponent(
+    `(dataSource:(dataViewId:'${CISCO_DATA_VIEW}',type:dataView),` +
+    `query:(language:kuery,query:'${kql.replace(/'/g, "\\'")}'))`
+  )
+  return `${KB}/app/discover#/?_g=${g}&_a=${a}`
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -104,22 +120,37 @@ function TimelineChart({ data, height = 100 }: { data: Array<{ timestamp: string
   )
 }
 
-function HorizBars({ data, max, color = '#00BF9A', truncate = 22 }: {
+function HorizBars({ data, max, color = '#00BF9A', truncate = 22, onRowClick }: {
   data: Array<{ key: string; count: number }>
   max: number
   color?: string
   truncate?: number
+  onRowClick?: (key: string) => void
 }) {
   return (
     <div>
       {data.slice(0, 8).map(({ key, count }) => {
-        const pct = max > 0 ? (count / max) * 100 : 0
+        const pct   = max > 0 ? (count / max) * 100 : 0
         const label = key.length > truncate ? key.slice(0, truncate - 1) + '…' : key
+        const clickable = !!onRowClick
         return (
-          <div key={key} style={{ marginBottom: 5 }}>
+          <div
+            key={key}
+            style={{ marginBottom: 5, cursor: clickable ? 'pointer' : 'default',
+                     borderRadius: 4, padding: '2px 4px',
+                     transition: 'background 0.1s' }}
+            onClick={clickable ? () => onRowClick(key) : undefined}
+            title={clickable ? `Open "${key}" in Kibana Discover` : key}
+            onMouseEnter={e => { if (clickable) (e.currentTarget as HTMLDivElement).style.background = '#F0F4F8' }}
+            onMouseLeave={e => { if (clickable) (e.currentTarget as HTMLDivElement).style.background = '' }}
+          >
             <EuiFlexGroup gutterSize="xs" alignItems="center" responsive={false}>
               <EuiFlexItem style={{ minWidth: 130, maxWidth: 160 }}>
-                <EuiText size="xs" style={{ fontFamily: 'monospace', fontSize: 11 }} title={key}>
+                <EuiText size="xs"
+                  style={{ fontFamily: 'monospace', fontSize: 11,
+                           color: clickable ? '#0077CC' : undefined,
+                           textDecoration: clickable ? 'underline' : undefined }}
+                  title={key}>
                   {label}
                 </EuiText>
               </EuiFlexItem>
@@ -129,7 +160,16 @@ function HorizBars({ data, max, color = '#00BF9A', truncate = 22 }: {
                 </div>
               </EuiFlexItem>
               <EuiFlexItem grow={false} style={{ minWidth: 55, textAlign: 'right' }}>
-                <EuiText size="xs" color="subdued">{formatFlows(count)}</EuiText>
+                <EuiFlexGroup gutterSize="xs" alignItems="center" responsive={false}>
+                  <EuiFlexItem grow={false}>
+                    <EuiText size="xs" color="subdued">{formatFlows(count)}</EuiText>
+                  </EuiFlexItem>
+                  {clickable && (
+                    <EuiFlexItem grow={false}>
+                      <span style={{ fontSize: 10, color: '#0077CC' }}>↗</span>
+                    </EuiFlexItem>
+                  )}
+                </EuiFlexGroup>
               </EuiFlexItem>
             </EuiFlexGroup>
           </div>
@@ -272,22 +312,32 @@ export function MerakiAnalysisPage() {
             </EuiFlexGroup>
           ) : !stats ? null : (
             <>
-              {/* ── KPI row ── */}
+              {/* ── KPI row — each card links to the relevant Kibana dashboard ── */}
               <EuiFlexGroup gutterSize="m" responsive={false} wrap>
                 {[
-                  { title: formatFlows(stats.total_events),   desc: 'Total Events',       color: 'primary' },
-                  { title: formatFlows(stats.url_count),      desc: 'URL Events',         color: 'primary' },
-                  { title: String(stats.unique_src),          desc: 'Unique Clients',     color: 'success' },
-                  { title: String(stats.unique_devices),      desc: 'Active Devices',     color: 'success' },
+                  { title: formatFlows(stats.total_events),   desc: 'Total Events',       color: 'primary', href: KB_SYSLOG_DASH },
+                  { title: formatFlows(stats.url_count),      desc: 'URL Events',         color: 'primary', href: buildDiscoverUrl('cisco_meraki.event_type : "urls"') },
+                  { title: String(stats.unique_src),          desc: 'Unique Clients',     color: 'success', href: buildDiscoverUrl('source.ip : *') },
+                  { title: String(stats.unique_devices),      desc: 'Active Devices',     color: 'success', href: KB_HEALTH_DASH },
                   { title: String(stats.security_count),      desc: 'Security Alerts',
-                    color: stats.security_count > 0 ? 'danger' : 'success' },
+                    color: stats.security_count > 0 ? 'danger' : 'success',
+                    href: buildDiscoverUrl('cisco_meraki.event_type : "ids_alerted" or cisco_meraki.event_type : "security_event"') },
                   { title: String(stats.airmarshal_count),    desc: 'Air Marshal Events',
-                    color: stats.airmarshal_count > 0 ? 'warning' : 'success' },
-                ].map(({ title, desc, color }) => (
+                    color: stats.airmarshal_count > 0 ? 'warning' : 'success',
+                    href: buildDiscoverUrl('cisco_meraki.event_type : "airmarshal_events"') },
+                ].map(({ title, desc, color, href }) => (
                   <EuiFlexItem key={desc}>
-                    <EuiPanel paddingSize="m" hasBorder hasShadow={false}>
+                    <EuiPanel
+                      paddingSize="m" hasBorder hasShadow={false}
+                      style={{ cursor: 'pointer', transition: 'box-shadow 0.15s' }}
+                      onClick={() => window.open(href, '_blank', 'noopener,noreferrer')}
+                      title={`Open "${desc}" in Kibana`}
+                    >
                       <EuiStat title={title} description={desc}
                         titleColor={color as 'primary'} titleSize="m" />
+                      <EuiText size="xs" color="subdued" style={{ marginTop: 4 }}>
+                        ↗ Open in Kibana
+                      </EuiText>
                     </EuiPanel>
                   </EuiFlexItem>
                 ))}
@@ -320,14 +370,16 @@ export function MerakiAnalysisPage() {
                   <EuiPanel paddingSize="m" hasBorder hasShadow={false} style={{ height: '100%' }}>
                     <EuiTitle size="xs"><h3>By Event Type</h3></EuiTitle>
                     <EuiSpacer size="s" />
-                    <HorizBars data={stats.by_event_type} max={maxEvType} color="#00BF9A" />
+                    <HorizBars data={stats.by_event_type} max={maxEvType} color="#00BF9A"
+                      onRowClick={k => window.open(buildDiscoverUrl(`cisco_meraki.event_type : "${k}"`), '_blank', 'noopener,noreferrer')} />
                   </EuiPanel>
                 </EuiFlexItem>
                 <EuiFlexItem grow={3}>
                   <EuiPanel paddingSize="m" hasBorder hasShadow={false} style={{ height: '100%' }}>
                     <EuiTitle size="xs"><h3>Top Active Devices</h3></EuiTitle>
                     <EuiSpacer size="s" />
-                    <HorizBars data={stats.top_devices} max={maxDevice} color="#7B61FF" />
+                    <HorizBars data={stats.top_devices} max={maxDevice} color="#7B61FF"
+                      onRowClick={k => window.open(buildDiscoverUrl(`observer.hostname : "${k}"`), '_blank', 'noopener,noreferrer')} />
                   </EuiPanel>
                 </EuiFlexItem>
               </EuiFlexGroup>
@@ -340,14 +392,16 @@ export function MerakiAnalysisPage() {
                   <EuiPanel paddingSize="m" hasBorder hasShadow={false}>
                     <EuiTitle size="xs"><h3>Top Source IPs (Clients)</h3></EuiTitle>
                     <EuiSpacer size="s" />
-                    <HorizBars data={stats.top_src_ip} max={maxSrc} color="#0077CC" />
+                    <HorizBars data={stats.top_src_ip} max={maxSrc} color="#0077CC"
+                      onRowClick={k => window.open(buildDiscoverUrl(`source.ip : "${k}"`), '_blank', 'noopener,noreferrer')} />
                   </EuiPanel>
                 </EuiFlexItem>
                 <EuiFlexItem grow={2}>
                   <EuiPanel paddingSize="m" hasBorder hasShadow={false}>
                     <EuiTitle size="xs"><h3>Top Domains (URL Filtering)</h3></EuiTitle>
                     <EuiSpacer size="s" />
-                    <HorizBars data={stats.top_domains} max={maxDomain} color="#F5A700" truncate={40} />
+                    <HorizBars data={stats.top_domains} max={maxDomain} color="#F5A700" truncate={40}
+                      onRowClick={k => window.open(buildDiscoverUrl(`url.domain : "${k}"`), '_blank', 'noopener,noreferrer')} />
                   </EuiPanel>
                 </EuiFlexItem>
               </EuiFlexGroup>
@@ -381,9 +435,15 @@ export function MerakiAnalysisPage() {
                     tableLayout="auto"
                     rowProps={(d) => ({
                       style: {
+                        cursor: 'pointer',
                         background: d.firmware?.toLowerCase().includes('not running')
                           ? 'rgba(254,197,20,0.06)' : undefined,
                       },
+                      onClick: () => window.open(
+                        buildDiscoverUrl(`observer.hostname : "${d.name}"`),
+                        '_blank', 'noopener,noreferrer'
+                      ),
+                      title: `Open events for ${d.name} in Kibana Discover`,
                     })}
                   />
                 ) : (
