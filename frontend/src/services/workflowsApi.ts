@@ -204,13 +204,27 @@ export async function getExecution(executionId: string): Promise<WorkflowExecuti
   // Map Kibana's response format → WorkflowExecution
   // Kibana returns stepExecutions[].stepId/stepType/status; frontend expects steps[].name/type/status
   const stepExecutions: Array<Record<string, unknown>> = (raw.stepExecutions ?? raw.steps ?? [])
-  const steps: WorkflowStepResult[] = stepExecutions.map((s) => ({
-    name:     String(s.stepId   ?? s.name   ?? ''),
-    type:     String(s.stepType ?? s.type   ?? ''),
-    status:   String(s.executionStatus ?? s.status ?? 'pending') as WorkflowStepResult['status'],
-    error:    s.error ? String(s.error) : undefined,
-    duration: typeof s.duration === 'number' ? s.duration : undefined,
-  }))
+  const steps: WorkflowStepResult[] = stepExecutions.map((s) => {
+    // Kibana does not expose step output via REST API as of 8.x/9.x.
+    // Map all candidate field names defensively so we surface output if it ever appears.
+    const rawOutput =
+      s.output ??
+      s.result ??
+      s.outputs ??
+      s.message ??
+      s.executionMessage ??
+      s.renderedMessage ??
+      undefined
+    return {
+      name:     String(s.stepId   ?? s.name   ?? ''),
+      type:     String(s.stepType ?? s.type   ?? ''),
+      status:   String(s.executionStatus ?? s.status ?? 'pending') as WorkflowStepResult['status'],
+      output:   rawOutput,
+      error:    s.error ? String(s.error) : undefined,
+      duration: typeof s.duration === 'number' ? s.duration :
+                typeof s.executionTimeMs === 'number' ? s.executionTimeMs : undefined,
+    }
+  })
 
   return {
     id:          String(raw.id ?? raw.workflowExecutionId ?? ''),
