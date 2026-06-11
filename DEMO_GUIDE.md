@@ -20,6 +20,8 @@ Elastic as the **single pane of glass for network operations** — ingesting Net
 | CDP/LLDP Map | Real adjacency data discovered by netcrawl — actual interface names, protocol badges, down-link detection |
 | Network Analytics | NetFlow top talkers, SNMP device health table, syslog alert feed |
 | **Impact Analysis** | Interface flap/outage → MAC→IP→hostname chain → every affected user by name, department, VLAN |
+| **NetFlow Analysis** | Deep flow analysis — top talkers, protocols, ports, conversation partners, links to 8 Kibana dashboards |
+| **Meraki Analysis** | Cisco Meraki event logs — URL filtering, security alerts, Air Marshal, full device inventory |
 | AI Workflows | 9 deployed workflows correlating NetFlow, SNMP, syslog, MAC/ARP/DNS for AI-grounded analysis |
 | Event-Driven Intelligence | Interface-down syslog → triggers CDP/LLDP crawl → topology updates automatically |
 | NOC Chat Assistant | Floating AI chat on every page — ask about alerts, devices, or events |
@@ -326,10 +328,45 @@ Give me a quick status summary of the entire network right now.
 | Element | Description |
 |---|---|
 | KPI row | Total flows (24h) · Ingress bandwidth · Egress bandwidth · Critical devices · Devices healthy |
+| Filter bar | IP search · Vendor pills (Cisco/Juniper/Arista) · Status pills (Healthy/Warning/Critical) |
 | Top Talkers | src IP · dst IP · protocol · port · volume with bar · % of total traffic |
 | Recent Alerts | Severity icon · device · message · timestamp · category |
-| Device Health | Full device table with CPU and memory progress bars, highlighted rows for critical/warning |
-| Time filter | 1h / 6h / 24h / 7d selector (UI toggle — queries update when wired to live ES data) |
+| Device Health | Full device table with CPU/memory bars, filtered by vendor or status |
+| Time filter | 1h / 6h / 24h / 7d |
+
+### NetFlow Analysis (`/netflow`)
+
+| Element | Description |
+|---|---|
+| KPI row | Total Flows · Total Bytes · Total Packets · Unique Sources · Unique Destinations |
+| Traffic volume chart | SVG area chart — bytes per hour over the selected time range |
+| Protocol donut | TCP / UDP / ICMP breakdown with percentages |
+| Flow direction bars | Inbound · Outbound · Internal |
+| Top Source IPs | Horizontal bar chart — most active senders |
+| Top Destination IPs | Horizontal bar chart — most accessed destinations |
+| Top Destination Ports | With service labels (443=HTTPS, 53=DNS, 22=SSH, 8883=MQTT…) |
+| Top Conversation Partners | Table — src→dst, protocol, bytes, flow count |
+| Kibana links bar | 8 dashboards: Overview, Top-N, Geo Location, Traffic Analysis, Flow Records, Exporters, Autonomous Systems, Conversation Partners |
+| Open in Kibana button | Direct link to `[Logs Netflow] Overview` |
+
+Works with `DATA_SOURCE=real` against `logs-netflow.log-cisco-*` (100M+ real records).
+
+### Meraki Analysis (`/meraki`)
+
+| Element | Description |
+|---|---|
+| KPI row | Total Events · URL Events · Unique Clients · Active Devices · Security Alerts · Air Marshal Events |
+| Security callout | Red callout when IDS/security events detected in the period |
+| Events timeline | SVG area chart — events per hour |
+| By Event Type | urls / events / airmarshal_events breakdown |
+| Top Active Devices | Which Meraki devices (MX68, APs) are seeing most traffic |
+| Top Source IPs | Most active client IPs on the 192.168.20.x subnet |
+| Top Domains | URL filtering — most visited domains |
+| Device Inventory | All 15 Meraki devices: name, model, type badge, LAN IP, MAC, serial, firmware. Amber highlight for outdated firmware |
+| Air Marshal feed | Rogue AP detections with device and message |
+| Kibana links | `[Logs Cisco Meraki] Syslog Events Overview` + `[Metrics Cisco Meraki] Device Health Overview` |
+
+Works with `DATA_SOURCE=real` against `logs-cisco_meraki.log-cisco-*` (13M+ real records) and `metrics-cisco_meraki_metrics.device_health-cisco-*`.
 
 ### Impact Analysis (`/network-impact`)
 
@@ -421,6 +458,10 @@ uv run --project backend python scripts/simulate_netcrawl.py
 | **NOC Overview dashboard** | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/b12f7eb1-e40b-4c21-86b4-13849efa574a |
 | **NetFlow Traffic Analysis dashboard** | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/fd38bd9a-0100-47a6-aa53-e9fd9bb329d2 |
 | **CDP/LLDP Topology dashboard** | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/f3ebd0b7-5168-438c-a9f6-4e32c2213709 |
+| **Network Impact Analysis dashboard** | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/32d04ef9-8145-44f8-95f2-8b8370d9b5d8 |
+| **[Logs Netflow] Overview** _(real data)_ | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/netflow-34e26884-161a-4448-9556-43b5bf2f62a2 |
+| **[Logs Cisco Meraki] Syslog Events** _(real data)_ | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/cisco_meraki-4832a430-af22-11ec-a899-6f7e676e0fb4 |
+| **[Metrics Cisco Meraki] Device Health** _(real data)_ | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/cisco_meraki_metrics-d6b9863a-88e2-4e3d-a2a7-36ca1ee525b1 |
 
 ### netcrawl
 

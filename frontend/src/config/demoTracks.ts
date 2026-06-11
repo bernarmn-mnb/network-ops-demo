@@ -387,6 +387,103 @@ export const DEMO_TRACKS: DemoTrack[] = [
   },
 
   // =========================================================================
+  // Track E — Real Data: NetFlow + Meraki
+  // =========================================================================
+  {
+    id: 'e',
+    title: 'Track E: Real NetFlow & Meraki Data',
+    description: 'Live analysis of 100M+ real NetFlow records and 13M+ Cisco Meraki events from your own network',
+    color: 'success',
+    badges: ['Real Data', 'NetFlow v9', 'Meraki', 'URL Filtering', 'Air Marshal'],
+    valueProposition: {
+      title: 'Your Real Network, Not a Demo Story',
+      icon: 'visArea',
+      content: 'The cluster holds 100M+ real NetFlow v9 records from your Meraki MX and 13M+ Meraki syslog events. Switch DATA_SOURCE=real and the entire demo runs on your actual traffic — top talkers, URL filtering events, device inventory, and Air Marshal rogue AP detections.',
+    },
+    keyMessages: [
+      '"This is your actual network traffic — not synthetic data"',
+      '"108 Air Marshal events detected — rogue APs attempting to connect to your wireless network"',
+      '"15 Meraki devices inventoried: MS220-8P switch, MX68/MX100 appliances, 6 access points, 2 cameras"',
+    ],
+    scenarios: [
+      {
+        id: 'netflow-real',
+        badge: '1',
+        badgeColor: 'success',
+        title: 'NetFlow Analysis — Real Traffic',
+        keyInsight: 'Your top talkers, protocol mix, and conversation partners from real NetFlow v9 exports.',
+        steps: [
+          'Navigate to NetFlow Analysis (/netflow)',
+          'Show KPI row: total flows, total bytes, unique source IPs from your network',
+          'Point to the traffic volume timeline — show actual business hours peaks',
+          'Show top source IPs: 192.168.20.168, 192.168.20.143 are your highest-traffic clients',
+          'Show top domains: Comcast CDN, elastic domains, streaming services',
+          'Show top destination ports: 443 (HTTPS), 53 (DNS), 8883 (MQTT/IoT)',
+          'Click "Open in Kibana" → [Logs Netflow] Overview for full Kibana view',
+        ],
+        talkingPoints: [
+          '"Every flow record here came from your Meraki MX via NetFlow v9 export to Elastic"',
+          '"The MQTT traffic on port 8883 suggests IoT devices on your network"',
+          '"The 8 Kibana links in the header give you drill-downs: Geo Location, Autonomous Systems, Conversation Partners"',
+          '"With 100M+ records, you can query any IP, protocol, or port and get instant answers"',
+        ],
+        demoPills: [
+          { label: 'NetFlow Analysis', path: '/netflow' },
+        ],
+      },
+      {
+        id: 'meraki-real',
+        badge: '2',
+        badgeColor: 'success',
+        title: 'Meraki Analysis — Real Events & Device Inventory',
+        keyInsight: '13M+ real Meraki events: URL filtering, security alerts, and 108 Air Marshal rogue AP detections.',
+        steps: [
+          'Navigate to Meraki Analysis (/meraki)',
+          'Show KPI row — highlight Security Alerts and Air Marshal Events count',
+          'Point to the amber security callout if alerts are present',
+          'Show top active devices: MX68, Tiffany_AP, Corey_Room_AP — these are your real APs',
+          'Show top domains in URL filtering — identifies what your clients are browsing',
+          'Scroll to Device Inventory table — show all 15 devices: type, model, LAN IP, serial, firmware',
+          'Point out any devices with outdated firmware (amber row highlight)',
+          'Show the Air Marshal events feed if populated',
+          'Click "Open in Kibana" links for the full Kibana views',
+        ],
+        talkingPoints: [
+          '"108 Air Marshal events means Meraki detected rogue access points attempting to connect — this is a real security signal from your network"',
+          '"The device inventory is live from the Meraki API via Elastic — serial numbers, firmware versions, LAN IPs all current"',
+          '"Outdated firmware rows are automatically highlighted — this is your vulnerability surface"',
+          '"URL filtering events show exactly what your clients are browsing, which domains are being blocked, and which clients generate the most traffic"',
+          '"All of this feeds into the AI workflows — the NOC agent has context about your real devices"',
+        ],
+        demoPills: [
+          { label: 'Meraki Analysis', path: '/meraki' },
+        ],
+      },
+      {
+        id: 'real-esql',
+        badge: '⭐',
+        badgeColor: 'accent',
+        title: 'ES|QL on Real Data — MAC→IP Correlation',
+        keyInsight: 'Meraki URL events carry client MAC addresses. ES|QL can join them to NetFlow IPs to build a real identity chain.',
+        steps: [
+          'Open Kibana → Discover → select the "cisco" data view',
+          'Run this ES|QL query to join Meraki MAC addresses to source IPs:',
+        ],
+        talkingPoints: [
+          'Query: FROM *cisco* | WHERE cisco_meraki.urls.mac IS NOT NULL AND source.ip IS NOT NULL | EVAL mac = cisco_meraki.urls.mac, ip = source.ip, device = observer.hostname | STATS last_seen = MAX(@timestamp), hits = COUNT() BY mac, ip, device | SORT last_seen DESC | LIMIT 20',
+          '"This is the same MAC→IP chain as the Impact Analysis page but built from real Meraki events — not synthetic ARP tables"',
+          '"Every client device on your network that generated a URL event is mapped: MAC address → IP → Meraki AP"',
+          '"Add another ENRICH step and you have hostname and user from your DHCP/DNS records"',
+        ],
+        demoPills: [
+          { label: 'Meraki Analysis', path: '/meraki' },
+          { label: 'NetFlow Analysis', path: '/netflow' },
+        ],
+      },
+    ],
+  },
+
+  // =========================================================================
   // Track C — Event-Driven Intelligence
   // =========================================================================
   {
