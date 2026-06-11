@@ -80,4 +80,5 @@ steps:
         workflow_name: "Network Incident Response"
         device_id: "{{ inputs.incident_device }}"
         incident_type: "{{ inputs.incident_type }}"
+        "@timestamp": "{{ context.execution.startedAt }}"
         ai_output: "{{ steps.ai_runbook.output.message }}"

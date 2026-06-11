@@ -66,4 +66,5 @@ steps:
         device_id: "{{ inputs.device_id }}"
         flows_found: "{{ steps.search_flows.output.hits.total.value }}"
         snmp_samples: "{{ steps.search_snmp.output.hits.total.value }}"
+        "@timestamp": "{{ context.execution.startedAt }}"
         ai_output: "{{ steps.ai_triage.output.message }}"

@@ -80,4 +80,5 @@ steps:
         workflow_name: "Network Root Cause Analysis"
         device_id: "{{ inputs.alert_device }}"
         alert_description: "{{ inputs.alert_description }}"
+        "@timestamp": "{{ context.execution.startedAt }}"
         ai_output: "{{ steps.ai_rca.output.message }}"

@@ -51,11 +51,18 @@ def _fetch_outputs(workflow_id: str | None, size: int) -> list[dict] | None:
         query: dict = {"match_all": {}}
         if workflow_id:
             query = {"term": {"workflow_id.keyword": workflow_id}}
-        resp = es.search(index=OUTPUT_INDEX, body={
-            "size": size,
-            "sort": [{"@timestamp": "desc"}],
-            "query": query,
-        })
+        try:
+            resp = es.search(index=OUTPUT_INDEX, body={
+                "size": size,
+                "sort": [{"@timestamp": "desc"}],
+                "query": query,
+            })
+        except Exception:
+            # Fallback without sort if @timestamp mapping not present yet
+            resp = es.search(index=OUTPUT_INDEX, body={
+                "size": size,
+                "query": query,
+            })
         if resp["hits"]["total"]["value"] == 0:
             return None
         return [h["_source"] for h in resp["hits"]["hits"]]

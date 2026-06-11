@@ -80,4 +80,5 @@ steps:
         workflow_name: "Network Flap Impact Analysis"
         device_id: "{{ inputs.trigger_device }}"
         interface_name: "{{ inputs.trigger_interface }}"
+        "@timestamp": "{{ context.execution.startedAt }}"
         ai_output: "{{ steps.ai_topology_impact.output.message }}"

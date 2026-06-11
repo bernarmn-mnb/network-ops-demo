@@ -72,4 +72,5 @@ steps:
       document:
         workflow_id: "network-capacity-planning"
         workflow_name: "Network Capacity Planning"
+        "@timestamp": "{{ context.execution.startedAt }}"
         ai_output: "{{ steps.ai_capacity_plan.output.message }}"
