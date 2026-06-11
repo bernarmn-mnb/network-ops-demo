@@ -537,6 +537,82 @@ function RunFormPanel({
   )
 }
 
+/** Parse the AI assessment out of a console log prefix like "ANOMALY TRIAGE — device: N flows. AI: <text>" */
+function parseConsoleOutput(text: string): { prefix: string; body: string } | null {
+  const PREFIXES = ['ANOMALY TRIAGE', 'RCA COMPLETE', 'ANALYSIS COMPLETE', 'TRIAGE COMPLETE']
+  const upper = text.toUpperCase()
+  if (!PREFIXES.some((p) => upper.startsWith(p))) return null
+  // Find last " AI: " or ": " separator to extract body
+  const aiIdx = text.indexOf(' AI: ')
+  if (aiIdx !== -1) {
+    return { prefix: text.slice(0, aiIdx + 4), body: text.slice(aiIdx + 5) }
+  }
+  const colonIdx = text.lastIndexOf(': ')
+  if (colonIdx !== -1 && colonIdx > 10) {
+    return { prefix: text.slice(0, colonIdx), body: text.slice(colonIdx + 2) }
+  }
+  return null
+}
+
+function StepOutputBlock({ output }: { output: unknown }) {
+  const [expanded, setExpanded] = useState(false)
+  const LIMIT = 800
+
+  if (output === null || output === undefined) return null
+  const text = typeof output === 'string' ? output : JSON.stringify(output, null, 2)
+  if (!text || !text.trim()) return null
+
+  const parsed = parseConsoleOutput(text)
+
+  if (parsed) {
+    const body = parsed.body
+    const truncated = !expanded && body.length > LIMIT ? body.slice(0, LIMIT) + '…' : body
+    return (
+      <EuiPanel paddingSize="s" color="transparent"
+        style={{ border: '1px solid #00BF9A', borderRadius: 4, marginTop: 4 }}>
+        <EuiText size="xs" color="subdued" style={{ marginBottom: 4 }}>
+          <strong>{parsed.prefix}</strong>
+        </EuiText>
+        <div style={{
+          background: 'var(--euiColorEmptyShade, #fff)',
+          border: '1px solid var(--euiColorLightShade, #D3DAE6)',
+          borderRadius: 4, padding: '8px 12px',
+          fontFamily: 'var(--euiFontFamily, Inter, sans-serif)',
+          fontSize: 12, lineHeight: 1.6,
+          whiteSpace: 'pre-wrap',
+        }}>
+          {truncated}
+        </div>
+        {body.length > LIMIT && (
+          <EuiButtonEmpty size="xs" onClick={() => setExpanded(!expanded)} style={{ marginTop: 2 }}>
+            {expanded ? 'Show less' : 'Show more'}
+          </EuiButtonEmpty>
+        )}
+      </EuiPanel>
+    )
+  }
+
+  const truncated = !expanded && text.length > LIMIT ? text.slice(0, LIMIT) + '…' : text
+  return (
+    <div style={{ marginTop: 4, paddingLeft: 16 }}>
+      <pre style={{
+        fontSize: 11, lineHeight: 1.5,
+        background: 'var(--euiColorLightestShade, #F5F7FA)',
+        border: '1px solid var(--euiColorLightShade, #D3DAE6)',
+        borderRadius: 4, padding: '6px 10px',
+        whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0,
+      }}>
+        {truncated}
+      </pre>
+      {text.length > LIMIT && (
+        <EuiButtonEmpty size="xs" onClick={() => setExpanded(!expanded)}>
+          {expanded ? 'Show less' : 'Show more'}
+        </EuiButtonEmpty>
+      )}
+    </div>
+  )
+}
+
 function ExecutionStatus({ execution }: { execution: WorkflowExecution }) {
   const statusColor = {
     pending: 'hollow' as const,
@@ -568,6 +644,17 @@ function ExecutionStatus({ execution }: { execution: WorkflowExecution }) {
             <EuiText size="xs" color="subdued">{(execution.duration / 1000).toFixed(1)}s</EuiText>
           </EuiFlexItem>
         )}
+        <EuiFlexItem grow={false}>
+          <EuiButtonEmpty
+            size="xs"
+            iconType="popout"
+            href={KB_WORKFLOWS}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View in Kibana
+          </EuiButtonEmpty>
+        </EuiFlexItem>
       </EuiFlexGroup>
 
       {/* Step results */}
@@ -575,16 +662,29 @@ function ExecutionStatus({ execution }: { execution: WorkflowExecution }) {
         <>
           <EuiSpacer size="xs" />
           {execution.steps.map((step, i) => (
-            <EuiFlexGroup key={i} gutterSize="xs" alignItems="center" responsive={false} style={{ paddingLeft: 16 }}>
-              <EuiFlexItem grow={false}>
-                <EuiText size="xs" color="subdued">{step.name}</EuiText>
-              </EuiFlexItem>
-              <EuiFlexItem grow={false}>
-                <EuiBadge color={statusColor[step.status] || 'hollow'}>
-                  {step.status}
-                </EuiBadge>
-              </EuiFlexItem>
-            </EuiFlexGroup>
+            <div key={i}>
+              <EuiFlexGroup gutterSize="xs" alignItems="center" responsive={false} style={{ paddingLeft: 16 }}>
+                <EuiFlexItem grow={false}>
+                  <EuiText size="xs" color="subdued">{step.name}</EuiText>
+                </EuiFlexItem>
+                <EuiFlexItem grow={false}>
+                  <EuiBadge color={statusColor[step.status] || 'hollow'}>
+                    {step.status}
+                  </EuiBadge>
+                </EuiFlexItem>
+                {step.duration !== undefined && (
+                  <EuiFlexItem grow={false}>
+                    <EuiText size="xs" color="subdued">{(step.duration / 1000).toFixed(1)}s</EuiText>
+                  </EuiFlexItem>
+                )}
+              </EuiFlexGroup>
+              {step.output != null && <StepOutputBlock output={step.output} />}
+              {step.error && (
+                <div style={{ paddingLeft: 16, marginTop: 4 }}>
+                  <EuiText size="xs" color="danger">{step.error}</EuiText>
+                </div>
+              )}
+            </div>
           ))}
         </>
       )}

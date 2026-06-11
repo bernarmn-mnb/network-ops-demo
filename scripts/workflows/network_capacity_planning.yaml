@@ -78,24 +78,14 @@ steps:
   - name: create_case
     type: http
     with:
-      url: "https://home-depot.kb.us-central1.gcp.cloud.es.io/api/cases"
+      url: "https://demos.gcp.elasticsa.co/noc/api/cases/create"
       method: POST
-      headers:
-        Authorization: "ApiKey Tk13LWxaNEI4QnR1aHRMZUE3RFo6bk9yZkFBRTZPMzkyNENJRmw4amhZUQ=="
-        kbn-xsrf: "true"
-        Content-Type: "application/json"
       body:
         title: "NOC Capacity Planning Report"
         description: "{{ steps.ai_capacity_plan.output.message }}"
+        workflow_id: "network-capacity-planning"
+        device_id: ""
         tags:
           - "network"
           - "ai-generated"
           - "capacity-planning"
-        connector:
-          id: "none"
-          name: "none"
-          type: ".none"
-          fields: null
-        settings:
-          syncAlerts: false
-        owner: "cases"
