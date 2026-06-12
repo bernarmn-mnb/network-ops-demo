@@ -190,12 +190,14 @@ export const DEMO_TRACKS: DemoTrack[] = [
           'Enter device_id: site-b-rtr',
           'Click Execute and watch the steps run in real time',
           'Show the AI output: severity, root cause hypothesis, CLI commands to run',
+          'After completion, open Kibana Cases to see the auto-generated case with the full AI analysis',
         ],
         talkingPoints: [
           'The workflow searches 5,000+ NetFlow records and 2,800+ SNMP samples',
           'The AI has counts and timestamps from your actual environment — not a generic template',
           'Containment recommendations include specific CLI commands for the device vendor',
           'This can fire automatically when an alert rule detects anomalous traffic patterns',
+          'After the workflow completes, a case is automatically created in Kibana Cases — title: NOC Alert: {device} — {type}, tags: network, ai-generated',
         ],
         demoPills: [
           { label: 'Workflows', path: '/workflows' },
@@ -212,12 +214,14 @@ export const DEMO_TRACKS: DemoTrack[] = [
           'Enter: alert_device = site-b-rtr, alert_description = "CPU 95%, OSPF adjacency lost, Ge0/2 down"',
           'Show the structured output: timeline of events, root cause with confidence level, blast radius',
           'Point out the blast radius section — which downstream devices are affected',
+          'After completion, open Kibana Cases to see the auto-generated case with the full AI analysis',
         ],
         talkingPoints: [
           'Three data types correlated in a single workflow: syslog (events), SNMP (metrics), NetFlow (traffic)',
           'The blast radius analysis tells you which services are down before your service desk gets the calls',
           'Confidence level (high/medium/low) helps the engineer know how much to trust the AI\'s hypothesis',
           'Remediation steps are ordered by priority — what to do first, second, third',
+          'After the workflow completes, a case is automatically created in Kibana Cases — title: NOC Alert: {device} — {type}, tags: network, ai-generated',
         ],
         demoPills: [
           { label: 'Workflows', path: '/workflows' },
@@ -233,12 +237,14 @@ export const DEMO_TRACKS: DemoTrack[] = [
           'Run "Network Incident Response"',
           'Enter: incident_device = site-b-rtr, incident_type = "CPU spike and interface down"',
           'Show the full runbook: immediate actions, investigation steps, remediation, comms, post-incident',
+          'After completion, open Kibana Cases to see the auto-generated case with the full AI analysis',
         ],
         talkingPoints: [
           'This runbook would normally take a senior engineer 20 minutes to write during an incident',
           'The rollback plan is specific to the device and incident type in the inputs',
           'Stakeholder communication template is included — copy-paste for your incident bridge',
           'Post-incident tasks capture institutional knowledge while the engineer still remembers what happened',
+          'After the workflow completes, a case is automatically created in Kibana Cases — title: NOC Alert: {device} — {type}, tags: network, ai-generated',
         ],
         demoPills: [
           { label: 'Workflows', path: '/workflows' },
@@ -253,12 +259,14 @@ export const DEMO_TRACKS: DemoTrack[] = [
         steps: [
           'Run "Network Capacity Planning" with no inputs (uses 7-day window, 75% threshold)',
           'Show the output: congested interface count, 30/60/90-day projections, upgrade recommendations, quick wins',
+          'After completion, open Kibana Cases to see the auto-generated case with the full AI analysis',
         ],
         talkingPoints: [
           'Capacity planning typically requires a dedicated tool and a quarterly review meeting',
           'The 30/60/90-day projections are based on your actual utilisation trend data',
           'Quick wins are optimisations deployable in 48 hours without hardware changes',
           '"Run this on demand before your next budget cycle" — no dedicated capacity planning tool needed',
+          'After the workflow completes, a case is automatically created in Kibana Cases — title: NOC Alert: {device} — {type}, tags: network, ai-generated',
         ],
         demoPills: [
           { label: 'Workflows', path: '/workflows' },

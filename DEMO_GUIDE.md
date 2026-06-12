@@ -49,6 +49,8 @@ uv run --project backend python scripts/simulate_netcrawl.py
 
 **Demo URL**: http://localhost:3001
 
+After running any NOC workflow, the AI analysis appears inline in the frontend AND a new case is created in Kibana Cases at https://home-depot.kb.us-central1.gcp.cloud.es.io/app/cases
+
 **Kibana Dashboards** (open directly in a separate tab during the demo):
 
 | Dashboard | Link |
@@ -73,6 +75,7 @@ Run these before opening the browser:
 - [ ] Go to `/network-topology` — topology loads (devices visible, links coloured)
 - [ ] Toggle to **CDP/LLDP Map** — 19 adjacencies shown, `site-b-rtr → acc-sw-03` link pulsing red
 - [ ] Go to `/workflows` — 8 workflows listed including all 5 network ones
+- [ ] Run Network Anomaly Triage once — confirm AI output panel appears and a case is created in Kibana Cases
 
 ---
 
@@ -180,6 +183,8 @@ Show the 8 deployed workflows. Focus on the 5 network ones:
 
 **Expected AI output**: The agent will identify the CPU spike, correlate it with the high-volume flow to app-srv, and recommend immediate containment actions.
 
+After completion, check Kibana Cases for the auto-generated case.
+
 **Talking points**:
 - "The workflow searches 5,000+ NetFlow records and 2,800+ SNMP samples in milliseconds"
 - "The AI agent has full context: traffic volumes, device metrics, historical baseline"
@@ -199,6 +204,8 @@ Show the 8 deployed workflows. Focus on the 5 network ones:
 3. Gets related NetFlow records for the last 2h
 4. Calls `network-agent` for structured RCA: timeline, root cause with confidence, blast radius, remediation steps
 
+After completion, check Kibana Cases for the auto-generated case.
+
 **Talking points**:
 - "We're correlating three different data types — syslog, SNMP, NetFlow — in a single workflow"
 - "The AI output isn't a generic answer — it's grounded in your actual data"
@@ -214,6 +221,8 @@ Show the 8 deployed workflows. Focus on the 5 network ones:
 
 **What it does**: Generates a full incident response runbook — immediate actions, investigation steps, remediation procedure with rollback, stakeholder communication, and post-incident tasks.
 
+After completion, check Kibana Cases for the auto-generated case.
+
 **Talking points**:
 - "This is a production-quality runbook generated in seconds, not written by a senior engineer over 20 minutes"
 - "Every step is grounded in actual evidence from your environment — not generic advice"
@@ -225,6 +234,8 @@ Show the 8 deployed workflows. Focus on the 5 network ones:
 **Run**: Network Capacity Planning → Run (no inputs needed — uses defaults: 7-day window, 75% threshold)
 
 **What it does**: Analyses SNMP bandwidth data across all devices, identifies congested interfaces, and generates a capacity planning report with growth projections and upgrade recommendations.
+
+After completion, check Kibana Cases for the auto-generated case.
 
 **Talking points**:
 - "Capacity planning typically requires a dedicated tool and a quarterly review meeting"
@@ -263,6 +274,7 @@ Run **Network Interface Down — CDP/LLDP Crawl** → Run → enter:
 - Go back to the topology page → **CDP/LLDP Map**
 - The fresh crawl data is reflected — the down link is confirmed with a new timestamp
 - Click **site-b-rtr** → click **Re-crawl topology** to demonstrate the manual trigger
+- After completion, check Kibana Cases for the auto-generated case
 
 **Talking points**:
 - "This workflow can be triggered by an alert rule in Kibana — the moment a syslog matching that pattern arrives, the workflow fires automatically"
@@ -399,11 +411,11 @@ Works with `DATA_SOURCE=real` against `logs-cisco_meraki.log-cisco` data stream 
 
 | Workflow | Inputs | What it does |
 |---|---|---|
-| Network Anomaly Triage | `device_id` | NetFlow + SNMP → AI severity/root cause/containment |
-| Network Root Cause Analysis | `alert_device`, `alert_description` | Syslog + SNMP + flows → AI RCA with blast radius |
-| Network Incident Response | `incident_device`, `incident_type` | Critical syslogs + flows → AI remediation runbook |
-| Network Capacity Planning | _(none required)_ | SNMP bandwidth trends → AI capacity recommendations |
-| Interface Down CDP/LLDP Crawl | `device_id`, `interface_name` | Syslog + CDP/LLDP check + HTTP crawl → AI topology impact |
+| Network Anomaly Triage | `device_id` | NetFlow + SNMP → AI severity/root cause/containment → creates Kibana Case |
+| Network Root Cause Analysis | `alert_device`, `alert_description` | Syslog + SNMP + flows → AI RCA with blast radius → creates Kibana Case |
+| Network Incident Response | `incident_device`, `incident_type` | Critical syslogs + flows → AI remediation runbook → creates Kibana Case |
+| Network Capacity Planning | _(none required)_ | SNMP bandwidth trends → AI capacity recommendations → creates Kibana Case |
+| Interface Down CDP/LLDP Crawl | `device_id`, `interface_name` | Syslog + CDP/LLDP check + HTTP crawl → AI topology impact → creates Kibana Case |
 | **Network Flap Impact Analysis** | `trigger_device`, `trigger_interface` | Syslog + MAC table + impact chain → AI business impact ("can Trading execute?") |
 | Traffic Analysis | `query` (IP/device/protocol) | NetFlow search → AI traffic behaviour + security/performance recommendations |
 
@@ -470,6 +482,7 @@ uv run --project backend python scripts/simulate_netcrawl.py
 | **[Logs Netflow] Overview** _(real data)_ | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/netflow-34e26884-161a-4448-9556-43b5bf2f62a2 |
 | **[Logs Cisco Meraki] Syslog Events** _(real data)_ | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/cisco_meraki-4832a430-af22-11ec-a899-6f7e676e0fb4 |
 | **[Metrics Cisco Meraki] Device Health** _(real data)_ | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/dashboards#/view/cisco_meraki_metrics-d6b9863a-88e2-4e3d-a2a7-36ca1ee525b1 |
+| **Kibana Cases** | https://home-depot.kb.us-central1.gcp.cloud.es.io/app/cases |
 
 ### netcrawl
 

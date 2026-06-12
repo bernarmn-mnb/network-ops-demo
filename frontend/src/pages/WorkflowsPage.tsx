@@ -39,6 +39,16 @@ import type { WorkflowRecipe } from '../config/workflowRecipes'
 import { API_PREFIX } from '../services/apiBase'
 
 const KB_WORKFLOWS = 'https://home-depot.kb.us-central1.gcp.cloud.es.io/app/enterprise_search/kibana_workflows'
+const KB_CASES     = 'https://home-depot.kb.us-central1.gcp.cloud.es.io/app/cases'
+
+// Workflows that create a Kibana Case after completion
+const CASE_WORKFLOWS = new Set([
+  'network-anomaly-triage',
+  'network-root-cause-analysis',
+  'network-incident-response',
+  'network-capacity-planning',
+  'network-flap-impact-analysis',
+])
 
 interface WorkflowAiOutput {
   workflow_id: string
@@ -505,10 +515,28 @@ function RunFormPanel({
               }}>
                 {aiOutput.ai_output}
               </div>
-              <EuiSpacer size="xs" />
-              <EuiText size="xs" color="subdued">
-                {new Date(aiOutput['@timestamp']).toLocaleTimeString()} · saved to workflow-ai-outputs index
-              </EuiText>
+              <EuiSpacer size="s" />
+              <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" responsive={false}>
+                <EuiFlexItem grow={false}>
+                  <EuiText size="xs" color="subdued">
+                    {new Date(aiOutput['@timestamp']).toLocaleTimeString()} · saved to workflow-ai-outputs
+                  </EuiText>
+                </EuiFlexItem>
+                {CASE_WORKFLOWS.has(runForm?.workflowId ?? '') && (
+                  <EuiFlexItem grow={false}>
+                    <EuiButtonEmpty
+                      size="s"
+                      iconType="folderClosed"
+                      href={KB_CASES}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontWeight: 600 }}
+                    >
+                      View case in Kibana Cases
+                    </EuiButtonEmpty>
+                  </EuiFlexItem>
+                )}
+              </EuiFlexGroup>
             </EuiPanel>
           ) : (
             <EuiPanel paddingSize="s" color="transparent"
