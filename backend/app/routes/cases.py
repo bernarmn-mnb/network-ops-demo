@@ -5,7 +5,8 @@ cannot securely access the API key itself. The backend holds the key and
 proxies the case creation.
 """
 
-from fastapi import APIRouter
+import json
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 import requests as req
 from ..config import settings
@@ -14,18 +15,36 @@ router = APIRouter(prefix="/api/cases", tags=["cases"])
 
 
 class CaseCreateRequest(BaseModel):
-    model_config = {"extra": "allow"}  # accept any extra fields
+    model_config = {"extra": "allow"}
 
     title: str
     description: str
-    # Accept dict (Kibana serialises YAML lists as {"0":…,"1":…}) or list
     tags: list | dict | str | None = None
     workflow_id: str = ""
     device_id: str = ""
 
 
 @router.post("/create")
-async def create_case(body: CaseCreateRequest):
+async def create_case(request: Request):
+    """Create a Kibana case. Handles both JSON object and JSON-encoded string body.
+
+    Kibana Workflows serialises the http step body as a JSON string in some
+    versions, so the raw body may be '{"title":...}' (a string) rather than
+    the object itself. We unwrap one extra layer of encoding if needed.
+    """
+    raw = await request.body()
+    try:
+        data = json.loads(raw)
+        # Double-encoded: Kibana sent the body as a JSON string e.g. '"{\"title\":...}"'
+        if isinstance(data, str):
+            data = json.loads(data)
+    except Exception as e:
+        return {"error": f"Could not parse body: {e}", "created": False}
+
+    try:
+        body = CaseCreateRequest(**data)
+    except Exception as e:
+        return {"error": f"Validation error: {e}", "created": False}
     """Create a Kibana case. Called by workflow http steps."""
     kb  = (settings.KIBANA_URL or "").rstrip("/")
     key = settings.ELASTIC_API_KEY
