@@ -27,7 +27,7 @@ metadata:
     purpose: demo
     project: YOUR_PROJECT
   annotations:
-    run.googleapis.com/ingress: internal-and-cloud-load-balancing
+    run.googleapis.com/ingress: all
 spec:
   template:
     metadata:
