@@ -86,7 +86,7 @@ steps:
   - name: create_case
     type: http
     with:
-      url: "https://demos.gcp.elasticsa.co/noc/api/cases/create"
+      url: "https://mnb-noc-demo-1059491012611.us-central1.run.app/noc/api/cases/create"
       method: POST
       body:
         title: "NOC Alert: {{ inputs.trigger_device }} / {{ inputs.trigger_interface }} — Interface Flap"
