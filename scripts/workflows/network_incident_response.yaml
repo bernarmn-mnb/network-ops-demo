@@ -93,7 +93,3 @@ steps:
         description: "{{ steps.ai_runbook.output.message }}"
         workflow_id: "network-incident-response"
         device_id: "{{ inputs.incident_device }}"
-        tags:
-          - "network"
-          - "ai-generated"
-          - "incident-response"

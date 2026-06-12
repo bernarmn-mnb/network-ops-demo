@@ -93,7 +93,3 @@ steps:
         description: "Alert: {{ inputs.alert_description }}. Analysis: {{ steps.ai_rca.output.message }}"
         workflow_id: "network-root-cause-analysis"
         device_id: "{{ inputs.alert_device }}"
-        tags:
-          - "network"
-          - "ai-generated"
-          - "root-cause-analysis"

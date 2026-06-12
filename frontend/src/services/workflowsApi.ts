@@ -234,7 +234,9 @@ export async function getExecution(executionId: string): Promise<WorkflowExecuti
     completedAt: raw.finishedAt ? String(raw.finishedAt) : raw.completedAt ? String(raw.completedAt) : undefined,
     duration:    typeof raw.duration === 'number' ? raw.duration : undefined,
     steps:       steps.length ? steps : undefined,
-    error:       raw.error ? String(raw.error) : undefined,
+    error:       raw.error
+      ? (typeof raw.error === 'string' ? raw.error : JSON.stringify(raw.error))
+      : undefined,
   }
 }
 

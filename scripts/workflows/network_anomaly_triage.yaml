@@ -79,7 +79,3 @@ steps:
         description: "{{ steps.ai_triage.output.message }}"
         workflow_id: "network-anomaly-triage"
         device_id: "{{ inputs.device_id }}"
-        tags:
-          - "network"
-          - "ai-generated"
-          - "anomaly-triage"

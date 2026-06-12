@@ -85,7 +85,3 @@ steps:
         description: "{{ steps.ai_capacity_plan.output.message }}"
         workflow_id: "network-capacity-planning"
         device_id: ""
-        tags:
-          - "network"
-          - "ai-generated"
-          - "capacity-planning"

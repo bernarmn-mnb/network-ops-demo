@@ -14,9 +14,12 @@ router = APIRouter(prefix="/api/cases", tags=["cases"])
 
 
 class CaseCreateRequest(BaseModel):
+    model_config = {"extra": "allow"}  # accept any extra fields
+
     title: str
     description: str
-    tags: list[str] = []
+    # Accept dict (Kibana serialises YAML lists as {"0":…,"1":…}) or list
+    tags: list | dict | str | None = None
     workflow_id: str = ""
     device_id: str = ""
 
@@ -38,13 +41,24 @@ async def create_case(body: CaseCreateRequest):
     # Trim description to 30k chars (Kibana Cases limit)
     description = body.description[:30000]
 
+    # Normalise tags — Kibana Workflows serialises YAML lists as {"0":…,"1":…}
+    raw_tags = body.tags
+    if isinstance(raw_tags, dict):
+        clean_tags = list(raw_tags.values())
+    elif isinstance(raw_tags, list):
+        clean_tags = [str(t) for t in raw_tags]
+    elif isinstance(raw_tags, str):
+        clean_tags = [raw_tags]
+    else:
+        clean_tags = ["network", "ai-generated"]
+
     payload = {
         "title":       body.title,
         "description": description,
         "connector":   {"id": "none", "name": "none", "type": ".none", "fields": None},
         "settings":    {"syncAlerts": False},
         "owner":       "cases",
-        "tags":        body.tags or ["network", "ai-generated"],
+        "tags":        clean_tags,
     }
 
     try:

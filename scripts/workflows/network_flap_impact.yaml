@@ -93,7 +93,3 @@ steps:
         description: "{{ steps.ai_topology_impact.output.message }}"
         workflow_id: "network-flap-impact-analysis"
         device_id: "{{ inputs.trigger_device }}"
-        tags:
-          - "network"
-          - "ai-generated"
-          - "flap-impact"
